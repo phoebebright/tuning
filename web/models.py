@@ -27,6 +27,9 @@ from model_utils.managers import QueryManager
 from libs.utils import make_time, is_list
 from web.exceptions import *
 
+from easy_maps.models import Address
+
+
 # faketime allows the actual date to be set in the future past - for testing can be useful
 from libs.faketime import now
 NOW = now()
@@ -55,12 +58,13 @@ class Organisation(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        verbose_name = _("Studio")
 
 
 
-
-class Location(models.Model):
-    name = models.CharField(max_length=50)
+class Location(Address):
+    name = models.CharField(max_length=20)
     organisation = models.ForeignKey('Organisation', null=True, blank=True)
 
     def __unicode__(self):
@@ -71,7 +75,7 @@ class Location(models.Model):
         unique_together = ("name", "organisation")
 
 class Instrument(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=20)
     organisation = models.ForeignKey('Organisation', null=True, blank=True)
 
     def __unicode__(self):

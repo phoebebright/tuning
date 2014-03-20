@@ -12,7 +12,7 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 '''
 API Stuff
