@@ -27,7 +27,8 @@ from model_utils.managers import QueryManager
 from libs.utils import make_time, is_list
 from web.exceptions import *
 
-from easy_maps.models import Address
+from django_google_maps import fields as map_fields
+
 
 
 # faketime allows the actual date to be set in the future past - for testing can be useful
@@ -47,7 +48,6 @@ class Organisation(models.Model):
 
     org_type = models.CharField(choices=ORG_TYPES, default=ORG_TYPES.client, max_length=8)
     name = models.CharField(max_length=50)
-    address = models.TextField(blank=True, null=True)
     test = models.BooleanField(default=False)
     active = models.BooleanField(default=False)
 
@@ -63,9 +63,11 @@ class Organisation(models.Model):
 
 
 
-class Location(Address):
+class Location(models.Model):
     name = models.CharField(max_length=20)
     organisation = models.ForeignKey('Organisation', null=True, blank=True)
+    address = map_fields.AddressField(max_length=200, blank=True, null=True)
+    geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
 
     def __unicode__(self):
         return self.name

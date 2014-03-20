@@ -7,8 +7,12 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
+from django.forms.widgets import TextInput
 
-from easy_maps.widgets import AddressWithMapWidget
+from django_google_maps.widgets import GoogleMapsAddressWidget
+from django_google_maps.fields import AddressField, GeoLocationField
+
+
 
 
 #import reversion
@@ -27,11 +31,11 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
 
 class LocationAdmin(admin.ModelAdmin):
-    class form(forms.ModelForm):
-        class Meta:
-            widgets = {
-                'address': AddressWithMapWidget({'class': 'vTextField'})
-            }
+
+    formfield_overrides = {
+        AddressField: {'widget': GoogleMapsAddressWidget},
+        GeoLocationField: {'widget': TextInput(attrs={'readonly': 'readonly'})},
+                    }
 
 
 

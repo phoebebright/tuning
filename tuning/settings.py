@@ -112,7 +112,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'easy_maps',
+    'django_google_maps',
     'web',
 )
 
@@ -175,7 +175,7 @@ USE_FAKEDATES = False
 # time in minutes to make each appointment unless specified
 DEFAULT_SLOT_TIME = 30
 
-EASY_MAPS_CENTER = (51.5072, 0.1275)
+
 
 try:
     from tuning.settings_local import *
