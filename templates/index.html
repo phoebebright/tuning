@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="span6 pagination-centered">
+            <button id="make_booking"
+                    class="btn btn-large btn-primary" type="button">Make Booking</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="span6">
+            <h2>Current Tuning Requests</h2>
+            <ul id="requested"></ul>
+
+        </div>
+    </div>
+</div>
+
+
+{%  endblock content %}
+
+{% block js %}
+
+
+<script type="text/javascript">
+    API = "http://127.0.0.1:8000/api/v1/";
+
+    $(document).ready(function () {
+
+        load_requested();
+
+
+        $("#make_booking").on("click", function(e) { make_booking(e); });
+
+        function make_booking() {
+
+            alert("book");
+        }
+    });
+
+function load_requested() {
+
+        // RANKINGS
+         var jqxhr = jQuery.ajax({
+          type : "GET",
+          dataType: "jsonp",
+          url : API + "requested_bookings/",
+          data : {"format" : "jsonp"}
+
+          })
+          .done( function(json) {
+
+            // show last updated comment
+            jQuery("#last_updated").html(json.objects[0].comment);
+
+              // create name column
+
+            var data = json.objects;
+            data.map(function(row) {
+                row['name'] =  '<a href="/player-profile/' + row.player.id + '/">'+ row.player.name + '</a>';
+
+                if (row["change"]>" ") {
+                    var indicator = "";
+                    if (row["change"] == "=") { indicator = row['position'] }
+                    else if (row["change"].substr(0,1) == "+") { indicator = row['position'] + "&nbsp;<img src='"+imgloc+"/up.jpg'>"+row["change"]; }
+                    else if (row["change"].substr(0,1) == "-") { indicator = row['position'] + "&nbsp;<img src='"+imgloc+"/down.jpg'>"+row["change"]; }
+
+
+                    row["position"] = indicator;
+                }
+
+              });
+
+
+            // the columns you'd like to display
+            var columns = ["position", "name", "points"];
+
+            var table = '';
+            jQuery.each(data, function(key, value){
+                table +="<tr>";
+                jQuery.each(columns, function(k,v){
+                         table += "<td>" + ((value[v] == null) ? "" : value[v]) + "</td>";
+
+                });
+                table +="</tr>";
+            });
+
+            jQuery("#world_rankings table tr:last").after(table);
+
+
+
+        });
+}
+
+
+
+function build_table(json, cols, num_cols, tableid) {
+
+
+
+    // get domain of each column
+    domain = new Array();
+
+    for (var i=0;i < num_cols.length; i++) {
+        // NOTE: assumes values in d are numeric
+        domain[num_cols[i]] = extent(json, function(d) {
+            return d[num_cols[i]];
+        });
+    }
+    // not in IE8
+    //var show_framework = $.inArray(cols, "framework_panel");
+
+    //
+
+    // for view prices when updating batches
+    var show_city = (cols[2] != "hourly");
+    var show_org = (cols[2] != "hourly");
+    var show_framework = (cols[2] != "hourly");
+
+
+    // build table
+    var body = $(tableid+" tbody");
+    $.each(json, function (i, d) {
+        if (tableid == "#lawfirm_prices") {
+
+            var tr = '<tr class="org_row" data-org="'+d.org_id+'">';
+
+            var td = '<td class="name" style="background-color: white;">' + d.organisation + '</td>';
+
+            if (show_framework) {
+                td = td + '<td class="name" style="background-color: white;">' + d.framework_panel + '</td>';
+            }
+
+            td = td + '<td class="name" style="background-color: white;">' + d.city + '</td>';
+
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.tp, domain['tp'][0], domain['tp'][1]) + '";>' + d.tp + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.solicitor, domain['solicitor'][0], domain['solicitor'][1]) + '";>' + d.solicitor + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.partner, domain['partner'][0], domain['partner'][1]) + '";>' + d.partner + '</td>';
+
+        } else {
+
+            var tr = '<tr class="org_row" data-org="'+d.org_id+'">';
+
+            var td =  '<td class="name" style="background-color: white;">' + d.level_of_court + '</td>';
+            td = td + '<td class="name" style="background-color: white;">' + d.seniority + '</td>';
+
+            if (show_org) {
+                td = td + '<td class="name" style="background-color: white;">' + d.organisation + '</td>';
+            }
+
+            if (show_framework) {
+                td = td + '<td class="name" style="background-color: white;">' + d.framework_panel + '</td>';
+            }
+
+            if (show_city) {
+                td = td + '<td class="name " style="background-color: white;">' + d.city + '</td>';
+            }
+
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.hourly, domain['hourly'][0], domain['hourly'][1]) + '";>' + d.hourly + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.briefh, domain['briefh'][0], domain['briefh'][1]) + '";>' + d.briefh + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.brief1, domain['brief1'][0], domain['brief1'][1]) + '";>' + d.brief1 + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.brief34, domain['brief34'][0], domain['brief34'][1]) + '";>' + d.brief34 + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.briefh, domain['briefh'][0], domain['briefh'][1]) + '";>' + d.briefh + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.dirsconfs, domain['dirsconfs'][0], domain['dirsconfs'][1]) + '";>' + d.dirsconfs + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher1, domain['refresher1'][0], domain['refresher1'][1]) + '";>' + d.refresher1 + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher34, domain['refresher34'][0], domain['refresher34'][1]) + '";>' + d.refresher34 + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher56, domain['refresher56'][0], domain['refresher56'][1]) + '";>' + d.refresher56 + '</td>';
+            td = td + '<td class="number" style="background-color: ' + getcolour(d.daily_uplift, domain['daily_uplift'][0], domain['daily_uplift'][1]) + '";>' + d.daily_uplift + '</td>';
+
+
+
+        }
+
+        var row = tr + td + '</tr>';
+
+        body.append(row);
+
+        });
+
+
+
+
+        // add the onclick for org now that everything is initialised
+        $(".org_row").on("click", function(e) {
+            e.preventDefault();
+
+            var thisrow = $(this);
+            var org_id = thisrow.data("org");
+
+            // toggle selection of organisation on clicking on row
+            if (thisrow.hasClass("orgrowselected")) {
+                deleteOrg(org_id);
+            } else {
+                addingOrg(org_id);
+            }
+
+
+
+    });
+
+    if (show_framework) {
+       if (tableid == "#lawfirm_prices") {
+            var filter_rows = { 1: true };
+        } else {
+            var filter_rows = { 3: true };
+        }
+    } else {
+     var filter_rows =  {};
+    }
+
+    $(tableid).tablesorter({
+        widgets: [ "filter"],
+        widthFixed : false,
+
+    widgetOptions : {
+
+        filter_functions : filter_rows
+
+
+    }
+
+  });
+
+        $("#cleanfilters").on("click", function() {
+           $('.choosers').trigger('filterReset');
+        });
+}
+
+
+</script>
+{% endblock js %}
+</body>
+</html>

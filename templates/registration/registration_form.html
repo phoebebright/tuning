@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    Registration
+{% endblock %}
+
+{% block main %}
+
+    <h3>Green My Day Registration</h3>
+      <br />
+      {% if form.errors.signup_code %}
+        <p>The signup code you are using is invalid or has already been used.</p>
+      {% else %}
+          <p>Please enter a user name that will be used when you log in.  It must be all one word and you may use your email if you choose.</p>
+          <form action="." method="post" accept-charset="utf-8">{% csrf_token %}
+              <span class="error">{{ form.non_field_errors }}</span>
+             
+            {% for field in form %}
+                {% if field.is_hidden %}
+                    {{ field }}
+                {% else %}
+                    <div class="clearfix{% if field.errors %} error{% endif %}">
+                        {% if field.label %}
+                            <label for="{{ field.auto_id }}" {% if field.field.required %}class="requiredField"{% endif %}>
+                                {{ field.label|safe }}
+                            </label>
+                            <div class="input">
+                                {{ field }}
+                                {% for error in field.errors %}
+                                    <span class="help-block-inline">{{ error }}</span>
+                                {% endfor %}
+                                {% if field.help_text %}
+                                    <span class="help-block">{{ field.help_text|safe }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+    
+    
+        
+              <input type="submit" value="Create account" class="btn do_next" />
+                    
+                    <input name="cancel" type="submit" value="Cancel Registration" class="btn"/>
+    
+          </form>
+    
+ 				
+				{% endif %}
+
+{% endblock %}
+
+   <p class="innerT">Alternatively</p>
+	<a href="{% url 'facebook_connect' %}" class="btn btn-icon-stacked btn-block btn-facebook glyphicons facebook"><i></i><span>Join using your</span><span class="strong">Facebook Account</span></a>

@@ -1,0 +1,11 @@
+
+Thanks for registering on {{ site }} !
+
+You can activate simply by clicking the link below:
+
+You have {{ expiration_days }} days to activate your account.
+
+http://{{ site }}/accounts/activate/{{ activation_key }}
+
+Yours,
+{{ site }} team

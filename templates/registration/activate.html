@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    Account Activation
+{% endblock %}
+
+
+{% block content %}
+    {% if account %}
+        Welcome {{ account.username }}. Your account is now active.
+        
+        You have been logged in and can start using the site now  <a href="/">Home Page</a>
+        
+    {% else %}
+        The activation link is invalid or your account is already active.  Login on the <a href="/">Home Page</a>
+        
+        
+    {% endif %}
+    
+{% endblock %}
