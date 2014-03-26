@@ -80,8 +80,20 @@ class OrganisationResource(ModelResource):
         include_resource_uri = False
         resource_name = 'organisations'
         allowed_methods = ['get']
+        filtering = {
+            'org_type': ['exact', ]
+        }
 
 
+
+class MakeBookingResource(ModelResource):
+    #TODO: Only return own bookings
+
+    class Meta:
+        queryset = Booking.objects.all()
+        include_resource_uri = True
+        resource_name = 'make_booking'
+        allowed_methods = ['post']
 
 
 class RequestedBookingsResource(ModelResource):

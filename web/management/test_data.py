@@ -42,12 +42,19 @@ def base_data(request=None):
     t3=Organisation.objects.create(name="Tuner C", org_type="provider")
     t4=Organisation.objects.create(name="Tuner D", org_type="provider")
     s=Organisation.objects.create(name="System", org_type="system")
+    tst=Organisation.objects.create(name="Test Org", org_type="client", test=True)
 
 
     # create users
     su=User.objects.create_superuser('system','system@gmail.com','pass')
     su.organisation=s
     su.save()
+    u = User.objects.create_user('ajs', 'phoebebright310+ajs@gmail.com', 'pass', organisation=s)
+    u.first_name = "Alexander"
+    u.last_name = "Skeaping"
+    u.mobile = "123456"
+    u.save()
+
     u = User.objects.create_user('fredA', 'phoebebright310+freda@gmail.com', 'pass', organisation=o1)
     u.first_name = "Fred"
     u.last_name = "Smith"
@@ -88,6 +95,16 @@ def base_data(request=None):
     u.last_name = "Apostle"
     u.mobile = "6764523"
     u.save()
+    u = User.objects.create_user('testera', 'phoebebright310+testa@gmail.com', 'pass', organisation=tst)
+    u.first_name = "Tester"
+    u.last_name = "A"
+    u.mobile = "6764523"
+    u.save()
+    u = User.objects.create_user('testerb', 'phoebebright310+testb@gmail.com', 'pass', organisation=tst)
+    u.first_name = "Tester"
+    u.last_name = "B"
+    u.mobile = "6764523"
+    u.save()
 
     # locations
     Location.objects.create(name="Studio Red", organisation=o1)
@@ -97,6 +114,7 @@ def base_data(request=None):
     Location.objects.create(name="Studio Orange", organisation=o1)
     Location.objects.create(name="Studio 1", organisation=o2)
     Location.objects.create(name="Studio 2", organisation=o2)
+    Location.objects.create(name="Test Location", organisation=tst)
 
     # Instruments
     Instrument.objects.create(name="Steinway Grand", organisation=o1)
@@ -105,6 +123,7 @@ def base_data(request=None):
     Instrument.objects.create(name="Harpsicord", organisation=o1)
     Instrument.objects.create(name="Grand", organisation=o2)
     Instrument.objects.create(name="Upright", organisation=o2)
+    Instrument.objects.create(name="Test Instrument", organisation=tst)
 
 
 def test_bookings(request=None):

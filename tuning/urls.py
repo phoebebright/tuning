@@ -27,6 +27,7 @@ v1_api.register(RequestBookingResource())
 v1_api.register(BookingsResource())
 v1_api.register(RequestedBookingsResource())
 v1_api.register(AcceptedBookingsResource())
+v1_api.register(MakeBookingResource())
 
 
 '''
@@ -65,7 +66,12 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 )
 
+urlpatterns += patterns('web.views',
+    url(r'^dashboard', 'dashboard', name="dashboard"),
+    )
+
 if settings.DEBUG:
     urlpatterns += patterns('',
             (r'^test_data$', 'web.management.test_data.test_data'),
+            (r'^apis$', DirectTemplateView.as_view(template_name='apis.html')),
     )

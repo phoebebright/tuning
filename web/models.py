@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time
 
 from django.db import models
 from django.contrib.auth.models import  AbstractUser
@@ -22,7 +22,7 @@ from django.core.validators import  MinValueValidator
 
 from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
-from model_utils.managers import QueryManager
+from model_utils.managers import QueryManager, PassThroughManager
 
 from libs.utils import make_time, is_list
 from web.exceptions import *
@@ -38,6 +38,10 @@ TODAY = NOW.date()
 YESTERDAY = TODAY - timedelta(days = 1)
 TOMORROW = TODAY + timedelta(days = 1)
 
+BOOKING_REQUESTED = "1"
+BOOKING_BOOKED = "3"
+BOOKING_COMPLETE = "5"
+BOOKING_ARCHIVED = "9"
 
 class Organisation(models.Model):
 
@@ -61,7 +65,9 @@ class Organisation(models.Model):
     class Meta:
         verbose_name = _("Studio")
 
-
+    @property
+    def is_test(self):
+        return self.test
 
 class Location(models.Model):
     name = models.CharField(max_length=20)
@@ -94,7 +100,6 @@ class CustomUser(AbstractUser):
     land_line = models.CharField(max_length=20, null=True, blank=True)
     mobile = models.CharField(max_length=20, null=True, blank=True)
     active = models.BooleanField(default=True)
-    #expertise = models.ManyToManyField('Expertise', blank=True, null=True)
 
 
 
@@ -115,43 +120,82 @@ class CustomUser(AbstractUser):
 
         return False
 
+    @property
+    def is_client(self):
+
+        return self.organisation.org_type == "client"
+
+    @property
+    def is_provider(self):
+
+        return self.organisation.org_type == "provider"
+
+    @property
+    def is_system(self):
+
+        return self.organisation.org_type == "system"
+
     def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None):
+
+        #TODO: which org_types can request a booking?
+        #TODO: may want to limit users who can create bookings
 
         booking = Booking.create_booking(self, when, where, what, deadline, client_ref, comments )
 
 
         return booking
 
-    def accept_booking(self, booking_id, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
+    def accept_booking(self, booking_ref, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
 
-        booking = Booking.objects.get(id=booking_id)
+        booking = Booking.objects.get(ref=booking_ref)
 
         booking.book(self, start_time, duration)
 
+        return booking
+
+    @property
     def requested_bookings(self):
 
-        return Booking.objects.filter(status="asked")
+        return Booking.objects.filter(status=BOOKING_REQUESTED)
 
+    @property
     def accepted_bookings(self):
 
-        return Booking.objects.filter(status="booked", provider=self)
+        return Booking.objects.filter(status=BOOKING_BOOKED, provider=self)
+
+class BookingsQuerySet(QuerySet):
+
+    def current(self):
+        return self.filter(status__lt=BOOKING_ARCHIVED)
+
+    def archived(self):
+        return self.filter(status=BOOKING_ARCHIVED)
+
+    def mine(self, user):
+
+        if user.is_client:
+            return self.filter(booker=user)
+
+        elif user.is_provider:
+            return self.filter(provider=user)
+
+        else:
+            raise InvalidQueryset
 
 class Booking(models.Model):
     #TODO: Add geodjango: http://django-model-utils.readthedocs.org/en/latest/managers.html#passthroughmanager
 
-    STATUS = Choices(('asked', _('requested')),
-                     ('booked', _('booked')),
-                     ('cancelled', _('cancelled')),
-                     ('completed', _('completed')),
-                     ('paid_client', _('client has paid')),
-                     ('paid_provider', _('provider has been paid')),
+    STATUS = Choices((BOOKING_REQUESTED, _('requested')),
+                     (BOOKING_BOOKED, _('booked')),
+                     (BOOKING_COMPLETE, _('completed')),
+                     (BOOKING_ARCHIVED, _('archived')),
                      )
 
     ref = models.CharField(max_length=8, unique=True)
     booker = models.ForeignKey(CustomUser, related_name="booker")
     client = models.ForeignKey(Organisation, related_name="client")
     provider = models.ForeignKey(CustomUser, related_name="provider", blank=True, null=True)
-    status = models.CharField(choices=STATUS, default=STATUS.asked, max_length=10)
+    status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
     completed_at = models.DateTimeField(_('when completed'), blank=True, null=True)
@@ -172,6 +216,8 @@ class Booking(models.Model):
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
     comments = models.TextField(_('comments'), blank=True, null=True)
 
+    objects = PassThroughManager.for_queryset_class(BookingsQuerySet)()
+
 
     def __unicode__(self):
         return "%s" % self.client.organisation
@@ -184,12 +230,17 @@ class Booking(models.Model):
             self.ref =  str(uuid.uuid4())[:8]
             print self.ref
 
+        # change status to archived if cancelled or when fully paid
+        # TODO:test
+        if self.cancelled_at or (self.paid_provider and self.client_paid):
+            self.status=BOOKING_ARCHIVED
+
         super(Booking, self).save(*args, **kwargs)
 
     @property
     def start_time(self):
 
-        if self.status == "asked":
+        if self.status == BOOKING_REQUESTED:
             return self.requested_from
         else:
             return self.booked_time
@@ -197,10 +248,36 @@ class Booking(models.Model):
     @property
     def end_time(self):
 
-        if self.status == "asked":
+        if self.status == BOOKING_REQUESTED:
             return self.requested_to
         else:
             return self.booked_time + timedelta(seconds= self.duration*60)
+
+    @property
+    def when(self):
+        return self.start_time
+
+    @property
+    def client_paid(self):
+        ''' true if client has paid for tuning
+        '''
+        return self.paid_client_at
+
+    @property
+    def provider_paid(self):
+        ''' true if provider has been paid for tuning
+        '''
+        return self.paid_provider
+
+
+
+    def cancel(self, user):
+        #TODO: test
+        #TODO: prevent cancellation when status is complete
+        #TODO: can only be cancelled by admin or person who created
+        self.cancelled_at = NOW
+        self.save()
+
 
     @classmethod
     def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None):
@@ -218,6 +295,8 @@ class Booking(models.Model):
             from_time = make_time(when, "start")
             to_time = make_time(when, "end")
 
+
+
         # can't bookin in the past
         # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
 
@@ -227,6 +306,11 @@ class Booking(models.Model):
         # fix end time if possible
 
         if deadline:
+
+            # make sure deadline is a datetime
+            if not hasattr(deadline, 'hour'):
+                deadline = datetime.combine(deadline, time(23, 59))
+
             if deadline > from_time and deadline < to_time:
                 to_time = deadline
             elif deadline < from_time:
@@ -239,9 +323,13 @@ class Booking(models.Model):
                                          requested_at = NOW)
 
         if where:
+            #TODO: prevent locations not belonging to this org
             booking.location = where
+
         if what:
+            #TODO: prevent instruments not belonging to this org
             booking.instrument = what
+
         if deadline:
             booking.deadline = deadline
         if client_ref:
@@ -267,7 +355,7 @@ class Booking(models.Model):
         self.provider = provider
         self.booked_time = start_time
         self.duration = duration
-        self.status = "booked"
+        self.status = BOOKING_BOOKED
         self.booked_at = NOW
         self.save()
 

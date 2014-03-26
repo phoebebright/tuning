@@ -27,3 +27,10 @@ class DeadlineBeforeBookingException(ModelException):
     '''
     txtMessage = 'Deadline is before time of requested booking'
     errorCode = 103
+
+class InvalidQueryset(ModelException):
+    '''
+    eg. "mine" queryset is required by user of type system as only valid for clients and providers
+    '''
+    txtMessage = 'Filter requested for this queryset is not valid'
+    errorCode = 104

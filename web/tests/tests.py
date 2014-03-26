@@ -48,6 +48,8 @@ class BookingTest(TestCase):
     def setUp(self):
 
         base_data()
+
+
         
         # get organisations
         self.o1=Organisation.objects.get(name="Recording Studio A")
@@ -58,7 +60,8 @@ class BookingTest(TestCase):
         self.t3=Organisation.objects.get(name="Tuner C")
         self.t4=Organisation.objects.get(name="Tuner D")
         self.s=Organisation.objects.get(name="System")
-    
+        self.tst=Organisation.objects.get(name="Test Org")
+
     
         # get users
 
@@ -70,7 +73,10 @@ class BookingTest(TestCase):
         self.mark = User.objects.get(username='mark')
         self.luke = User.objects.get(username='luke')
         self.john = User.objects.get(username='john')
-    
+        self.testera = User.objects.get(username='testera')
+        self.testerb = User.objects.get(username='testerb')
+        self.ajs = User.objects.get(username='ajs')
+
         # locations
         self.sr = Location.objects.get(name="Studio Red")
         self.sb = Location.objects.get(name="Studio Blue")
@@ -89,6 +95,36 @@ class BookingTest(TestCase):
         self.i5 = Instrument.objects.get(name="Grand")
         self.i6 = Instrument.objects.get(name="Upright")
 
+    def test_user_properties(self):
+
+        self.assertTrue(self.tst.is_test)
+        self.assertTrue(self.testera.is_test)
+        self.assertFalse(self.o1.is_test)
+        self.assertFalse(self.matt.is_test)
+
+        self.assertTrue(self.freda.is_client)
+        self.assertFalse(self.freda.is_provider)
+        self.assertFalse(self.freda.is_system)
+
+        self.assertFalse(self.matt.is_client)
+        self.assertTrue(self.matt.is_provider)
+        self.assertFalse(self.matt.is_system)
+
+        self.assertFalse(self.ajs.is_client)
+        self.assertFalse(self.ajs.is_provider)
+        self.assertTrue(self.ajs.is_system)
+
+    def test_user_querysets(self):
+
+        book1 = self.freda.request_booking(when=TOMORROW)
+
+        self.assertEqual(Booking.objects.mine(self.freda).count(), 1)
+        self.assertEqual(Booking.objects.mine(self.matt).count(), 0)
+
+
+        self.assertRaises(InvalidQueryset, Booking.objects.mine(self.ajs).count())
+
+
     def test_make_booking(self):
 
 
@@ -98,18 +134,20 @@ class BookingTest(TestCase):
 
         self.assertRaises(PastDateException, self.freda.request_booking, when=YESTERDAY)
         self.assertRaises(PastDateException, self.freda.request_booking, when=datetime.combine(YESTERDAY, time(12,00)))
-        self.assertRaises(PastDateException, self.freda.request_booking,
+        self.assertRaises(DeadlineBeforeBookingException, self.freda.request_booking,
                           when=datetime.combine(TODAY, time(12,00)),
                           deadline=YESTERDAY)
 
         #TODO: Test unique ref not being unique - should generate another ref and try again
 
         # test passes
+        self.assertEqual(self.freda.requested_bookings.count(),0)
         book1 = self.freda.request_booking(when=TODAY)
         book1a = Booking.objects.get(id=book1.id)
+        self.assertEqual(self.freda.requested_bookings.count(),1)
 
         # populated fields
-        self.assertEqual(book1.status, "asked")
+        self.assertEqual(book1.status, BOOKING_REQUESTED)
         self.assertEqual(book1.booker, self.freda)
         self.assertEqual(book1.client, self.o1)
         self.assertEqual(roundTime(book1.requested_at, 120), roundTime(NOW, 120))  # within 2 seconds
@@ -136,16 +174,72 @@ class BookingTest(TestCase):
         self.assertEqual(book3.instrument, self.i1)
         self.assertEqual(book3.location, self.sr)
 
+        # specify all fields
+        starts = datetime.combine(TOMORROW, time(11,00))
+        ends = datetime.combine(TOMORROW, time(14,15))
+        deadline = datetime.combine(TOMORROW, time(15,00))
+        book4 = Booking.create_booking(self.jima, when=(starts, ends), deadline=deadline, where=self.sr, what=self.i1, client_ref="testref", comments="fulltest" )
+        self.assertEqual(book4.status, BOOKING_REQUESTED)
+        self.assertEqual(book4.booker, self.jima)
+        self.assertEqual(book4.client, self.o1)
+        self.assertEqual(roundTime(book4.requested_at, 120), roundTime(NOW, 120))  # within 2 seconds
+        self.assertEqual(book4.requested_from, starts)
+        self.assertEqual(book4.requested_to, ends)
+        self.assertEqual(book4.client_ref, "testref")
+        self.assertEqual(book4.location, self.sr)
+        self.assertEqual(book4.instrument, self.i1)
+        self.assertEqual(book4.comments, "fulltest")
+        self.assertEqual(book4.deadline, deadline)
+        self.assertIsNotNone(book4.ref)
+
     def test_book(self):
 
+        self.assertEqual(self.jima.accepted_bookings.count(),0)
+
+        # accept booking from booking object
         book1 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
         book1.book(provider=self.matt, start_time=datetime.combine(TOMORROW, time(12,15)))
 
-        self.assertEqual(book1.status, "booked")
+        self.assertEqual(book1.status, BOOKING_BOOKED)
         self.assertEqual(book1.provider, self.matt)
         self.assertEqual(roundTime(book1.booked_time, 120), roundTime(datetime.combine(TOMORROW, time(12,15)), 120))  # within 2 seconds
         self.assertEqual(roundTime(book1.booked_at, 120), roundTime(NOW, 120))  # within 2 seconds
 
+        self.assertEqual(self.matt.accepted_bookings.count(),1)
+
+
+        # accept booking from user
+        book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
+        self.assertEqual(self.matt.accepted_bookings.count(),1)
+
+        book2 = self.matt.accept_booking(book2.ref, start_time=datetime.combine(TOMORROW, time(12,15)))
+
+        self.assertEqual(book2.status, BOOKING_BOOKED)
+        self.assertEqual(book2.provider, self.matt)
+        self.assertEqual(roundTime(book2.booked_time, 120), roundTime(datetime.combine(TOMORROW, time(12,15)), 120))  # within 2 seconds
+        self.assertEqual(roundTime(book2.booked_at, 120), roundTime(NOW, 120))  # within 2 seconds
+
+        self.assertEqual(self.matt.accepted_bookings.count(),2)
+
+    def test_cancel(self):
+
+        # bookings not accepted
+        book1 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
+        book1.cancel(self.jima)
+
+        book1 = Booking.objects.get(id=book1.id)
+        self.assertEqual(book1.status, BOOKING_ARCHIVED)
+        self.assertEqual(book1.cancelled_at, roundTime(NOW, 120))
+
+        # fully booked
+        book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
+        self.assertEqual(self.matt.accepted_bookings.count(),1)
+        book2 = self.matt.accept_booking(book2.ref, start_time=datetime.combine(TOMORROW, time(12,15)))
+        book2.cancel(self.jima)
+
+        book2 = Booking.objects.get(id=book2.id)
+        self.assertEqual(book2.status, BOOKING_ARCHIVED)
+        self.assertEqual(book2.cancelled_at, roundTime(NOW, 120))
 
 
 def roundTime(dt=None, roundTo=60):

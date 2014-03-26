@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <script>
+        API = "http://127.0.0.1:8000/api/v1/";
+
+    </script>
+    <h3>Organisations</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations</code></p>
+    <p>Result:</p> <textarea id="organisations"></textarea>
+
+    <h3>Clients</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations/?org_type=client</code></p>
+    <p>Result:</p> <textarea id="clients"></textarea>
+
+    <h3>Tuners</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations/?org_type=provider</code></p>
+    <p>Result:</p> <textarea id="tuners"></textarea>
+
+
+{%  endblock content %}
+
+
+{%  block js %}
+
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                type:"get",
+                url:API+"organisations",
+                dataType : 'json',
+
+                success:function(data){
+
+                    $("#organisations").html(JSON.stringify(data));
+                }
+            });
+
+            $.ajax({
+                type:"get",
+                url:API+"organisations",
+                data: {org_type: 'client'},
+                dataType : 'json',
+
+                success:function(data){
+
+                    $("#clients").html(JSON.stringify(data));
+                }
+            });
+            $.ajax({
+                type:"get",
+                url:API+"organisations",
+                data: {org_type: 'provider'},
+                dataType : 'json',
+
+                success:function(data){
+
+                    $("#tuners").html(JSON.stringify(data));
+                }
+            });
+
+
+        });
+    </script>
+
+{% endblock js %}

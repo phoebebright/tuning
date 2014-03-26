@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+    <link href="{{ STATIC_URL }}css/bootstrap-formhelpers.min.css" rel="stylesheet">
+
+{% endblock extra_head %}
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="span6 pagination-centered">
+                <div id="make_booking">
+                    <H3>New Booking</H3>
+                    <label for="client_list">Client</label>
+                    <span id="client_list"></span>
+                    <label for="location">Location</label>
+                    <span id="location"></span>
+
+
+                    <label for="book_date">Booking Date</label>
+                    <div data-name="book_date" class="bfh-datepicker" data-format="d-m-y" data-min="today">
+                    </div>
+
+                    <label for="book_time">Time to Start</label>
+                    <div data-name="book_time" class="bfh-timepicker" data-time="now">
+                    </div>
+
+                    <label for="deadline">Deadline</label>
+                    <div data-name="deadline" class="bfh-timepicker" data-time="now">
+                    </div>
+                </div>
+                <button id="request_booking">Make Booking</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="span6">
+                <h2>Current Tunings</h2>
+                <table id="bookings">
+                    <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>When</th>
+                        <th>Where</th>
+                        <th>What</th>
+
+                        <th>Who</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {%  for item in bookings %}
+                        <tr>
+                            <td>{{ item.status }}</td>
+                            <td>{{ item.when }}</td>
+                            <td>{{ item.location }}</td>
+                            <td>{{ item.instrument }}</td>
+                            <td>{{ item.provider }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+
+{%  endblock content %}
+
+{% block js %}
+
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
+
+
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
+
+    <script type="text/javascript">
+        API = "http://127.0.0.1:8000/api/v1/";
+
+        $(document).ready(function () {
+
+
+
+
+            $.ajax({
+                type:"get",
+                url:API+"organisations",
+                data: {org_type: 'client'},
+                dataType : 'json',
+
+                success:function(data){
+                    var select= '<select>';
+                    var option = '';
+                    $.each(data.objects, function(index, value) {
+                        option += '<option valid="' + value.id + '">' + value.name + '</option>';
+                    });
+                    select = select+option+'</select>';
+                    $("#org_list").html(select);
+                }
+            });
+
+            {#           $("#bookings").tablesorter();#}
+            {##}
+            {#            $("#cleanfilters").on("click", function() {#}
+            {#                $('.choosers').trigger('filterReset');#}
+            {#            });#}
+
+        });
+
+
+
+
+    </script>
+{% endblock js %}
+</body>
+</html>
