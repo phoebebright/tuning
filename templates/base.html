@@ -41,8 +41,12 @@
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="\">Home</a></li>
                         <li><a href="#about">About</a></li>
-                        <li><a href="#contact">Contact</a></li>
+
                         {% if user.is_authenticated %}
+
+                            {% if user.is_staff %}
+                                <li><a href="/admin">Admin</a></li>
+                            {% endif %}
 
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ user.first_name }} {{ user.last_name }} <b class="caret"></b></a>
@@ -70,9 +74,9 @@
 
 {% block body %}
     {%  block main %}
-    {% block content %}
-    {% endblock content %}
-        {% endblock main %}
+        {% block content %}
+        {% endblock content %}
+    {% endblock main %}
 {% endblock body %}
 
 <!-- Bootstrap core JavaScript
@@ -81,6 +85,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script src="https://raw.github.com/andris9/jStorage/master/jstorage.js"></script>
+<script src="{{ STATIC_URL }}js/moment.min.js"></script>
 
 {%  block js %}
 {%  endblock %}

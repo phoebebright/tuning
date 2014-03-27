@@ -11,7 +11,7 @@ from django import forms
 from django.contrib.auth.decorators import user_passes_test
 from django.forms.models import BaseInlineFormSet
 
-
+from django.views.generic.edit import ModelFormMixin
 from django.core.urlresolvers import reverse
 
 from django.template import loader, Context
@@ -38,3 +38,31 @@ def dashboard(request):
        },
     context_instance=RequestContext(request)
     )
+
+''' JSONise
+
+http://chriskief.com/2013/10/29/advanced-django-class-based-views-modelforms-and-ajax-example-tutorial/
+'''
+#http://ccbv.co.uk
+
+class BookingCreate(CreateView):
+    model = Booking
+    fields = [ 'client', 'requested_from', 'requested_to', 'duration', 'location', 'instrument', 'deadline', 'client_ref', 'comments']
+
+
+    def form_valid(self, form):
+
+        self.object = form.save(commit=False)
+        self.object.booker = self.request.user
+        self.object.save()
+
+        return super(ModelFormMixin, self).form_valid(form)
+
+
+class BookingUpdate(UpdateView):
+    model = Booking
+    fields = ['name']
+
+class BookingDelete(DeleteView):
+    model = Booking
+    success_url = reverse_lazy('Booking-list')

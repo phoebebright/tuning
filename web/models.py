@@ -43,6 +43,14 @@ BOOKING_BOOKED = "3"
 BOOKING_COMPLETE = "5"
 BOOKING_ARCHIVED = "9"
 
+# default booking request times
+
+def default_start():
+    return datetime.combine(TOMORROW, time(12, 00))
+
+def default_end():
+   return datetime.combine(TOMORROW, time(12, 30))
+
 class Organisation(models.Model):
 
     ORG_TYPES = Choices(  ('client', _('client')),
@@ -204,8 +212,8 @@ class Booking(models.Model):
     paid_client_at = models.DateTimeField(_('when client paid'), blank=True, null=True)
     paid_provider = models.DateTimeField(_('when tuner paid'), blank=True, null=True)
 
-    requested_from = models.DateTimeField(_('from time'), blank=True, null=True)
-    requested_to = models.DateTimeField(_('to time'), blank=True, null=True)
+    requested_from = models.DateTimeField(_('from time'), default=default_start)
+    requested_to = models.DateTimeField(_('to time'), default=default_end)
     booked_time =  models.DateTimeField(_('booked time'), blank=True, null=True)
     duration = models.PositiveSmallIntegerField(_('duration'), default = settings.DEFAULT_SLOT_TIME )
 
@@ -222,6 +230,9 @@ class Booking(models.Model):
     def __unicode__(self):
         return "%s" % self.client.organisation
 
+    def get_absolute_url(self):
+        return reverse('booking-detail', kwargs={'pk': self.pk})
+
 
     def save(self, *args, **kwargs):
 
@@ -236,6 +247,9 @@ class Booking(models.Model):
             self.status=BOOKING_ARCHIVED
 
         super(Booking, self).save(*args, **kwargs)
+
+
+
 
     @property
     def start_time(self):
