@@ -40,6 +40,7 @@ class BookingsResource(ModelResource):
         include_resource_uri = True
         resource_name = 'bookings'
         allowed_methods = ['get']
+        limit = 0
         fields = ['requested_from','requested_to','location','instrument', 'status']
         filtering = {
             'client_id': ('exact',),
@@ -69,6 +70,7 @@ class UserResource(ModelResource):
         queryset = User.objects.all()
         fields = ['first_name', 'last_name', 'email', 'mobile']
         resource_name = 'user'
+        limit = 0
         include_resource_uri = False
         list_allowed_methods = ['get', ]
         detail_allowed_methods = ['get',]
@@ -79,10 +81,63 @@ class OrganisationResource(ModelResource):
         queryset = Organisation.objects.all()
         include_resource_uri = False
         resource_name = 'organisations'
+        limit = 0
         allowed_methods = ['get']
         filtering = {
             'org_type': ['exact', ]
         }
+
+class OrganisationMinResource(ModelResource):
+    class Meta:
+        queryset = Organisation.objects.all()
+        include_resource_uri = False
+        fields = ['id', 'name']
+        limit = 0
+        resource_name = 'orgs'
+        allowed_methods = ['get']
+        filtering = {
+            'org_type': ['exact', ]
+        }
+
+class LocationResource(ModelResource):
+    organisation = fields.ToOneField(OrganisationResource, "organisation", full=False)
+
+    class Meta:
+        queryset = Location.objects.all()
+        include_resource_uri = False
+        resource_name = 'locations'
+        limit = 0
+        allowed_methods = ['get']
+        filtering = {
+            'organisation_id': ['exact', ]
+        }
+
+    def get_object_list(self, request):
+        base = super(LocationResource, self).get_object_list(request)
+        if request._get.has_key('organisation_id'):
+            return base.filter(organisation_id = request._get['organisation_id'])
+        else:
+            return base
+
+class InstrumentResource(ModelResource):
+    organisation = fields.ToOneField(OrganisationResource, "organisation", full=False)
+
+    class Meta:
+        queryset = Instrument.objects.all()
+        include_resource_uri = False
+        resource_name = 'instruments'
+        limit = 0
+        allowed_methods = ['get']
+        filtering = {
+            'organisation_id': ['exact', ]
+        }
+
+    def get_object_list(self, request):
+        base = super(InstrumentResource, self).get_object_list(request)
+        if request._get.has_key('organisation_id'):
+            return base.filter(organisation_id = request._get['organisation_id'])
+        else:
+            return base
 
 
 
@@ -95,6 +150,27 @@ class MakeBookingResource(ModelResource):
         resource_name = 'make_booking'
         allowed_methods = ['post']
 
+
+class RecentBookingsResource(ModelResource):
+    #TODO: Only return own bookings
+    client = fields.ToOneField(OrganisationResource, "client", full=True)
+    booker = fields.ToOneField(UserResource, "booker", full=True)
+
+    class Meta:
+        queryset = Booking.objects.all().order_by("-booked_at")
+        include_resource_uri = True
+        resource_name = 'recent_bookings'
+        allowed_methods = ['get']
+        fields = ['status','id']
+
+    def dehydrate(self, bundle):
+        bundle.data['status'] = bundle.obj.get_status_display()
+        bundle.data['who'] = bundle.obj.who
+        bundle.data['when'] = bundle.obj.when
+        bundle.data['where'] = bundle.obj.where
+        bundle.data['what'] = bundle.obj.what
+
+        return bundle
 
 class RequestedBookingsResource(ModelResource):
     #TODO: Only return own bookings

@@ -13,25 +13,23 @@ from django_google_maps.widgets import GoogleMapsAddressWidget
 from django_google_maps.fields import AddressField, GeoLocationField
 
 
-
-
 #import reversion
 
 from web.models import *
 #TODO: user admin is not working, can't get to second screen
 
-# class CustomUserChangeForm(UserChangeForm):
-#     class Meta(UserChangeForm.Meta):
-#         model = CustomUser
-#
-# class CustomUserAdmin(UserAdmin):
-#     list_display = ('email', 'username', 'organisation', 'first_name', 'last_name', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
-#     list_filter = ('is_staff', 'is_superuser', 'last_login')
-#     search_fields =	  ('email', 'first_name', 'last_name', 'username','organisation__name')
-#     list_display_links = ('email', 'username')
-#     form = CustomUserChangeForm
+class CustomUserChangeForm(UserChangeForm):
+    class Meta(UserChangeForm.Meta):
+        model = CustomUser
 
-admin.site.register(CustomUser)
+class CustomUserAdmin(UserAdmin):
+    list_display = ('email', 'username', 'organisation', 'first_name', 'last_name', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
+    list_filter = ('is_staff', 'is_superuser', 'last_login')
+    search_fields =	  ('email', 'first_name', 'last_name', 'username','organisation__name')
+    list_display_links = ('email', 'username')
+    form = CustomUserChangeForm
+
+
 
 class LocationAdmin(admin.ModelAdmin):
 
@@ -72,7 +70,8 @@ class BookingAdmin(admin.ModelAdmin):
     search_fields =	 ('client__name','location__name', 'instrument__name', 'provider__username', 'booker_username')
     fields = [ 'client', 'booker', 'requested_from', 'requested_to', 'duration', 'location', 'instrument', 'deadline', 'client_ref', 'comments']
 
-# admin.site.register(CustomUser, CustomUserAdmin)
+
+admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Organisation, OrgAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Booking, BookingAdmin)

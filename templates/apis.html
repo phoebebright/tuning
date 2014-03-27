@@ -18,6 +18,19 @@
     <p>Result:</p> <textarea id="tuners"></textarea>
 
 
+    <h3>Locations</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/locations/?organisation_id=1</code></p>
+    <p>Result:</p> <textarea id="locations"></textarea>
+
+    <h3>Instruments</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/instruments/?organisation_id=1</code></p>
+    <p>Result:</p> <textarea id="instruments"></textarea>
+
+    <h3>Recent Bookings</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/recent_bookings/?limit=10</code></p>
+    <p>Result:</p> <textarea id="recent_bookings"></textarea>
+
+
 {%  endblock content %}
 
 
@@ -58,7 +71,40 @@
                     $("#tuners").html(JSON.stringify(data));
                 }
             });
+            $.ajax({
+                type:"get",
+                url:API+"locations",
+                data: {organisation_id: '1'},
+                dataType : 'json',
 
+                success:function(data){
+
+                    $("#locations").html(JSON.stringify(data));
+                }
+            });
+            $.ajax({
+                type:"get",
+                url:API+"instruments",
+                data: {organisation_id: '1'},
+                dataType : 'json',
+
+                success:function(data){
+
+                    $("#instruments").html(JSON.stringify(data));
+                }
+            });
+
+               $.ajax({
+                type:"get",
+                url:API+"recent_bookings",
+                data: {limit: '10'},
+                dataType : 'json',
+
+                success:function(data){
+
+                    $("#recent_bookings").html(JSON.stringify(data));
+                }
+            });
 
         });
     </script>

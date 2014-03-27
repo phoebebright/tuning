@@ -1,5 +1,6 @@
 
 #django
+from django.forms import ModelForm, TextInput
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.template.context import RequestContext
@@ -45,10 +46,51 @@ http://chriskief.com/2013/10/29/advanced-django-class-based-views-modelforms-and
 '''
 #http://ccbv.co.uk
 
-class BookingCreate(CreateView):
-    model = Booking
-    fields = [ 'client', 'requested_from', 'requested_to', 'duration', 'location', 'instrument', 'deadline', 'client_ref', 'comments']
+class BookingForm(forms.ModelForm):
 
+
+    class Meta:
+        model = Booking
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'location', 'instrument',  'comments']
+
+
+
+
+class ClientBookingForm(BookingForm):
+    client = forms.HiddenInput()
+
+    class Meta:
+        model = Booking
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'location', 'instrument',  'comments']
+
+
+class BookingCreate(CreateView):
+    #TODO: if user is client, should make client a hidden field but it isnt
+
+    form_class = BookingForm
+    template_name = "web/booking_form.html"
+
+
+    def get_form_class(self):
+        """
+        Returns the form class to use in this view.
+        """
+
+        # if the current user is a client, no need to ask for the client
+
+        if self.request.user.organisation:
+            if self.request.user.organisation.org_type == "client":
+                self.form_class = ClientBookingForm
+
+        return self.form_class
+
+    def get_form(self, form_class):
+        """
+        Returns an instance of the form to be used in this view.
+        """
+        form =  form_class(**self.get_form_kwargs())
+        form.initial = {'client': self.request.user.organisation}
+        return form
 
     def form_valid(self, form):
 

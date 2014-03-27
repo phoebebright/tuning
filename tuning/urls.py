@@ -24,11 +24,15 @@ from web.views import BookingCreate, BookingUpdate, BookingDelete
 
 v1_api = Api(api_name='v1')
 v1_api.register(OrganisationResource())
+v1_api.register(OrganisationMinResource())
 v1_api.register(RequestBookingResource())
 v1_api.register(BookingsResource())
+v1_api.register(RecentBookingsResource())
 v1_api.register(RequestedBookingsResource())
 v1_api.register(AcceptedBookingsResource())
 v1_api.register(MakeBookingResource())
+v1_api.register(LocationResource())
+v1_api.register(InstrumentResource())
 
 
 '''
@@ -69,7 +73,8 @@ urlpatterns = patterns('',
                        url(r'booking/add/$', BookingCreate.as_view(), name='booking_add'),
                        url(r'booking/(?P<pk>\d+)/$', BookingUpdate.as_view(), name='booking_update'),
                        url(r'booking/(?P<pk>\d+)/delete/$', BookingDelete.as_view(), name='booking_delete'),
-                       )
+                       #TODO: booking-detail and booking-list
+                       )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 urlpatterns += patterns('web.views',
@@ -81,4 +86,4 @@ if settings.DEBUG:
                             (r'^test_data$', 'web.management.test_data.test_data'),
                             (r'^apis$', DirectTemplateView.as_view(template_name='apis.html')),
 
-                            ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+                            )

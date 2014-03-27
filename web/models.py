@@ -51,6 +51,7 @@ def default_start():
 def default_end():
    return datetime.combine(TOMORROW, time(12, 30))
 
+
 class Organisation(models.Model):
 
     ORG_TYPES = Choices(  ('client', _('client')),
@@ -220,7 +221,7 @@ class Booking(models.Model):
     location = models.ForeignKey(Location, blank=True, null=True)
     instrument = models.ForeignKey(Instrument, blank=True, null=True)
 
-    deadline =  models.DateTimeField(_('session start'), blank=True, null=True)
+    deadline =  models.DateTimeField(_('session start'), default=default_end)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
     comments = models.TextField(_('comments'), blank=True, null=True)
 
@@ -228,7 +229,7 @@ class Booking(models.Model):
 
 
     def __unicode__(self):
-        return "%s" % self.client.organisation
+        return "%s on %s " % (self.who, self.when)
 
     def get_absolute_url(self):
         return reverse('booking-detail', kwargs={'pk': self.pk})
@@ -270,6 +271,25 @@ class Booking(models.Model):
     @property
     def when(self):
         return self.start_time
+
+    @property
+    def where(self):
+        if self.location:
+            return self.location.name
+        else:
+            return ""
+
+    @property
+    def what(self):
+         if self.instrument:
+            return self.instrument.name
+         else:
+            return ""
+
+    @property
+    def who(self):
+
+        return "%s(%s)" % (self.client.name, self.booker.username)
 
     @property
     def client_paid(self):

@@ -114,6 +114,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_google_maps',
+    'bootstrap3',
     'web',
 )
 
@@ -170,7 +171,8 @@ FAKEDATE_FILE = "fakedate.txt"
 USE_FAKEDATES = False
 
 # time in minutes to make each appointment unless specified
-DEFAULT_SLOT_TIME = 30
+DEFAULT_SLOT_TIME = 60
+MAX_BOOK_DAYS_IN_ADVANCE = 380
 
 
 
