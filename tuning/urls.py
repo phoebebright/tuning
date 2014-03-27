@@ -50,34 +50,35 @@ class DirectTemplateView(TemplateView):
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^api/', include(v1_api.urls)),
+                       url(r'^api/', include(v1_api.urls)),
 
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
-    url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', name="logout"),
-    url(r'^password_reset/$', 'django.contrib.auth.views.password_reset', name="password_reset"),
-    url(r'^password_reset/done/$', 'django.contrib.auth.views.password_reset_done', {'template_name': 'registration/password_reset_done.html'}, name="password_reset_done"),
-    url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
-    url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
-    url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
+                       url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
+                       url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
+                       url(r'^logout/$', 'django.contrib.auth.views.logout', name="logout"),
+                       url(r'^password_reset/$', 'django.contrib.auth.views.password_reset', name="password_reset"),
+                       url(r'^password_reset/done/$', 'django.contrib.auth.views.password_reset_done', {'template_name': 'registration/password_reset_done.html'}, name="password_reset_done"),
+                       url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
+                       url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
+                       url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
 
-    url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
-    url(r'^$', DirectTemplateView.as_view(template_name='index.html'),  name="home"),
+                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
+                       url(r'^$', DirectTemplateView.as_view(template_name='index.html'),  name="home"),
 
-    url(r'^admin/', include(admin.site.urls)),
+                       url(r'^admin/', include(admin.site.urls)),
 
-    url(r'booking/add/$', BookingCreate.as_view(), name='booking_add'),
-    url(r'booking/(?P<pk>\d+)/$', BookingUpdate.as_view(), name='booking_update'),
-    url(r'booking/(?P<pk>\d+)/delete/$', BookingDelete.as_view(), name='booking_delete'),
-)
+                       url(r'booking/add/$', BookingCreate.as_view(), name='booking_add'),
+                       url(r'booking/(?P<pk>\d+)/$', BookingUpdate.as_view(), name='booking_update'),
+                       url(r'booking/(?P<pk>\d+)/delete/$', BookingDelete.as_view(), name='booking_delete'),
+                       )
 
 
 urlpatterns += patterns('web.views',
-    url(r'^dashboard', 'dashboard', name="dashboard"),
-     )
+                        url(r'^dashboard', 'dashboard', name="dashboard"),
+                        )
 
 if settings.DEBUG:
     urlpatterns += patterns('',
-            (r'^test_data$', 'web.management.test_data.test_data'),
-            (r'^apis$', DirectTemplateView.as_view(template_name='apis.html')),
-    )
+                            (r'^test_data$', 'web.management.test_data.test_data'),
+                            (r'^apis$', DirectTemplateView.as_view(template_name='apis.html')),
+
+                            ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

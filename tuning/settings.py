@@ -163,10 +163,6 @@ USE_L10N = False
 USE_TZ = False
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
-
-STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = "web.CustomUser"
 
