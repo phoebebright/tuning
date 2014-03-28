@@ -174,7 +174,7 @@ USE_FAKEDATES = False
 DEFAULT_SLOT_TIME = 60
 MAX_BOOK_DAYS_IN_ADVANCE = 380
 
-
+API_URL = "http://tunemypiano.co.uk/api/v1/"
 
 try:
     from tuning.settings_local import *
