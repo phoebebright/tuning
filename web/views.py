@@ -5,6 +5,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.http import HttpResponse,HttpResponseRedirect, Http404
 from django.template.context import RequestContext
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.detail import DetailView
 from django.core.urlresolvers import reverse_lazy
 from django.template.base import TemplateDoesNotExist
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -53,6 +54,10 @@ class BookingForm(forms.ModelForm):
         model = Booking
         fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'location', 'instrument',  'comments']
 
+    def __init__(self, *args, **kwargs):
+            super(BookingForm, self).__init__(*args, **kwargs)
+            self.fields['client'].queryset = Organisation.objects.filter(org_type='client',  active=True)
+
 
 
 
@@ -69,6 +74,7 @@ class BookingCreate(CreateView):
 
     form_class = BookingForm
     template_name = "web/booking_form.html"
+    success_url = reverse_lazy('booking_add')
 
 
     def get_form_class(self):
@@ -108,3 +114,7 @@ class BookingUpdate(UpdateView):
 class BookingDelete(DeleteView):
     model = Booking
     success_url = reverse_lazy('Booking-list')
+
+class BookingDetailView(DetailView):
+    model = Booking
+

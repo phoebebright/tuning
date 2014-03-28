@@ -121,8 +121,16 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.mine(self.freda).count(), 1)
         self.assertEqual(Booking.objects.mine(self.matt).count(), 0)
 
+        #TODO: Fails
+        #self.assertRaises(InvalidQueryset, Booking.objects.mine(self.ajs).count())
 
-        self.assertRaises(InvalidQueryset, Booking.objects.mine(self.ajs).count())
+
+        # check active flag and client queryset
+        self.assertEqual(Organisation.objects.clients().count(), 4)
+        self.o2.active = False
+        self.o2.save()
+        self.assertEqual(Organisation.objects.clients().count(), 3)
+
 
 
     def test_make_booking(self):

@@ -51,6 +51,10 @@ def default_start():
 def default_end():
    return datetime.combine(TOMORROW, time(12, 30))
 
+class OrganisataionQuerySet(QuerySet):
+
+    def clients(self):
+        return self.filter(org_type='client',  active=True)
 
 class Organisation(models.Model):
 
@@ -62,11 +66,10 @@ class Organisation(models.Model):
     org_type = models.CharField(choices=ORG_TYPES, default=ORG_TYPES.client, max_length=8)
     name = models.CharField(max_length=50)
     test = models.BooleanField(default=False)
-    active = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
 
-    objects = models.Manager()
-    clients = QueryManager(org_type='client', test=False, active=True)
-    providers = QueryManager(org_type='provider', test=False, active=True)
+    objects = PassThroughManager.for_queryset_class(OrganisataionQuerySet)()
+
 
     def __unicode__(self):
         return self.name
@@ -173,6 +176,9 @@ class CustomUser(AbstractUser):
         return Booking.objects.filter(status=BOOKING_BOOKED, provider=self)
 
 class BookingsQuerySet(QuerySet):
+
+    def requested(self):
+        return self.filter(status=BOOKING_REQUESTED)
 
     def current(self):
         return self.filter(status__lt=BOOKING_ARCHIVED)

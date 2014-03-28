@@ -86,6 +86,13 @@ class OrganisationResource(ModelResource):
         filtering = {
             'org_type': ['exact', ]
         }
+class ClientResource(ModelResource):
+    class Meta:
+        queryset = Organisation.objects.filter(org_type="client")
+        include_resource_uri = False
+        resource_name = 'clients'
+        limit = 0
+        allowed_methods = ['get']
 
 class OrganisationMinResource(ModelResource):
     class Meta:
@@ -161,7 +168,7 @@ class RecentBookingsResource(ModelResource):
         include_resource_uri = True
         resource_name = 'recent_bookings'
         allowed_methods = ['get']
-        fields = ['status','id']
+        fields = ['ref', 'status','id']
 
     def dehydrate(self, bundle):
         bundle.data['status'] = bundle.obj.get_status_display()
@@ -178,11 +185,20 @@ class RequestedBookingsResource(ModelResource):
     booker = fields.ToOneField(UserResource, "booker", full=True)
 
     class Meta:
-        queryset = Booking.objects.filter(status="asked")
+        queryset = Booking.objects.requested()
         include_resource_uri = True
         resource_name = 'requested_bookings'
         allowed_methods = ['get']
-        fields = ['requested_from','requested_to', 'location','instrument']
+        fields = ['ref', 'requested_from','requested_to', 'location','instrument']
+
+    def dehydrate(self, bundle):
+        bundle.data['status'] = bundle.obj.get_status_display()
+        bundle.data['who'] = ''
+        bundle.data['when'] = bundle.obj.when
+        bundle.data['where'] = bundle.obj.where
+        bundle.data['what'] = bundle.obj.what
+
+        return bundle
 
 class AcceptedBookingsResource(ModelResource):
     #TODO: Only return own bookings

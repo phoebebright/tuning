@@ -20,10 +20,11 @@ API Stuff
 
 from tastypie.api import Api
 from web.api import *
-from web.views import BookingCreate, BookingUpdate, BookingDelete
+from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView
 
 v1_api = Api(api_name='v1')
 v1_api.register(OrganisationResource())
+v1_api.register(ClientResource())
 v1_api.register(OrganisationMinResource())
 v1_api.register(RequestBookingResource())
 v1_api.register(BookingsResource())
@@ -73,6 +74,7 @@ urlpatterns = patterns('',
                        url(r'booking/add/$', BookingCreate.as_view(), name='booking_add'),
                        url(r'booking/(?P<pk>\d+)/$', BookingUpdate.as_view(), name='booking_update'),
                        url(r'booking/(?P<pk>\d+)/delete/$', BookingDelete.as_view(), name='booking_delete'),
+                       url(r'booking/(?P<slug>[-_\w]+)/$', BookingDetailView.as_view(), name='booking-detail'),  # not used?
                        #TODO: booking-detail and booking-list
                        )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
