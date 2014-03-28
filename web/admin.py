@@ -42,6 +42,7 @@ class LocationAdmin(admin.ModelAdmin):
 
 class LocationInline(admin.TabularInline):
     model           = Location
+    fields = ['name', ]
 
 
 class InstrumentInline(admin.TabularInline):
