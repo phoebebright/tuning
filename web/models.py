@@ -57,6 +57,11 @@ class OrganisataionQuerySet(QuerySet):
         return self.filter(org_type='client',  active=True)
 
 class Organisation(models.Model):
+    ''' organisations are the top level for both clients (studios) and providers (tuners)
+    Even though most tuners are one man (yes man) band, organisation holds the
+    invoice details etc.  the company end.
+    The individuals are help in CustomUser
+    '''
 
     ORG_TYPES = Choices(  ('client', _('client')),
         ('provider', _('provider')),
@@ -64,7 +69,7 @@ class Organisation(models.Model):
     )
 
     org_type = models.CharField(choices=ORG_TYPES, default=ORG_TYPES.client, max_length=8)
-    name = models.CharField(max_length=50)
+    name = models.CharField(_('Company Name (that appears on invoices)'), max_length=50)
     test = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
 

@@ -94,6 +94,15 @@ class ClientResource(ModelResource):
         limit = 0
         allowed_methods = ['get']
 
+class TunerResource(ModelResource):
+    class Meta:
+        queryset = Organisation.objects.filter(org_type="provider")
+        include_resource_uri = False
+        resource_name = 'tuners'
+        limit = 0
+        allowed_methods = ['get']
+        
+        
 class OrganisationMinResource(ModelResource):
     class Meta:
         queryset = Organisation.objects.all()

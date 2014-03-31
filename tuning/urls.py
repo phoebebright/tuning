@@ -25,6 +25,7 @@ from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetail
 v1_api = Api(api_name='v1')
 v1_api.register(OrganisationResource())
 v1_api.register(ClientResource())
+v1_api.register(TunerResource())
 v1_api.register(OrganisationMinResource())
 v1_api.register(RequestBookingResource())
 v1_api.register(BookingsResource())
@@ -67,7 +68,7 @@ urlpatterns = patterns('',
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
 
                        url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
-                       url(r'^$', DirectTemplateView.as_view(template_name='index.html'),  name="home"),
+                       url(r'^$', BookingCreate.as_view(), name='booking_add'),
 
                        url(r'^admin/', include(admin.site.urls)),
 
