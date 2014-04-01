@@ -31,12 +31,32 @@ from django.conf import settings
 from web.models import *
 
 
+
 def dashboard(request):
 
     # TODO: Only admins
 
     return render_to_response('dashboard.html',{
+        'requested': Booking.objects.requested(),
         'bookings':Booking.objects.current(),
+       },
+    context_instance=RequestContext(request)
+    )
+
+def calendar(request):
+
+
+    return render_to_response('calendar.html',{
+        'clients':Client.objects.active(),
+       },
+    context_instance=RequestContext(request)
+    )
+
+def assign_tuner(request):
+
+
+    return render_to_response('web/booking_assign.html',{
+
        },
     context_instance=RequestContext(request)
     )
@@ -111,7 +131,7 @@ class BookingCreate(CreateView):
 
 class BookingUpdate(UpdateView):
     model = Booking
-    fields = ['name']
+
 
 class BookingDelete(DeleteView):
     model = Booking

@@ -38,10 +38,10 @@ TODAY = NOW.date()
 YESTERDAY = TODAY - timedelta(days = 1)
 TOMORROW = TODAY + timedelta(days = 1)
 
-BOOKING_REQUESTED = "1"
-BOOKING_BOOKED = "3"
-BOOKING_COMPLETE = "5"
-BOOKING_ARCHIVED = "9"
+BOOKING_REQUESTED = "1"   # waiting for a tuner
+BOOKING_BOOKED = "3"      # tuner has been assigned but not yet happened
+BOOKING_COMPLETE = "5"    # tuning has been done but not yet paid
+BOOKING_ARCHIVED = "9"    # paid and finished
 
 # default booking request times
 
@@ -239,6 +239,9 @@ class BookingsQuerySet(QuerySet):
     def current(self):
         return self.filter(status__lt=BOOKING_ARCHIVED)
 
+    def complete(self):
+        return self.filter(status=BOOKING_COMPLETE)
+
     def archived(self):
         return self.filter(status=BOOKING_ARCHIVED)
 
@@ -296,13 +299,17 @@ class Booking(models.Model):
     def get_absolute_url(self):
         return reverse('booking-detail', kwargs={'pk': self.pk})
 
+    class Meta:
+        ordering = ["-deadline",]
+
 
     def save(self, *args, **kwargs):
 
         # generate unique booking ref
         if not self.id:
             self.ref =  str(uuid.uuid4())[:8]
-            print self.ref
+            self.requested_at = NOW
+
 
         # change status to archived if cancelled or when fully paid
         # TODO:test
@@ -365,6 +372,32 @@ class Booking(models.Model):
         '''
         return self.paid_provider
 
+
+    @property
+    def sla_assign_tuner_by(self):
+        ''' time at which sla expires
+        '''
+        return self.requested_at + timedelta(seconds= settings.SLA_ASSIGN_TUNER * 60)
+
+    @property
+    def sla_assign_tuner_togo(self):
+        '''minutes until sla expires or 0 if already expired
+        '''
+        if self.sla_assign_tuner_by > NOW:
+            return int((self.sla_assign_tuner_by - NOW).total_seconds() / 60)
+        else:
+            return 0
+
+    @property
+    def sla_assign_tuner_pct(self):
+        ''' percent of sla expired
+        '''
+        if self.sla_assign_tuner_by > NOW:
+            mins2go = int((self.sla_assign_tuner_by - NOW).total_seconds() / 60.0)
+            return int((settings.SLA_ASSIGN_TUNER - mins2go) *100 / settings.SLA_ASSIGN_TUNER)
+
+        else:
+            return 100
 
 
     def cancel(self, user):

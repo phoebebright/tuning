@@ -115,6 +115,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_google_maps',
     'bootstrap3',
+    'theme',  # holds themeforest template
     'web',
 )
 
@@ -173,6 +174,7 @@ USE_FAKEDATES = False
 # time in minutes to make each appointment unless specified
 DEFAULT_SLOT_TIME = 60
 MAX_BOOK_DAYS_IN_ADVANCE = 380
+SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 
 API_URL = "http://tunemypiano.co.uk/api/v1/"
 

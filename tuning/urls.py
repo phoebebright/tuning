@@ -74,15 +74,16 @@ urlpatterns = patterns('',
                        #login required
                        url(r'^$', login_required(BookingCreate.as_view()), name='booking_add'),
                        url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
-                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingUpdate.as_view()), name='booking_update'),
                        url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
-                       url(r'booking/(?P<slug>[-_\w]+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),  # not used?
+                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),  # not used?
                        #TODO: booking-detail and booking-list
                        )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 urlpatterns += patterns('web.views',
                         url(r'^dashboard', 'dashboard', name="dashboard"),
+                        url(r'^calendar', 'calendar', name="calendar"),
+                        url(r'^booking/assign/', 'assign_tuner', name="assign_tuner"),
                         )
 
 if settings.DEBUG:

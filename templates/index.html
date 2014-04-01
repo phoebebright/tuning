@@ -1,235 +1,207 @@
 {% extends "base.html" %}
+{% load bootstrap3 %}
+{% block extra_head %}
+    <link href="{{ STATIC_URL }}css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 
-{% block content %}
 
-<div class="container">
-    <div class="row">
-        <div class="span6 pagination-centered">
-            <button id="make_booking"
-                    class="btn btn-large btn-primary" type="button">Make Booking</button>
+    <style>
+        .fc-header-title h2 {
+            font-size: 90%;
+        }
+    </style>
+{% endblock extra_head %}
+{% block main %}
+
+
+    <div class="container">
+        <div class="row">
+
+
+            <h1>New Booking</h1>
+            <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <button type="submit" class="btn btn-primary">
+                        {% bootstrap_icon "star" %} Save
+                    </button>
+                {% endbuttons %}
+
+
+            </form>
+
+
+
+
         </div>
     </div>
-    <div class="row">
-        <div class="span6">
-            <h2>Current Tuning Requests</h2>
-            <ul id="requested"></ul>
-
-        </div>
-    </div>
-</div>
 
 
-{%  endblock content %}
+{% endblock main %}
 
 {% block js %}
 
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker.js"></script>
 
-<script type="text/javascript">
-    API = "http://127.0.0.1:8000/api/v1/";
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
-    $(document).ready(function () {
+    <script type="text/javascript">
+        API = "{{ API_URL }}"
 
-        load_requested();
+        $(document).ready(function () {
 
+            init();
 
-        $("#make_booking").on("click", function(e) { make_booking(e); });
+            // ON CHANGES
 
-        function make_booking() {
-
-            alert("book");
-        }
-    });
-
-function load_requested() {
-
-        // RANKINGS
-         var jqxhr = jQuery.ajax({
-          type : "GET",
-          dataType: "jsonp",
-          url : API + "requested_bookings/",
-          data : {"format" : "jsonp"}
-
-          })
-          .done( function(json) {
-
-            // show last updated comment
-            jQuery("#last_updated").html(json.objects[0].comment);
-
-              // create name column
-
-            var data = json.objects;
-            data.map(function(row) {
-                row['name'] =  '<a href="/player-profile/' + row.player.id + '/">'+ row.player.name + '</a>';
-
-                if (row["change"]>" ") {
-                    var indicator = "";
-                    if (row["change"] == "=") { indicator = row['position'] }
-                    else if (row["change"].substr(0,1) == "+") { indicator = row['position'] + "&nbsp;<img src='"+imgloc+"/up.jpg'>"+row["change"]; }
-                    else if (row["change"].substr(0,1) == "-") { indicator = row['position'] + "&nbsp;<img src='"+imgloc+"/down.jpg'>"+row["change"]; }
+            // when client is selected, show rest of form
+            $("#id_client").on("change", function() {
+                update_dropdowns(this.value);
+                $('.form-group').show();
+            })
 
 
-                    row["position"] = indicator;
-                }
 
-              });
-
-
-            // the columns you'd like to display
-            var columns = ["position", "name", "points"];
-
-            var table = '';
-            jQuery.each(data, function(key, value){
-                table +="<tr>";
-                jQuery.each(columns, function(k,v){
-                         table += "<td>" + ((value[v] == null) ? "" : value[v]) + "</td>";
-
-                });
-                table +="</tr>";
+            $("#id_deadline").on("dp.change",function (e) {
+                // when the deadline is set, the requested time can't be after the deadline
+                var duration = parseInt($("#id_duration").val());
+                var max_from = moment(e.date).subtract('minutes', duration);
+                var max_to = moment(e.date);
+                $('#id_requested_from').data("DateTimePicker").setMaxDate(max_from);
+                $('#id_requested_from').data("DateTimePicker").setDate(max_from);
+                $('#id_requested_to').data("DateTimePicker").setMaxDate(max_to);
+                $('#id_requested_to').data("DateTimePicker").setDate(max_to);
             });
 
-            jQuery("#world_rankings table tr:last").after(table);
+            $("#id_requested_from").on("dp.change",function (e) {
+                var duration = parseInt($("#id_duration").val());
+                var min_to = e.date.add('minutes', duration);
+                $('#id_requested_to').data("DateTimePicker").setMinDate(min_to);
+                $('#id_requested_to').data("DateTimePicker").setDate(min_to);
+            });
 
 
+            $("#id_deadline").on("dp.change",function (e) {
+                $('#id_requested_to').data("DateTimePicker").setMaxDate(e.date);
+            });
+
+
+
+            $('#id_duration').on('change', function(e) {
+                // increase from time
+                var totime = $('#id_requested_to').data("DateTimePicker").getDate();
+                var fromtime = totime.subtract('minutes', parseInt(this.value))
+                $("#id_requested_from").data("DateTimePicker").setDate(fromtime);
+
+
+            });
 
         });
-}
+
+        function init() {
+            // when page is first loaded
+
+            // hide everything except client
+            $('.form-group').hide();
+            $('.form-group:first').show();
 
 
 
-function build_table(json, cols, num_cols, tableid) {
+            // HANDLE DATES
 
+            var mindate = moment();
+            var maxdate = moment().add('days', {{ MAX_BOOK_DAYS_IN_ADVANCE }});
 
+            var dt_options = {
+                useSeconds: false,
+                format: 'YYYY-MM-DD HH:mm',
+                minuteStepping:5,
+                minDate:mindate,
+                maxDate: maxdate,
+                showToday: true,
+                language:'en',
+                sideBySide: true
+            };
 
-    // get domain of each column
-    domain = new Array();
+            $('#id_requested_from').datetimepicker(dt_options);
 
-    for (var i=0;i < num_cols.length; i++) {
-        // NOTE: assumes values in d are numeric
-        domain[num_cols[i]] = extent(json, function(d) {
-            return d[num_cols[i]];
-        });
-    }
-    // not in IE8
-    //var show_framework = $.inArray(cols, "framework_panel");
+            $('#id_requested_to').datetimepicker(dt_options);
 
-    //
+            $('#id_deadline').datetimepicker(dt_options);
 
-    // for view prices when updating batches
-    var show_city = (cols[2] != "hourly");
-    var show_org = (cols[2] != "hourly");
-    var show_framework = (cols[2] != "hourly");
+            //TODO: If one location then use that
+            //TODO: allow for entry of new locations and instruments
 
+            // get list of tuners
+            $.ajax({
+                type:"get",
+                url:API+"tuners",
+                dataType : 'json',
+                success:function(data){
 
-    // build table
-    var body = $(tableid+" tbody");
-    $.each(json, function (i, d) {
-        if (tableid == "#lawfirm_prices") {
+                    var tuners = data.objects;
+                    requested_bookings(tuners);
 
-            var tr = '<tr class="org_row" data-org="'+d.org_id+'">';
-
-            var td = '<td class="name" style="background-color: white;">' + d.organisation + '</td>';
-
-            if (show_framework) {
-                td = td + '<td class="name" style="background-color: white;">' + d.framework_panel + '</td>';
-            }
-
-            td = td + '<td class="name" style="background-color: white;">' + d.city + '</td>';
-
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.tp, domain['tp'][0], domain['tp'][1]) + '";>' + d.tp + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.solicitor, domain['solicitor'][0], domain['solicitor'][1]) + '";>' + d.solicitor + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.partner, domain['partner'][0], domain['partner'][1]) + '";>' + d.partner + '</td>';
-
-        } else {
-
-            var tr = '<tr class="org_row" data-org="'+d.org_id+'">';
-
-            var td =  '<td class="name" style="background-color: white;">' + d.level_of_court + '</td>';
-            td = td + '<td class="name" style="background-color: white;">' + d.seniority + '</td>';
-
-            if (show_org) {
-                td = td + '<td class="name" style="background-color: white;">' + d.organisation + '</td>';
-            }
-
-            if (show_framework) {
-                td = td + '<td class="name" style="background-color: white;">' + d.framework_panel + '</td>';
-            }
-
-            if (show_city) {
-                td = td + '<td class="name " style="background-color: white;">' + d.city + '</td>';
-            }
-
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.hourly, domain['hourly'][0], domain['hourly'][1]) + '";>' + d.hourly + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.briefh, domain['briefh'][0], domain['briefh'][1]) + '";>' + d.briefh + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.brief1, domain['brief1'][0], domain['brief1'][1]) + '";>' + d.brief1 + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.brief34, domain['brief34'][0], domain['brief34'][1]) + '";>' + d.brief34 + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.briefh, domain['briefh'][0], domain['briefh'][1]) + '";>' + d.briefh + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.dirsconfs, domain['dirsconfs'][0], domain['dirsconfs'][1]) + '";>' + d.dirsconfs + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher1, domain['refresher1'][0], domain['refresher1'][1]) + '";>' + d.refresher1 + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher34, domain['refresher34'][0], domain['refresher34'][1]) + '";>' + d.refresher34 + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.refresher56, domain['refresher56'][0], domain['refresher56'][1]) + '";>' + d.refresher56 + '</td>';
-            td = td + '<td class="number" style="background-color: ' + getcolour(d.daily_uplift, domain['daily_uplift'][0], domain['daily_uplift'][1]) + '";>' + d.daily_uplift + '</td>';
-
+                }
+            });
 
 
         }
 
-        var row = tr + td + '</tr>';
+        // HANDLE CLIENT SPECIFIC DATA
+        function update_dropdowns(org_id) {
 
-        body.append(row);
-
-        });
-
-
-
-
-        // add the onclick for org now that everything is initialised
-        $(".org_row").on("click", function(e) {
-            e.preventDefault();
-
-            var thisrow = $(this);
-            var org_id = thisrow.data("org");
-
-            // toggle selection of organisation on clicking on row
-            if (thisrow.hasClass("orgrowselected")) {
-                deleteOrg(org_id);
-            } else {
-                addingOrg(org_id);
-            }
+            // studios for this client
+            $.ajax({
+                type:"get",
+                url:API+"studios",
+                data: {client_id: org_id},
+                dataType : 'json',
+                success:function(data){
 
 
+                    var select= '<select>';
+                    var options = '';
+                    $.each(data.objects, function(index, value) {
+                        options += '<option value="' + value.id + '">' + value.name + '</option>';
+                    });
+                    select = select + options + '</select>';
 
-    });
 
-    if (show_framework) {
-       if (tableid == "#lawfirm_prices") {
-            var filter_rows = { 1: true };
-        } else {
-            var filter_rows = { 3: true };
+                    $('#id_studio').html(select);
+
+
+
+                }
+
+
+            });
+
+            // instruments for this client
+            $.ajax({
+                type:"get",
+                url:API+"instruments",
+                data: {client_id: org_id},
+                dataType : 'json',
+                success:function(data){
+
+                    var select= '<select>';
+                    var options = '';
+
+                    $.each(data.objects, function(index, value) {
+                        options += '<option value="' + value.id + '">' + value.name + '</option>';
+                    });
+                    select = select + options + '</select>';
+                    $('#id_instrument').html(select);
+
+                }
+            });
+
         }
-    } else {
-     var filter_rows =  {};
-    }
-
-    $(tableid).tablesorter({
-        widgets: [ "filter"],
-        widthFixed : false,
-
-    widgetOptions : {
-
-        filter_functions : filter_rows
 
 
-    }
-
-  });
-
-        $("#cleanfilters").on("click", function() {
-           $('.choosers').trigger('filterReset');
-        });
-}
-
-
-</script>
+    </script>
 {% endblock js %}
-</body>
-</html>

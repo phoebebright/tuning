@@ -1,76 +1,43 @@
-{% extends "base.html" %}
+{% extends "registration/registration_base.html" %}
 
-{% block extra_head %}
-    <link rel="stylesheet" href="{{STATIC_URL}}css/auth-buttons.css">
+{% block content %}
 
-<style>
-body {
-  padding-top: 40px;
-  padding-bottom: 40px;
-  background-color: #eee;
-}
+    <form class="form-signin" role="form" action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
 
-.form-signin {
-  max-width: 330px;
-  padding: 15px;
-  margin: 0 auto;
-}
-.form-signin .form-signin-heading,
-.form-signin .checkbox {
-  margin-bottom: 10px;
-}
-.form-signin .checkbox {
-  font-weight: normal;
-}
-.form-signin .form-control {
-  position: relative;
-  height: auto;
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-  padding: 10px;
-  font-size: 16px;
-}
-.form-signin .form-control:focus {
-  z-index: 2;
-}
-.form-signin input[type="email"] {
-  margin-bottom: -1px;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-.form-signin input[type="password"] {
-  margin-bottom: 10px;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-</style>
-{% endblock extra_head %}
+        <h2 class="form-signin-heading">Please sign in</h2>
+        <div class="login-wrap">
 
 
-
-{% block main %}
-
-    <div class="container">
-
-        <form class="form-signin" role="form" action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
-
-            <h2 class="form-signin-heading">Please sign in</h2>
             {% if form.errors %}
                 <span class="text-error unstyled">{{ form.non_field_errors }}</span>
             {% endif %}
 
-            {% if form.username.errors %}<span class="error">{{form.username.errors }}</span>{% endif %}
-            <input name="username"  id="username" type="text" class="form-control" placeholder="Your username" required="" autofocus="">
+            <div class="user-login-info">
+                {% if form.username.errors %}<span class="error">{{form.username.errors }}</span>{% endif %}
+                <input name="username"  id="username" type="text" class="form-control" placeholder="Your username" required="" autofocus="">
 
-            {% if form.password.errors %}{{form.password.errors}}{% endif %}
-            <input name="password" value="" id="password" type="password" class="form-control" placeholder="Password" required="">
+                {% if form.password.errors %}{{form.password.errors}}{% endif %}
+                <input name="password" value="" id="password" type="password" class="form-control" placeholder="Password" required="">
+            </div>
             <a class="password" href="/password_reset/">forgot it?</a>
             <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-        </form>
+            <div class="registration">
+                Don't have an account yet?
+                <a class="" href="registration.html">
+                    Create an account
+                </a>
+            </div>
+        </div>
+
+
+    </form>
+
+
+
 
     </div>
+
+
 
 
 
