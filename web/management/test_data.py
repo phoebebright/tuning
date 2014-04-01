@@ -28,102 +28,105 @@ def test_data(request=None):
 def base_data(request=None):
 
     try:
-        Organisation.objects.get(name="Recording Studio A")
+        Client.objects.get(name="Recording Studio A")
         return
-    except Organisation.DoesNotExist:
+    except Client.DoesNotExist:
         pass
 
     # create organisations
-    o1=Organisation.objects.create(name="Recording Studio A", org_type="client")
-    o2=Organisation.objects.create(name="Recording Studio B", org_type="client")
-    o3=Organisation.objects.create(name="Private House", org_type="client")
-    t1=Organisation.objects.create(name="Tuner A", org_type="provider")
-    t2=Organisation.objects.create(name="Tuner B", org_type="provider")
-    t3=Organisation.objects.create(name="Tuner C", org_type="provider")
-    t4=Organisation.objects.create(name="Tuner D", org_type="provider")
-    s=Organisation.objects.create(name="System", org_type="system")
-    tst=Organisation.objects.create(name="Test Org", org_type="client", test=True)
+    o1=Client.objects.create(name="Recording Studio A")
+    o2=Client.objects.create(name="Recording Studio B")
+    o3=Client.objects.create(name="Private House")
+    t1=Provider.objects.create(name="Tuner A")
+    t2=Provider.objects.create(name="Tuner B")
+    t3=Provider.objects.create(name="Tuner C")
+    t4=Provider.objects.create(name="Tuner D")
+    tstc=Client.objects.create(name="Test Client", test=True)
+    tstp=Provider.objects.create(name="Test Provider", test=True)
 
-
-    # create users
+    # Users
     su=User.objects.create_superuser('system','system@gmail.com','pass')
-    su.organisation=s
-    su.save()
-    u = User.objects.create_user('ajs', 'phoebebright310+ajs@gmail.com', 'pass', organisation=s)
-    u.first_name = "Alexander"
-    u.last_name = "Skeaping"
-    u.mobile = "123456"
-    u.save()
+    su=User.objects.create_superuser('ajs','phoebebright310+asj@gmail.com','pass')
 
-    u = User.objects.create_user('fredA', 'phoebebright310+freda@gmail.com', 'pass', organisation=o1)
+    u = Booker.objects.create_user('fredA', 'phoebebright310+freda@gmail.com', 'pass')
     u.first_name = "Fred"
     u.last_name = "Smith"
     u.mobile = "123456"
+    u.client = o1
     u.save()
-    u = User.objects.create_user('jimA', 'phoebebright310+jima@gmail.com', 'pass', organisation=o1)
+    u = Booker.objects.create_user('jimA', 'phoebebright310+jima@gmail.com', 'pass')
     u.first_name = "Jim"
     u.last_name = "Smith"
     u.mobile = "5656564654"
+    u.client = o1
     u.save()
-    u = User.objects.create_user('maryB', 'phoebebright310+maryb@gmail.com', 'pass', organisation=o2)
+    u = Booker.objects.create_user('maryB', 'phoebebright310+maryb@gmail.com', 'pass')
     u.first_name = "Mary"
     u.last_name = "Smith"
     u.mobile = "6756554"
+    u.client = o2
     u.save()
-    u = User.objects.create_user('janePH', 'phoebebright310+janeph@gmail.com', 'pass', organisation=o3)
+    u = Booker.objects.create_user('janePH', 'phoebebright310+janeph@gmail.com', 'pass')
     u.first_name = "Jane"
     u.last_name = "Smith"
     u.mobile = "754456"
+    u.client = o3
     u.save()
-    u = User.objects.create_user('matt', 'phoebebright310+matt@gmail.com', 'pass', organisation=t1)
+    u = Tuner.objects.create_user('matt', 'phoebebright310+matt@gmail.com', 'pass')
     u.first_name = "Matt"
     u.last_name = "Apostle"
     u.mobile = "434534534"
+    u.provider=t1
     u.save()
-    u = User.objects.create_user('mark', 'phoebebright310+mark@gmail.com', 'pass', organisation=t2)
+    u = Tuner.objects.create_user('mark', 'phoebebright310+mark@gmail.com', 'pass')
     u.first_name = "Mark"
     u.last_name = "Apostle"
     u.mobile = "789876756"
+    u.provider=t2
     u.save()
-    u = User.objects.create_user('luke', 'phoebebright310+luke@gmail.com', 'pass', organisation=t3)
+    u = Tuner.objects.create_user('luke', 'phoebebright310+luke@gmail.com', 'pass')
     u.first_name = "Luke"
     u.last_name = "Apostle"
     u.mobile = "56756445"
+    u.provider=t3
     u.save()
-    u = User.objects.create_user('john', 'phoebebright310+john@gmail.com', 'pass', organisation=t4)
+    u = Tuner.objects.create_user('john', 'phoebebright310+john@gmail.com', 'pass')
     u.first_name = "John"
     u.last_name = "Apostle"
     u.mobile = "6764523"
+    u.provider=t4
     u.save()
-    u = User.objects.create_user('testera', 'phoebebright310+testa@gmail.com', 'pass', organisation=tst)
+    u = Booker.objects.create_user('testera', 'phoebebright310+testa@gmail.com', 'pass')
     u.first_name = "Tester"
     u.last_name = "A"
     u.mobile = "6764523"
+    u.client=tstc
     u.save()
-    u = User.objects.create_user('testerb', 'phoebebright310+testb@gmail.com', 'pass', organisation=tst)
+    u = Tuner.objects.create_user('testerb', 'phoebebright310+testb@gmail.com', 'pass')
     u.first_name = "Tester"
     u.last_name = "B"
     u.mobile = "6764523"
+    u.provider=tstp
     u.save()
 
-    # locations
-    Location.objects.create(name="Studio Red", organisation=o1)
-    Location.objects.create(name="Studio Blue", organisation=o1)
-    Location.objects.create(name="Studio Yellow", organisation=o1)
-    Location.objects.create(name="Studio Green", organisation=o1)
-    Location.objects.create(name="Studio Orange", organisation=o1)
-    Location.objects.create(name="Studio 1", organisation=o2)
-    Location.objects.create(name="Studio 2", organisation=o2)
-    Location.objects.create(name="Test Location", organisation=tst)
+    # Studios
+    s1 = Studio.objects.create(name="Studio Red")
+    s2 = Studio.objects.create(name="Studio Blue")
+    s3 = Studio.objects.create(name="Studio Yellow")
+    s4 = Studio.objects.create(name="Studio Green")
+    s5 = Studio.objects.create(name="Studio Orange")
+    s6 = Studio.objects.create(name="Studio 1")
+    s7 = Studio.objects.create(name="Studio 2")
+    s8 = Studio.objects.create(name="Test Studio")
 
     # Instruments
-    Instrument.objects.create(name="Steinway Grand", organisation=o1)
-    Instrument.objects.create(name="Steinway Upright", organisation=o1)
-    Instrument.objects.create(name="Fortepiano", organisation=o1)
-    Instrument.objects.create(name="Harpsicord", organisation=o1)
-    Instrument.objects.create(name="Grand", organisation=o2)
-    Instrument.objects.create(name="Upright", organisation=o2)
-    Instrument.objects.create(name="Test Instrument", organisation=tst)
+    Instrument.objects.create(name="Steinway Grand")
+    Instrument.objects.create(name="Steinway Upright")
+    Instrument.objects.create(name="Fortepiano")
+    Instrument.objects.create(name="Harpsicord")
+    Instrument.objects.create(name="Grand")
+    Instrument.objects.create(name="Upright")
+    Instrument.objects.create(name="Test Instrument")
 
 
 def test_bookings(request=None):
@@ -137,35 +140,35 @@ def test_bookings(request=None):
 
 
     # get organisations
-    o1=Organisation.objects.get(name="Recording Studio A")
-    o2=Organisation.objects.get(name="Recording Studio B")
-    o3=Organisation.objects.get(name="Private House")
-    t1=Organisation.objects.get(name="Tuner A")
-    t2=Organisation.objects.get(name="Tuner B")
-    t3=Organisation.objects.get(name="Tuner C")
-    t4=Organisation.objects.get(name="Tuner D")
-    s=Organisation.objects.get(name="System")
+    o1=Client.objects.get(name="Recording Studio A")
+    o2=Client.objects.get(name="Recording Studio B")
+    o3=Client.objects.get(name="Private House")
+    t1=Provider.objects.get(name="Tuner A")
+    t2=Provider.objects.get(name="Tuner B")
+    t3=Provider.objects.get(name="Tuner C")
+    t4=Provider.objects.get(name="Tuner D")
+
 
 
     # get users
 
-    freda = User.objects.get(username='fredA')
-    jima = User.objects.get(username='jimA')
-    maryb = User.objects.get(username='maryB')
-    janeph = User.objects.get(username='janePH')
-    matt = User.objects.get(username='matt')
-    mark = User.objects.get(username='mark')
-    luke = User.objects.get(username='luke')
-    john = User.objects.get(username='john')
+    freda = Booker.objects.get(username='fredA')
+    jima = Booker.objects.get(username='jimA')
+    maryb = Booker.objects.get(username='maryB')
+    janeph = Booker.objects.get(username='janePH')
+    matt = Tuner.objects.get(username='matt')
+    mark = Tuner.objects.get(username='mark')
+    luke = Tuner.objects.get(username='luke')
+    john = Tuner.objects.get(username='john')
 
-    # locations
-    sr = Location.objects.get(name="Studio Red")
-    sb = Location.objects.get(name="Studio Blue")
-    sy = Location.objects.get(name="Studio Yellow")
-    sg = Location.objects.get(name="Studio Green")
-    so = Location.objects.get(name="Studio Orange")
-    s1 = Location.objects.get(name="Studio 1")
-    s2 = Location.objects.get(name="Studio 2")
+    # Studios
+    sr = Studio.objects.get(name="Studio Red")
+    sb = Studio.objects.get(name="Studio Blue")
+    sy = Studio.objects.get(name="Studio Yellow")
+    sg = Studio.objects.get(name="Studio Green")
+    so = Studio.objects.get(name="Studio Orange")
+    s1 = Studio.objects.get(name="Studio 1")
+    s2 = Studio.objects.get(name="Studio 2")
 
     # Instruments
     i1 = Instrument.objects.get(name="Steinway Grand")
@@ -178,7 +181,7 @@ def test_bookings(request=None):
     book1 = jima.request_booking(when=TODAY)
     book2 = jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
     book3 = jima.request_booking(when=(TODAY + timedelta(days = 4)), client_ref="Bono", what=i1, where=sr)
-    book3.book(provider=matt, start_time=datetime.combine(TODAY + timedelta(days = 4), time(16,00)))
+    book3.book(tuner=matt, start_time=datetime.combine(TODAY + timedelta(days = 4), time(16,00)))
     book4 = freda.request_booking(when=(TODAY + timedelta(days = 7)), client_ref="1234", what=i1, where=sr)
-    book4.book(provider=mark, start_time=datetime.combine(TODAY + timedelta(days = 7), time(07,30)))
+    book4.book(tuner=mark, start_time=datetime.combine(TODAY + timedelta(days = 7), time(07,30)))
     book5 = freda.request_booking(when=(TODAY + timedelta(days = 12)), client_ref="NM", what=i2, where=sr)

@@ -5,25 +5,22 @@
         API = "http://127.0.0.1:8000/api/v1/";
 
     </script>
-    <h3>Organisations</h3>
-    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations</code></p>
-    <p>Result:</p> <textarea id="organisations"></textarea>
 
     <h3>Clients</h3>
-    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations/?org_type=client</code></p>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/clients</code></p>
     <p>Result:</p> <textarea id="clients"></textarea>
 
     <h3>Tuners</h3>
-    <p>Call: <code>http://127.0.0.1:8000/api/v1/organisations/?org_type=provider</code></p>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/providers/</code></p>
     <p>Result:</p> <textarea id="tuners"></textarea>
 
 
-    <h3>Locations</h3>
-    <p>Call: <code>http://127.0.0.1:8000/api/v1/locations/?organisation_id=1</code></p>
-    <p>Result:</p> <textarea id="locations"></textarea>
+    <h3>Studios</h3>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/studios/?client_id=1</code></p>
+    <p>Result:</p> <textarea id="studios"></textarea>
 
     <h3>Instruments</h3>
-    <p>Call: <code>http://127.0.0.1:8000/api/v1/instruments/?organisation_id=1</code></p>
+    <p>Call: <code>http://127.0.0.1:8000/api/v1/instruments/?client_id=1</code></p>
     <p>Result:</p> <textarea id="instruments"></textarea>
 
     <h3>Recent Bookings</h3>
@@ -38,21 +35,11 @@
 
     <script>
         $(document).ready(function() {
-            $.ajax({
-                type:"get",
-                url:API+"organisations",
-                dataType : 'json',
 
-                success:function(data){
-
-                    $("#organisations").html(JSON.stringify(data));
-                }
-            });
 
             $.ajax({
                 type:"get",
-                url:API+"organisations",
-                data: {org_type: 'client'},
+                url:API+"clients",
                 dataType : 'json',
 
                 success:function(data){
@@ -62,8 +49,7 @@
             });
             $.ajax({
                 type:"get",
-                url:API+"organisations",
-                data: {org_type: 'provider'},
+                url:API+"providers",
                 dataType : 'json',
 
                 success:function(data){
@@ -73,19 +59,19 @@
             });
             $.ajax({
                 type:"get",
-                url:API+"locations",
-                data: {organisation_id: '1'},
+                url:API+"studios",
+                data: {client_id: '1'},
                 dataType : 'json',
 
                 success:function(data){
 
-                    $("#locations").html(JSON.stringify(data));
+                    $("#studios").html(JSON.stringify(data));
                 }
             });
             $.ajax({
                 type:"get",
                 url:API+"instruments",
-                data: {organisation_id: '1'},
+                data: {client_id: '1'},
                 dataType : 'json',
 
                 success:function(data){

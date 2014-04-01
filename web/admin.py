@@ -18,20 +18,44 @@ from django_google_maps.fields import AddressField, GeoLocationField
 from web.models import *
 #TODO: user admin is not working, can't get to second screen
 
+
+class CustomUserCreationForm(UserCreationForm):
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        try:
+            self._meta.model._default_manager.get(username=username)
+        except self._meta.model.DoesNotExist:
+            return username
+        raise forms.ValidationError(self.error_messages['duplicate_username'])
+
+    class Meta:
+        model = CustomUser
+        fields = ("username",)
+
+
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = CustomUser
 
 class CustomUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'organisation', 'first_name', 'last_name', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
+    list_display = ('email', 'username', 'first_name', 'last_name', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'last_login')
-    search_fields =	  ('email', 'first_name', 'last_name', 'username','organisation__name')
+    search_fields =	  ('email', 'first_name', 'last_name', 'username')
     list_display_links = ('email', 'username')
     form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
 
+class BookerUserAdmin(UserAdmin):
+    list_display = ('email', 'username', 'first_name', 'last_name','client', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
 
+class TunerUserAdmin(UserAdmin):
+    list_display = ('email', 'username', 'first_name', 'last_name','provider', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
+    form = CustomUserChangeForm
+    add_form = CustomUserCreationForm
 
-class LocationAdmin(admin.ModelAdmin):
+class StudioAdmin(admin.ModelAdmin):
 
     formfield_overrides = {
         AddressField: {'widget': GoogleMapsAddressWidget},
@@ -40,8 +64,8 @@ class LocationAdmin(admin.ModelAdmin):
 
 
 
-class LocationInline(admin.TabularInline):
-    model           = Location
+class StudioInline(admin.TabularInline):
+    model           = Studio
     fields = ['name', ]
 
 
@@ -52,14 +76,23 @@ class InstrumentInline(admin.TabularInline):
 
 
 #class OrgAdmin(reversion.VersionAdmin):
-class OrgAdmin(admin.ModelAdmin):
+class ClientAdmin(admin.ModelAdmin):
 
     class Meta:
-		model = Organisation
+		model = Client
 
-    list_display = ('name','org_type')
+    list_display = ('name',)
     search_fields =	 ('name',)
-    inlines = [LocationInline, InstrumentInline]
+    inlines = [StudioInline, InstrumentInline]
+
+
+class ProviderAdmin(admin.ModelAdmin):
+
+    class Meta:
+		model = Provider
+
+    list_display = ('name',)
+    search_fields =	 ('name',)
 
 
 class BookingAdmin(admin.ModelAdmin):
@@ -67,12 +100,15 @@ class BookingAdmin(admin.ModelAdmin):
     class Meta:
 		model = Booking
 
-    list_display = ('client','booker', 'location', 'instrument', 'provider')
-    search_fields =	 ('client__name','location__name', 'instrument__name', 'provider__username', 'booker_username')
-    fields = [ 'client', 'booker', 'requested_from', 'requested_to', 'duration', 'location', 'instrument', 'deadline', 'client_ref', 'comments']
+    list_display = ('client','booker', 'studio', 'instrument', 'tuner')
+    search_fields =	 ('client__name','studio__name', 'instrument__name', 'tuner__username', 'booker_username')
+    fields = [ 'client', 'booker','tuner', 'requested_from', 'requested_to', 'duration', 'studio', 'instrument', 'deadline', 'client_ref', 'comments']
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(Organisation, OrgAdmin)
-admin.site.register(Location, LocationAdmin)
+admin.site.register(Booker, BookerUserAdmin)
+admin.site.register(Tuner, TunerUserAdmin)
+admin.site.register(Client, ClientAdmin)
+admin.site.register(Provider, ProviderAdmin)
+admin.site.register(Studio, StudioAdmin)
 admin.site.register(Booking, BookingAdmin)

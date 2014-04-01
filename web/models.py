@@ -51,10 +51,10 @@ def default_start():
 def default_end():
    return datetime.combine(TOMORROW, time(12, 30))
 
-class OrganisataionQuerySet(QuerySet):
+class OrgQuerySet(QuerySet):
 
-    def clients(self):
-        return self.filter(org_type='client',  active=True)
+    def active(self):
+        return self.filter(active=True)
 
 class Organisation(models.Model):
     ''' organisations are the top level for both clients (studios) and providers (tuners)
@@ -63,32 +63,40 @@ class Organisation(models.Model):
     The individuals are help in CustomUser
     '''
 
-    ORG_TYPES = Choices(  ('client', _('client')),
-        ('provider', _('provider')),
-        ('system', _('system')),
-    )
-
-    org_type = models.CharField(choices=ORG_TYPES, default=ORG_TYPES.client, max_length=8)
     name = models.CharField(_('Company Name (that appears on invoices)'), max_length=50)
     test = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
-
-    objects = PassThroughManager.for_queryset_class(OrganisataionQuerySet)()
 
 
     def __unicode__(self):
         return self.name
 
     class Meta:
-        verbose_name = _("Studio")
+        abstract = True
 
     @property
     def is_test(self):
         return self.test
 
-class Location(models.Model):
+class Client(Organisation):
+
+    objects = PassThroughManager.for_queryset_class(OrgQuerySet)()
+
+    @property
+    def bookers(self):
+        return Booker.objects.filter(client=self)
+
+class Provider(Organisation):
+
+    objects = PassThroughManager.for_queryset_class(OrgQuerySet)()
+
+    @property
+    def tuners(self):
+        return Tuner.objects.filter(client=self)
+
+class Studio(models.Model):
     name = models.CharField(max_length=20)
-    organisation = models.ForeignKey('Organisation', null=True, blank=True)
+    client = models.ForeignKey(Client, null=True, blank=True)
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
 
@@ -96,24 +104,22 @@ class Location(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = _("Tuning Location")
-        unique_together = ("name", "organisation")
+        verbose_name = _("Studio Location")
+        unique_together = ("name", "client")
 
 class Instrument(models.Model):
     name = models.CharField(max_length=20)
-    organisation = models.ForeignKey('Organisation', null=True, blank=True)
+    client = models.ForeignKey(Client, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
 
     class Meta:
         verbose_name = _("Instrument")
-        unique_together = ("name", "organisation")
+        unique_together = ("name", "client")
 
 class CustomUser(AbstractUser):
 
-
-    organisation = models.ForeignKey('Organisation', null=True, blank=True)
     land_line = models.CharField(max_length=20, null=True, blank=True)
     mobile = models.CharField(max_length=20, null=True, blank=True)
     active = models.BooleanField(default=True)
@@ -126,41 +132,96 @@ class CustomUser(AbstractUser):
     #
     #     )
 
+
+
+    @property
+    def organisation(self):
+        '''assumes a user will only be assigned to 1 client/provider
+        '''
+        try:
+            return self.bookers.all()[0]
+        except:
+            return None
+
+    @property
+    def is_tuner(self):
+        return False
+
+    @property
+    def is_booker(self):
+        return False
+
+
+class Booker(CustomUser):
+
+    client = models.ForeignKey(Client, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Users - Booker")
+
+    @property
+    def is_tuner(self):
+        return False
+
+    @property
+    def is_booker(self):
+        return True
+
     @property
     def is_test(self):
-        ''' is a test user is attached to an organisatino that is a test org OR has test in username
+        ''' is a test user is attached to an organisatino that is a test org
         '''
 
-        if self.organisation:
-            if self.organisation.test:
+        if self.client:
+            if self.client.test:
                 return True
 
         return False
 
-    @property
-    def is_client(self):
-
-        return self.organisation.org_type == "client"
-
-    @property
-    def is_provider(self):
-
-        return self.organisation.org_type == "provider"
-
-    @property
-    def is_system(self):
-
-        return self.organisation.org_type == "system"
-
     def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None):
 
-        #TODO: which org_types can request a booking?
+
         #TODO: may want to limit users who can create bookings
 
         booking = Booking.create_booking(self, when, where, what, deadline, client_ref, comments )
 
 
         return booking
+
+
+
+class Tuner(CustomUser):
+
+    provider = models.ForeignKey(Provider, null=True, blank=True)
+    address = map_fields.AddressField(max_length=200, blank=True, null=True)
+    geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Users - Tuner")
+
+    @property
+    def is_tuner(self):
+        return True
+
+    @property
+    def is_booker(self):
+        return False
+
+    @property
+    def is_test(self):
+        ''' is a test user is attached to an organisatino that is a test org
+        '''
+
+        if self.provider:
+            if self.provider.test:
+                return True
+
+        return False
+
+    @property
+    def accepted_bookings(self):
+
+        return Booking.objects.filter(status=BOOKING_BOOKED, tuner=self)
 
     def accept_booking(self, booking_ref, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
 
@@ -169,16 +230,6 @@ class CustomUser(AbstractUser):
         booking.book(self, start_time, duration)
 
         return booking
-
-    @property
-    def requested_bookings(self):
-
-        return Booking.objects.filter(status=BOOKING_REQUESTED)
-
-    @property
-    def accepted_bookings(self):
-
-        return Booking.objects.filter(status=BOOKING_BOOKED, provider=self)
 
 class BookingsQuerySet(QuerySet):
 
@@ -193,11 +244,11 @@ class BookingsQuerySet(QuerySet):
 
     def mine(self, user):
 
-        if user.is_client:
+        if user.is_booker:
             return self.filter(booker=user)
 
-        elif user.is_provider:
-            return self.filter(provider=user)
+        elif user.is_tuner:
+            return self.filter(tuner=user)
 
         else:
             raise InvalidQueryset
@@ -212,9 +263,9 @@ class Booking(models.Model):
                      )
 
     ref = models.CharField(max_length=8, unique=True)
-    booker = models.ForeignKey(CustomUser, related_name="booker")
-    client = models.ForeignKey(Organisation, related_name="client")
-    provider = models.ForeignKey(CustomUser, related_name="provider", blank=True, null=True)
+    booker = models.ForeignKey(CustomUser, related_name="booker_user")
+    client = models.ForeignKey(Client, related_name="client")
+    tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
     status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
@@ -229,7 +280,7 @@ class Booking(models.Model):
     booked_time =  models.DateTimeField(_('booked time'), blank=True, null=True)
     duration = models.PositiveSmallIntegerField(_('duration'), default = settings.DEFAULT_SLOT_TIME )
 
-    location = models.ForeignKey(Location, blank=True, null=True)
+    studio = models.ForeignKey(Studio, blank=True, null=True)
     instrument = models.ForeignKey(Instrument, blank=True, null=True)
 
     deadline =  models.DateTimeField(_('session start'), default=default_end)
@@ -285,8 +336,8 @@ class Booking(models.Model):
 
     @property
     def where(self):
-        if self.location:
-            return self.location.name
+        if self.studio:
+            return self.studio.name
         else:
             return ""
 
@@ -325,7 +376,7 @@ class Booking(models.Model):
 
 
     @classmethod
-    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None):
+    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None, client=None, ):
 
 
         # get start and end times for booking
@@ -361,15 +412,23 @@ class Booking(models.Model):
             elif deadline < from_time:
                 raise DeadlineBeforeBookingException
 
+
+        if not client:
+            try:
+                client = who.client
+            except:
+                pass
+
+        #TODO: handle case where show does not have an organisation or is not a client
+
         booking = Booking.objects.create(booker=who,
-                                         client = who.organisation,
+                                         client = client,
                                          requested_from = from_time,
                                          requested_to = to_time,
                                          requested_at = NOW)
 
         if where:
-            #TODO: prevent locations not belonging to this org
-            booking.location = where
+            booking.studio = where
 
         if what:
             #TODO: prevent instruments not belonging to this org
@@ -388,7 +447,7 @@ class Booking(models.Model):
         return booking
 
 
-    def book(self, provider, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
+    def book(self, tuner, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
 
         # TODO: handle start_Time that is beyond deadline or within slot time
         # TODO: handle booked_time outside requested time
@@ -397,7 +456,7 @@ class Booking(models.Model):
             start_time = self.requested_from
 
 
-        self.provider = provider
+        self.tuner = tuner
         self.booked_time = start_time
         self.duration = duration
         self.status = BOOKING_BOOKED
@@ -407,7 +466,7 @@ class Booking(models.Model):
     def send_request(self):
         # schedule email http://www.cucumbertown.com/craft/scheduling-morning-emails-with-django-and-celery/
         subject = "Can you tune for %s between %s and %s" % (self.client.name, self.start_time, self.end_time)
-        message = "To Tune %s in %s for session %s starting at %s" % (self.instrument, self.location, self.client_id, self.deadline)
+        message = "To Tune %s in %s for session %s starting at %s" % (self.instrument, self.studio, self.client_id, self.deadline)
         to_email = "phoebebright310@gmail.com"
         from_email = "tuning@trialflight.com"
 

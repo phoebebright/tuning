@@ -52,11 +52,11 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'location', 'instrument',  'comments']
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument',  'comments']
 
     def __init__(self, *args, **kwargs):
             super(BookingForm, self).__init__(*args, **kwargs)
-            self.fields['client'].queryset = Organisation.objects.filter(org_type='client',  active=True)
+            self.fields['client'].queryset = Client.objects.active()
 
 
 
@@ -66,7 +66,7 @@ class ClientBookingForm(BookingForm):
 
     class Meta:
         model = Booking
-        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'location', 'instrument',  'comments']
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument',  'comments']
 
 
 class BookingCreate(CreateView):
@@ -82,11 +82,13 @@ class BookingCreate(CreateView):
         Returns the form class to use in this view.
         """
 
-        # if the current user is a client, no need to ask for the client
+        # TODO:if the current user is a client, no need to ask for the client
 
-        if self.request.user.organisation:
-            if self.request.user.organisation.org_type == "client":
-                self.form_class = ClientBookingForm
+        if self.request.user.is_booker:
+            self.form_class = ClientBookingForm
+        else:
+            self.form_class = BookingForm
+
 
         return self.form_class
 

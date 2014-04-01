@@ -52,39 +52,38 @@ class BookingTest(TestCase):
 
         
         # get organisations
-        self.o1=Organisation.objects.get(name="Recording Studio A")
-        self.o2=Organisation.objects.get(name="Recording Studio B")
-        self.o3=Organisation.objects.get(name="Private House")
-        self.t1=Organisation.objects.get(name="Tuner A")
-        self.t2=Organisation.objects.get(name="Tuner B")
-        self.t3=Organisation.objects.get(name="Tuner C")
-        self.t4=Organisation.objects.get(name="Tuner D")
-        self.s=Organisation.objects.get(name="System")
-        self.tst=Organisation.objects.get(name="Test Org")
+        self.o1=Client.objects.get(name="Recording Studio A")
+        self.o2=Client.objects.get(name="Recording Studio B")
+        self.o3=Client.objects.get(name="Private House")
+        self.t1=Provider.objects.get(name="Tuner A")
+        self.t3=Provider.objects.get(name="Tuner C")
+        self.t4=Provider.objects.get(name="Tuner D")
+        self.tstc=Client.objects.get(name="Test Client")
+        self.tstp=Provider.objects.get(name="Test Provider")
 
     
         # get users
 
-        self.freda = User.objects.get(username='fredA')
-        self.jima = User.objects.get(username='jimA')
-        self.maryb = User.objects.get(username='maryB')
-        self.janeph = User.objects.get(username='janePH')
-        self.matt = User.objects.get(username='matt')
-        self.mark = User.objects.get(username='mark')
-        self.luke = User.objects.get(username='luke')
-        self.john = User.objects.get(username='john')
-        self.testera = User.objects.get(username='testera')
-        self.testerb = User.objects.get(username='testerb')
+        self.freda = Booker.objects.get(username='fredA')
+        self.jima = Booker.objects.get(username='jimA')
+        self.maryb = Booker.objects.get(username='maryB')
+        self.janeph = Booker.objects.get(username='janePH')
+        self.matt = Tuner.objects.get(username='matt')
+        self.mark = Tuner.objects.get(username='mark')
+        self.luke = Tuner.objects.get(username='luke')
+        self.john = Tuner.objects.get(username='john')
+        self.testera = Booker.objects.get(username='testera')
+        self.testerb = Tuner.objects.get(username='testerb')
         self.ajs = User.objects.get(username='ajs')
 
-        # locations
-        self.sr = Location.objects.get(name="Studio Red")
-        self.sb = Location.objects.get(name="Studio Blue")
-        self.sy = Location.objects.get(name="Studio Yellow")
-        self.sg = Location.objects.get(name="Studio Green")
-        self.so = Location.objects.get(name="Studio Orange")
-        self.s1 = Location.objects.get(name="Studio 1")
-        self.s2 = Location.objects.get(name="Studio 2")
+        # studios
+        self.sr = Studio.objects.get(name="Studio Red")
+        self.sb = Studio.objects.get(name="Studio Blue")
+        self.sy = Studio.objects.get(name="Studio Yellow")
+        self.sg = Studio.objects.get(name="Studio Green")
+        self.so = Studio.objects.get(name="Studio Orange")
+        self.s1 = Studio.objects.get(name="Studio 1")
+        self.s2 = Studio.objects.get(name="Studio 2")
 
 
         # Instruments
@@ -94,42 +93,6 @@ class BookingTest(TestCase):
         self.i4 = Instrument.objects.get(name="Harpsicord")
         self.i5 = Instrument.objects.get(name="Grand")
         self.i6 = Instrument.objects.get(name="Upright")
-
-    def test_user_properties(self):
-
-        self.assertTrue(self.tst.is_test)
-        self.assertTrue(self.testera.is_test)
-        self.assertFalse(self.o1.is_test)
-        self.assertFalse(self.matt.is_test)
-
-        self.assertTrue(self.freda.is_client)
-        self.assertFalse(self.freda.is_provider)
-        self.assertFalse(self.freda.is_system)
-
-        self.assertFalse(self.matt.is_client)
-        self.assertTrue(self.matt.is_provider)
-        self.assertFalse(self.matt.is_system)
-
-        self.assertFalse(self.ajs.is_client)
-        self.assertFalse(self.ajs.is_provider)
-        self.assertTrue(self.ajs.is_system)
-
-    def test_user_querysets(self):
-
-        book1 = self.freda.request_booking(when=TOMORROW)
-
-        self.assertEqual(Booking.objects.mine(self.freda).count(), 1)
-        self.assertEqual(Booking.objects.mine(self.matt).count(), 0)
-
-        #TODO: Fails
-        #self.assertRaises(InvalidQueryset, Booking.objects.mine(self.ajs).count())
-
-
-        # check active flag and client queryset
-        self.assertEqual(Organisation.objects.clients().count(), 4)
-        self.o2.active = False
-        self.o2.save()
-        self.assertEqual(Organisation.objects.clients().count(), 3)
 
 
 
@@ -170,7 +133,7 @@ class BookingTest(TestCase):
         self.assertIsNone(book1.paid_client_at)
         self.assertIsNone(book1.paid_provider)
         self.assertIsNone(book1.booked_time)
-        self.assertIsNone(book1.location)
+        self.assertIsNone(book1.studio)
         self.assertIsNone(book1.instrument)
         self.assertIsNone(book1.deadline)
         self.assertIsNone(book1.client_ref)
@@ -180,7 +143,7 @@ class BookingTest(TestCase):
 
         book3 = self.jima.request_booking(when=(TODAY + timedelta(days = 4)), client_ref="Bono", what=self.i1, where=self.sr)
         self.assertEqual(book3.instrument, self.i1)
-        self.assertEqual(book3.location, self.sr)
+        self.assertEqual(book3.studio, self.sr)
 
         # specify all fields
         starts = datetime.combine(TOMORROW, time(11,00))
@@ -194,7 +157,7 @@ class BookingTest(TestCase):
         self.assertEqual(book4.requested_from, starts)
         self.assertEqual(book4.requested_to, ends)
         self.assertEqual(book4.client_ref, "testref")
-        self.assertEqual(book4.location, self.sr)
+        self.assertEqual(book4.studio, self.sr)
         self.assertEqual(book4.instrument, self.i1)
         self.assertEqual(book4.comments, "fulltest")
         self.assertEqual(book4.deadline, deadline)
@@ -202,14 +165,13 @@ class BookingTest(TestCase):
 
     def test_book(self):
 
-        self.assertEqual(self.jima.accepted_bookings.count(),0)
 
         # accept booking from booking object
         book1 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
-        book1.book(provider=self.matt, start_time=datetime.combine(TOMORROW, time(12,15)))
+        book1.book(tuner=self.matt, start_time=datetime.combine(TOMORROW, time(12,15)))
 
         self.assertEqual(book1.status, BOOKING_BOOKED)
-        self.assertEqual(book1.provider, self.matt)
+        self.assertEqual(book1.tuner, self.matt)
         self.assertEqual(roundTime(book1.booked_time, 120), roundTime(datetime.combine(TOMORROW, time(12,15)), 120))  # within 2 seconds
         self.assertEqual(roundTime(book1.booked_at, 120), roundTime(NOW, 120))  # within 2 seconds
 
@@ -223,7 +185,7 @@ class BookingTest(TestCase):
         book2 = self.matt.accept_booking(book2.ref, start_time=datetime.combine(TOMORROW, time(12,15)))
 
         self.assertEqual(book2.status, BOOKING_BOOKED)
-        self.assertEqual(book2.provider, self.matt)
+        self.assertEqual(book2.tuner, self.matt)
         self.assertEqual(roundTime(book2.booked_time, 120), roundTime(datetime.combine(TOMORROW, time(12,15)), 120))  # within 2 seconds
         self.assertEqual(roundTime(book2.booked_at, 120), roundTime(NOW, 120))  # within 2 seconds
 
@@ -237,17 +199,49 @@ class BookingTest(TestCase):
 
         book1 = Booking.objects.get(id=book1.id)
         self.assertEqual(book1.status, BOOKING_ARCHIVED)
-        self.assertEqual(book1.cancelled_at, roundTime(NOW, 120))
+        self.assertEqual(roundTime(book1.cancelled_at, 120), roundTime(NOW, 120))
 
         # fully booked
         book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
         self.assertEqual(self.matt.accepted_bookings.count(),1)
         book2 = self.matt.accept_booking(book2.ref, start_time=datetime.combine(TOMORROW, time(12,15)))
+        self.assertEqual(self.matt.accepted_bookings.count(),2)
         book2.cancel(self.jima)
+        self.assertEqual(self.matt.accepted_bookings.count(),1)
 
         book2 = Booking.objects.get(id=book2.id)
         self.assertEqual(book2.status, BOOKING_ARCHIVED)
         self.assertEqual(book2.cancelled_at, roundTime(NOW, 120))
+
+
+
+    def test_user_querysets(self):
+
+        book1 = self.freda.request_booking(when=TOMORROW)
+
+        self.assertEqual(Booking.objects.mine(self.freda).count(), 1)
+        self.assertEqual(Booking.objects.mine(self.matt).count(), 0)
+
+        #TODO: Fails
+        #self.assertRaises(InvalidQueryset, Booking.objects.mine(self.ajs).count())
+
+
+        # check active flag and client queryset
+        self.assertEqual(Client.objects.active().count(), 4)
+        self.o2.active = False
+        self.o2.save()
+        self.assertEqual(Client.objects.active().count(), 3)
+
+
+    def test_user_properties(self):
+
+        self.assertEqual(self.freda.client, self.o1)
+        self.assertEqual(self.matt.provider, self.t1)
+
+        self.assertTrue(self.tstc.is_test)
+        self.assertTrue(self.testera.is_test)
+        self.assertFalse(self.o1.is_test)
+        self.assertFalse(self.matt.is_test)
 
 
 def roundTime(dt=None, roundTo=60):

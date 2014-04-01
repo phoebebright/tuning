@@ -23,17 +23,19 @@ from web.api import *
 from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView
 
 v1_api = Api(api_name='v1')
-v1_api.register(OrganisationResource())
+
 v1_api.register(ClientResource())
+v1_api.register(ProviderResource())
 v1_api.register(TunerResource())
-v1_api.register(OrganisationMinResource())
+v1_api.register(ClientMinResource())
 v1_api.register(RequestBookingResource())
 v1_api.register(BookingsResource())
+v1_api.register(AcceptBookingResource())
 v1_api.register(RecentBookingsResource())
 v1_api.register(RequestedBookingsResource())
 v1_api.register(AcceptedBookingsResource())
 v1_api.register(MakeBookingResource())
-v1_api.register(LocationResource())
+v1_api.register(StudioResource())
 v1_api.register(InstrumentResource())
 
 
@@ -66,16 +68,15 @@ urlpatterns = patterns('',
                        url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
-
                        url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
-                       url(r'^$', BookingCreate.as_view(), name='booking_add'),
-
                        url(r'^admin/', include(admin.site.urls)),
 
-                       url(r'booking/add/$', BookingCreate.as_view(), name='booking_add'),
-                       url(r'booking/(?P<pk>\d+)/$', BookingUpdate.as_view(), name='booking_update'),
-                       url(r'booking/(?P<pk>\d+)/delete/$', BookingDelete.as_view(), name='booking_delete'),
-                       url(r'booking/(?P<slug>[-_\w]+)/$', BookingDetailView.as_view(), name='booking-detail'),  # not used?
+                       #login required
+                       url(r'^$', login_required(BookingCreate.as_view()), name='booking_add'),
+                       url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
+                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingUpdate.as_view()), name='booking_update'),
+                       url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
+                       url(r'booking/(?P<slug>[-_\w]+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),  # not used?
                        #TODO: booking-detail and booking-list
                        )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
