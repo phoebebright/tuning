@@ -97,7 +97,7 @@ class BookingCreate(CreateView):
         Returns an instance of the form to be used in this view.
         """
         form =  form_class(**self.get_form_kwargs())
-        form.initial = {'client': self.request.user.organisation}
+        #form.initial = {'client': self.request.user.client}
         return form
 
     def form_valid(self, form):
