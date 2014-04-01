@@ -1,0 +1,136 @@
+
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% block extra_head %}
+
+    <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
+
+
+    <style>
+        .fc-header-title h2 {
+            font-size: 90%;
+        }
+    </style>
+{% endblock extra_head %}
+{% block heading %}Bookings Calendar{% endblock %}
+{% block content %}
+
+    <div class="row">
+        <aside class="col-lg-9">
+            <div id="calendar" class="has-toolbar"></div>
+        </aside>
+        <aside class="col-lg-3">
+            <h4 class="drg-event-title">Clients</h4>
+            <div id='external-events'>
+                {%  for item in clients %}
+                <div class='external-event label label-primary'>{{ item.name }}</div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+
+{% endblock content %}
+
+
+{%  block js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/fullcalendar/fullcalendar.js"></script>
+
+    <script type="text/javascript">
+        API = "{{ API_URL }}"
+
+        $(document).ready(function () {
+
+            init();
+
+            function init() {
+                /* initialize the external events
+                 -----------------------------------------------------------------*/
+
+                $('#external-events div.external-event').each(function() {
+
+                    // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
+                    // it doesn't need to have a start or end
+                    var eventObject = {
+                        title: $.trim($(this).text()) // use the element's text as the event title
+                    };
+
+                    // store the Event Object in the DOM element so we can get to it later
+                    $(this).data('eventObject', eventObject);
+
+                    // make the event draggable using jQuery UI
+                    $(this).draggable({
+                        zIndex: 999,
+                        revert: true,      // will cause the event to go back to its
+                        revertDuration: 0  //  original position after the drag
+                    });
+
+                });
+
+                calendar();
+            }
+        });
+
+        function calendar() {
+            //$.getJSON("http://127.0.0.1:8000/api/v1/bookings/?format=json",function(json) {
+            {#        var json = {"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 5}, "objects": [{"allDay": "false", "className": "asked", "end": "2014-03-19T23:59:59.999999", "requested_from": "2014-03-19T00:00:00", "requested_to": "2014-03-19T23:59:59.999999", "resource_uri": "/api/v1/bookings/1/", "start": "2014-03-19T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "asked", "end": "2014-03-20T23:59:59.999999", "requested_from": "2014-03-20T00:00:00", "requested_to": "2014-03-20T23:59:59.999999", "resource_uri": "/api/v1/bookings/2/", "start": "2014-03-20T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "booked", "end": "2014-03-23T16:30:00", "requested_from": "2014-03-23T00:00:00", "requested_to": "2014-03-23T23:59:59.999999", "resource_uri": "/api/v1/bookings/3/", "start": "2014-03-23T16:00:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "booked", "end": "2014-03-26T08:00:00", "requested_from": "2014-03-26T00:00:00", "requested_to": "2014-03-26T23:59:59.999999", "resource_uri": "/api/v1/bookings/4/", "start": "2014-03-26T07:30:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "asked", "end": "2014-03-31T23:59:59.999999", "requested_from": "2014-03-31T00:00:00", "requested_to": "2014-03-31T23:59:59.999999", "resource_uri": "/api/v1/bookings/5/", "start": "2014-03-31T00:00:00", "status": "asked", "title": "Steinway Upright in Studio Red"}]}#}
+            {#        var data = json['objects'];#}
+
+            $.ajax({
+                type:"get",
+                url:API+"bookings",
+                data: {
+                    limit:10},
+                dataType : 'json',
+                success:function(json){
+
+                    // convert dates to moment objects
+                    data = new Array();
+                    $.each(json.objects, function(i,d) {
+                        d['start'] = moment(d.start);
+                        d['end'] = moment(d.end);
+
+                        data.push(d)
+                    })
+
+                    $('#calendar').fullCalendar({
+                        firstDay:1,
+                        header: {
+                            left: 'prev,next ',
+                            center: 'title',
+                            right: 'month,agendaWeek,agendaDay'
+                        },
+                        editable: true,
+                        droppable: true, // this allows things to be dropped onto the calendar !!!
+                        drop: function(date, allDay) { // this function is called when something is dropped
+
+                            // retrieve the dropped element's stored Event Object
+                            var originalEventObject = $(this).data('eventObject');
+
+                            // we need to copy it, so that multiple events don't have a reference to the same object
+                            var copiedEventObject = $.extend({}, originalEventObject);
+
+                            // assign it the date that was reported
+                            copiedEventObject.start = date;
+                            copiedEventObject.allDay = allDay;
+
+                            // render the event on the calendar
+                            // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                            $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
+
+                            // is the "remove after drop" checkbox checked?
+                            if ($('#drop-remove').is(':checked')) {
+                                // if so, remove the element from the "Draggable Events" list
+                                $(this).remove();
+                            }
+
+                        },
+                        events: data
+                    })
+                }
+            });
+        }
+
+    </script>
+
+{%  endblock %}
+

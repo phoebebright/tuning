@@ -1,4 +1,5 @@
 from django.conf import settings
+from web.models import Booking
 
 def add_stuff(request):
 
@@ -18,6 +19,9 @@ def add_stuff(request):
     context['YESTERDAY'] = context['TODAY'] - timedelta(days = 1)
     context['TOMORROW'] = context['TODAY'] + timedelta(days = 1)
 
+    context['requested'] = Booking.objects.requested()
+    context['current'] = Booking.objects.current()
+    context['complete'] = Booking.objects.complete()
 
 
     return context

@@ -17,77 +17,22 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-6">
-
-                    <div id="calendar"></div>
 
 
-            </div>
-            <div class="col-md-6">
-
-                <h1>New Booking</h1>
-                <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
-                    {% bootstrap_form form %}
-                    {% buttons %}
-                        <button type="submit" class="btn btn-primary">
-                            {% bootstrap_icon "star" %} Save
-                        </button>
-                    {% endbuttons %}
+            <h1>New Booking</h1>
+            <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <button type="submit" class="btn btn-primary">
+                        {% bootstrap_icon "star" %} Save
+                    </button>
+                {% endbuttons %}
 
 
-                </form>
-
-                <h1>Assign Tuner</h1>
-                <div class="table-responsive">
-                    <table id="requested_bookings" class="table table-striped table-condensed">
-                        <thead>
-                        <tr>
-                            <th>When</th>
-                            <th>Who</th>
-                            <th>Where</th>
-                            <th>What</th>
-                            <th >To Go</th>
+            </form>
 
 
 
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <h1>Recent Bookings</h1>
-                <div class="table-responsive">
-                    <table id="recent_bookings" class="table table-striped table-condensed">
-                        <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th >When</th>
-                            <th>Who</th>
-                            <th>Where</th>
-                            <th>What</th>
-
-
-                        </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-
-
-            </div>
 
         </div>
     </div>
@@ -100,290 +45,163 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/fullcalendar/fullcalendar.js"></script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
     <script type="text/javascript">
-    API = "{{ API_URL }}"
+        API = "{{ API_URL }}"
 
-    $(document).ready(function () {
+        $(document).ready(function () {
 
-        init();
+            init();
 
-        // ON CHANGES
+            // ON CHANGES
 
-        // when client is selected, show rest of form
-        $("#id_client").on("change", function() {
-            update_dropdowns(this.value);
-            $('.form-group').show();
-        })
+            // when client is selected, show rest of form
+            $("#id_client").on("change", function() {
+                update_dropdowns(this.value);
+                $('.form-group').show();
+            })
 
 
 
-        $("#id_deadline").on("dp.change",function (e) {
-            // when the deadline is set, the requested time can't be after the deadline
-            var duration = parseInt($("#id_duration").val());
-            var max_from = moment(e.date).subtract('minutes', duration);
-            var max_to = moment(e.date);
-            $('#id_requested_from').data("DateTimePicker").setMaxDate(max_from);
-            $('#id_requested_from').data("DateTimePicker").setDate(max_from);
-            $('#id_requested_to').data("DateTimePicker").setMaxDate(max_to);
-            $('#id_requested_to').data("DateTimePicker").setDate(max_to);
-        });
-
-        $("#id_requested_from").on("dp.change",function (e) {
-            var duration = parseInt($("#id_duration").val());
-            var min_to = e.date.add('minutes', duration);
-            $('#id_requested_to').data("DateTimePicker").setMinDate(min_to);
-            $('#id_requested_to').data("DateTimePicker").setDate(min_to);
-        });
-
-
-        $("#id_deadline").on("dp.change",function (e) {
-            $('#id_requested_to').data("DateTimePicker").setMaxDate(e.date);
-        });
-
-
-
-        $('#id_duration').on('change', function(e) {
-            // increase from time
-            var totime = $('#id_requested_to').data("DateTimePicker").getDate();
-            var fromtime = totime.subtract('minutes', parseInt(this.value))
-            $("#id_requested_from").data("DateTimePicker").setDate(fromtime);
-
-
-        });
-
-    });
-
-    function init() {
-        // when page is first loaded
-
-        // hide everything except client
-        $('.form-group').hide();
-        $('.form-group:first').show();
-
-        recent_bookings();
-        calendar();
-
-
-        // HANDLE DATES
-
-        var mindate = moment();
-        var maxdate = moment().add('days', {{ MAX_BOOK_DAYS_IN_ADVANCE }});
-
-        var dt_options = {
-            useSeconds: false,
-            format: 'YYYY-MM-DD HH:mm',
-            minuteStepping:5,
-            minDate:mindate,
-            maxDate: maxdate,
-            showToday: true,
-            language:'en',
-            sideBySide: true
-        };
-
-        $('#id_requested_from').datetimepicker(dt_options);
-
-        $('#id_requested_to').datetimepicker(dt_options);
-
-        $('#id_deadline').datetimepicker(dt_options);
-
-        //TODO: If one location then use that
-        //TODO: allow for entry of new locations and instruments
-
-        // get list of tuners
-        $.ajax({
-            type:"get",
-            url:API+"tuners",
-            dataType : 'json',
-            success:function(data){
-
-                var tuners = data.objects;
-                requested_bookings(tuners);
-
-            }
-        });
-
-
-    }
-
-    // HANDLE CLIENT SPECIFIC DATA
-    function update_dropdowns(org_id) {
-
-        // studios for this client
-        $.ajax({
-            type:"get",
-            url:API+"studios",
-            data: {client_id: org_id},
-            dataType : 'json',
-            success:function(data){
-
-
-                var select= '<select>';
-                var options = '';
-                $.each(data.objects, function(index, value) {
-                    options += '<option value="' + value.id + '">' + value.name + '</option>';
-                });
-                select = select + options + '</select>';
-
-
-                $('#id_studio').html(select);
-
-
-
-            }
-
-
-        });
-
-        // instruments for this client
-        $.ajax({
-            type:"get",
-            url:API+"instruments",
-            data: {client_id: org_id},
-            dataType : 'json',
-            success:function(data){
-
-                var select= '<select>';
-                var options = '';
-
-                $.each(data.objects, function(index, value) {
-                    options += '<option value="' + value.id + '">' + value.name + '</option>';
-                });
-                select = select + options + '</select>';
-                $('#id_instrument').html(select);
-
-            }
-        });
-
-    }
-
-    function recent_bookings() {
-
-
-
-        $.ajax({
-            type:"get",
-            url:API+"recent_bookings",
-            data: {
-                limit:10},
-            dataType : 'json',
-            success:function(json){
-                data = new Array();
-                $.each(json.objects, function(i,d) {
-                    d['togo'] = moment(d.when).fromNow()
-                    data.push(d)
-                })
-                build_table(data,
-                        ["status", "togo", "who", "where", "what"],
-                        "#recent_bookings")
-
-            }
-        });
-    }
-
-    function requested_bookings(tuners) {
-
-
-
-        $.ajax({
-            type:"get",
-            url:API+"requested_bookings",
-            data: {
-                limit:10},
-            dataType : 'json',
-            success:function(json){
-                data = new Array();
-                $.each(json.objects, function(i,d) {
-                    d['togo'] = moment(d.when).fromNow()
-                    d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
-                    d['tuner'] = '<a href="#" class="tuners" data-pk="' + d['ref'] +'">?</a>';
-                    data.push(d)
-                })
-                build_table(data,
-                        ["when", "tuner", "where", "what", "togo"],
-                        "#requested_bookings");
-
-                var tuners_list = [];
-                $.each(tuners, function(i,d) {
-                    tuners_list.push({value: d.id, text: d.name});
-                });
-
-                $('.tuners').editable({
-                    type: 'select',
-                    source: tuners_list,
-                    sourceCache: true,
-                    url: API + 'accept_booking/?format=json',
-
-                    success: function(response, newValue) {
-                        if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                    },
-                    title: 'Enter Tuner'
-                });
-
-            }
-        });
-    }
-
-    function build_table(json, cols, tableid) {
-
-
-
-
-        // build table
-        var body = $(tableid+" tbody");
-        var rows = "";
-        $.each(json, function (i, d) {
-
-            var tr = '<tr class="' + d.status + '" data-id="'+d.ref+'">';
-
-            $.each(cols, function(i,c){
-
-                tr += '<td class="name" >' + d[c] + '</td>';
+            $("#id_deadline").on("dp.change",function (e) {
+                // when the deadline is set, the requested time can't be after the deadline
+                var duration = parseInt($("#id_duration").val());
+                var max_from = moment(e.date).subtract('minutes', duration);
+                var max_to = moment(e.date);
+                $('#id_requested_from').data("DateTimePicker").setMaxDate(max_from);
+                $('#id_requested_from').data("DateTimePicker").setDate(max_from);
+                $('#id_requested_to').data("DateTimePicker").setMaxDate(max_to);
+                $('#id_requested_to').data("DateTimePicker").setDate(max_to);
             });
-            rows += tr + '</tr>';
+
+            $("#id_requested_from").on("dp.change",function (e) {
+                var duration = parseInt($("#id_duration").val());
+                var min_to = e.date.add('minutes', duration);
+                $('#id_requested_to').data("DateTimePicker").setMinDate(min_to);
+                $('#id_requested_to').data("DateTimePicker").setDate(min_to);
+            });
+
+
+            $("#id_deadline").on("dp.change",function (e) {
+                $('#id_requested_to').data("DateTimePicker").setMaxDate(e.date);
+            });
+
+
+
+            $('#id_duration').on('change', function(e) {
+                // increase from time
+                var totime = $('#id_requested_to').data("DateTimePicker").getDate();
+                var fromtime = totime.subtract('minutes', parseInt(this.value))
+                $("#id_requested_from").data("DateTimePicker").setDate(fromtime);
+
+
+            });
+
         });
 
-        body.append(rows);
+        function init() {
+            // when page is first loaded
 
-    }
+            // hide everything except client
+            $('.form-group').hide();
+            $('.form-group:first').show();
 
-    function calendar() {
-        //$.getJSON("http://127.0.0.1:8000/api/v1/bookings/?format=json",function(json) {
-        {#        var json = {"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 5}, "objects": [{"allDay": "false", "className": "asked", "end": "2014-03-19T23:59:59.999999", "requested_from": "2014-03-19T00:00:00", "requested_to": "2014-03-19T23:59:59.999999", "resource_uri": "/api/v1/bookings/1/", "start": "2014-03-19T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "asked", "end": "2014-03-20T23:59:59.999999", "requested_from": "2014-03-20T00:00:00", "requested_to": "2014-03-20T23:59:59.999999", "resource_uri": "/api/v1/bookings/2/", "start": "2014-03-20T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "booked", "end": "2014-03-23T16:30:00", "requested_from": "2014-03-23T00:00:00", "requested_to": "2014-03-23T23:59:59.999999", "resource_uri": "/api/v1/bookings/3/", "start": "2014-03-23T16:00:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "booked", "end": "2014-03-26T08:00:00", "requested_from": "2014-03-26T00:00:00", "requested_to": "2014-03-26T23:59:59.999999", "resource_uri": "/api/v1/bookings/4/", "start": "2014-03-26T07:30:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "asked", "end": "2014-03-31T23:59:59.999999", "requested_from": "2014-03-31T00:00:00", "requested_to": "2014-03-31T23:59:59.999999", "resource_uri": "/api/v1/bookings/5/", "start": "2014-03-31T00:00:00", "status": "asked", "title": "Steinway Upright in Studio Red"}]}#}
-        {#        var data = json['objects'];#}
 
-        $.ajax({
-            type:"get",
-            url:API+"bookings",
-            data: {
-                limit:10},
-            dataType : 'json',
-            success:function(json){
 
-                // convert dates to moment objects
-                data = new Array();
-                $.each(json.objects, function(i,d) {
-                    d['start'] = moment(d.start);
-                    d['end'] = moment(d.end);
+            // HANDLE DATES
 
-                    data.push(d)
-                })
+            var mindate = moment();
+            var maxdate = moment().add('days', {{ MAX_BOOK_DAYS_IN_ADVANCE }});
 
-                $('#calendar').fullCalendar({
-                    firstDay:1,
-header: {
-				left: 'prev,next ',
-				center: 'title',
-				right: 'month,agendaWeek,agendaDay'
-			},
-                    events: data
-                })
-            }
-        });
-    }
+            var dt_options = {
+                useSeconds: false,
+                format: 'YYYY-MM-DD HH:mm',
+                minuteStepping:5,
+                minDate:mindate,
+                maxDate: maxdate,
+                showToday: true,
+                language:'en',
+                sideBySide: true
+            };
+
+            $('#id_requested_from').datetimepicker(dt_options);
+
+            $('#id_requested_to').datetimepicker(dt_options);
+
+            $('#id_deadline').datetimepicker(dt_options);
+
+            //TODO: If one location then use that
+            //TODO: allow for entry of new locations and instruments
+
+            // get list of tuners
+            $.ajax({
+                type:"get",
+                url:API+"tuners",
+                dataType : 'json',
+                success:function(data){
+
+                    var tuners = data.objects;
+                    requested_bookings(tuners);
+
+                }
+            });
+
+
+        }
+
+        // HANDLE CLIENT SPECIFIC DATA
+        function update_dropdowns(org_id) {
+
+            // studios for this client
+            $.ajax({
+                type:"get",
+                url:API+"studios",
+                data: {client_id: org_id},
+                dataType : 'json',
+                success:function(data){
+
+
+                    var select= '<select>';
+                    var options = '';
+                    $.each(data.objects, function(index, value) {
+                        options += '<option value="' + value.id + '">' + value.name + '</option>';
+                    });
+                    select = select + options + '</select>';
+
+
+                    $('#id_studio').html(select);
+
+
+
+                }
+
+
+            });
+
+            // instruments for this client
+            $.ajax({
+                type:"get",
+                url:API+"instruments",
+                data: {client_id: org_id},
+                dataType : 'json',
+                success:function(data){
+
+                    var select= '<select>';
+                    var options = '';
+
+                    $.each(data.objects, function(index, value) {
+                        options += '<option value="' + value.id + '">' + value.name + '</option>';
+                    });
+                    select = select + options + '</select>';
+                    $('#id_instrument').html(select);
+
+                }
+            });
+
+        }
+
 
     </script>
 {% endblock js %}

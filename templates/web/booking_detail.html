@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{
+{% block main %}
+
+
+    <div class="container">
+        <div class="row">
+
+
+
+
+
+            <section class="panel">
+                <header class="panel-heading">
+                    <h1>Booking Ref {{ object.ref }}</h1>
+                            <span class="tools pull-right">
+                                <a class="fa fa-chevron-down" href="javascript:;"></a>
+                                <a class="fa fa-cog" href="javascript:;"></a>
+                                <a class="fa fa-times" href="javascript:;"></a>
+                            </span>
+                </header>
+
+                <div class="alert alert-block booking_status_{{ object.status }} fade in">
+                                Booking Status {{ object.get_status_display }}
+                            </div>
+
+                <div class="panel-body">
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Client</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.client }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Deadline</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.deadline }}</span>
+                        </div>
+                    </div>
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Session Ref</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.client_ref }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Studio</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.studio }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Instrument</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.instrument }}</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="panel-body">
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Booker</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.booker }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Booking Requested</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.requested_at }}</span>
+                        </div>
+                    </div>
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Requested For</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.requested_from }} - {{ object.requested_to }}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                                <div class="panel-body">
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Tuner</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.tuner }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Tuning Booked for</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.booked_time }}</span>
+                        </div>
+                    </div>
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Tuning Completed</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.completed_at }}</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                                <div class="panel-body">
+                    <div class="row m-bot20">
+                        <p>Comments</p>
+                            <span class="object">{{ object.comments }}</span>
+
+                    </div>
+            </section>
+
+        </div>
+    </div>
+
+
+{% endblock main %}
+ref =
+booker
+client
+tuner
+status
+requested_at =
+booked_at = mo
+completed_at =
+cancelled_at =
+
+paid_client_at
+paid_provider
+
+requested_from
+requested_to =
+booked_time =
+duration = mod
+
+studio = model
+instrument = m
+
+deadline =  mo
+client_ref = m
+comments = mod
