@@ -90,7 +90,6 @@ class BookingsResource(ModelResource):
         bundle.data['end'] = bundle.obj.end_time
         bundle.data['className'] = bundle.obj.status
 
-        bundle.data['allDay'] = "false"
 
 
         return bundle
