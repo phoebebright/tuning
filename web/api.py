@@ -390,13 +390,12 @@ class RecentBookingsCount(Resource):
     class Meta:
         include_resource_uri = True
         resource_name = 'recent_bookings_count'
-        allowed_methods = ['get]
+        allowed_methods = ['get',]
         object_class = SimpleObject
 
     def get_object_list(self, request):
-        base = super(InstrumentResource, self).get_object_list(request)
+        base = super(RecentBookingsCount, self).get_object_list(request)
         if request._get.has_key('client_id'):
             return base.filter(client_id = request._get['client_id'])
         else:
             return base
-        
