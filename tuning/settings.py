@@ -131,6 +131,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'privateviews.middleware.LoginRequiredMiddleware',
 )
 
 ROOT_URLCONF = 'tuning.urls'
@@ -193,6 +194,7 @@ CRON_CLASSES = [
 
 ]
 
+#TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
 DATETIME_FORMAT = "D N j, P"
 try:

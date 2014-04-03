@@ -31,17 +31,76 @@ from django.conf import settings
 from web.models import *
 
 
+@login_required()
 def dashboard(request):
 
-    if not request.user.is_authenticated():
-        return HttpResponseRedirect("/login/")
-        
+    # TODO: Only admins
+    today_start = make_time(date.today(), "start")
+    today_end = make_time(date.today(), "end")
 
-    return render_to_response('dashboard.html',{
+
+    return render_to_response('index.html',{
+        'new_bookings_today': Booking.objects.requested().filter(requested_at__range=( today_start, today_end)),
+        'matched_today': Booking.objects.booked().filter(booked_at__range=( today_start, today_end)),
+        'tunings_today': Booking.objects.completed().filter(completed_at__range=( today_start, today_end)),
+        'paid_today': Booking.objects.archived().filter(archived_at__range=( today_start, today_end)),
+        'requested': Booking.objects.requested(),
         'bookings':Booking.objects.current(),
        },
     context_instance=RequestContext(request)
     )
+
+@login_required()
+def calendar(request):
+
+
+    return render_to_response('calendar.html',{
+        'clients':Client.objects.active(),
+       },
+    context_instance=RequestContext(request)
+    )
+
+@login_required()
+def upcoming_bookings(request):
+
+
+    return render_to_response('web/booking_upcoming.html',{
+
+       },
+    context_instance=RequestContext(request)
+    )
+
+@login_required()
+def assign_tuner(request):
+
+
+    return render_to_response('web/booking_assign.html',{
+
+       },
+    context_instance=RequestContext(request)
+    )
+
+@login_required()
+def to_completed(request):
+
+
+    return render_to_response('web/booking_to_complete.html',{
+
+       },
+    context_instance=RequestContext(request)
+    )
+
+@login_required()
+def to_paid(request):
+
+
+    return render_to_response('web/booking_to_paid.html',{
+
+       },
+    context_instance=RequestContext(request)
+    )
+
+
 
 ''' JSONise
 
@@ -51,15 +110,27 @@ http://chriskief.com/2013/10/29/advanced-django-class-based-views-modelforms-and
 
 class BookingForm(forms.ModelForm):
 
+    # comments = forms.Textarea()
+    # user = forms.HiddenInput()
 
     class Meta:
         model = Booking
-        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument',  'comments']
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument']
 
     def __init__(self, *args, **kwargs):
             super(BookingForm, self).__init__(*args, **kwargs)
             self.fields['client'].queryset = Client.objects.active()
 
+    # def form_valid(self, form):
+    #
+    #     self.object.user = self.request.user
+    #
+    #     return super(BookingForm, self).form_valid(form)
+    #
+    # def save(self, commit=True):
+    #
+    #         booking = super(BookingForm, self).save(commit=commit)
+    #         booking.Log(self.cleaned_data['comments'])
 
 
 
@@ -68,7 +139,7 @@ class ClientBookingForm(BookingForm):
 
     class Meta:
         model = Booking
-        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument',  'comments']
+        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument']
 
 
 class BookingCreate(CreateView):
@@ -99,7 +170,7 @@ class BookingCreate(CreateView):
         Returns an instance of the form to be used in this view.
         """
         form =  form_class(**self.get_form_kwargs())
-        #form.initial = {'client': self.request.user.client}
+        form.initial = {'client': self.request.user.organisation, 'user': self.request.user}
         return form
 
     def form_valid(self, form):
@@ -113,7 +184,7 @@ class BookingCreate(CreateView):
 
 class BookingUpdate(UpdateView):
     model = Booking
-    fields = ['name']
+
 
 class BookingDelete(DeleteView):
     model = Booking
@@ -122,3 +193,6 @@ class BookingDelete(DeleteView):
 class BookingDetailView(DetailView):
     model = Booking
 
+class BookingCompleteView(DetailView):
+    model = Booking
+    template_name = "web/booking_complete.html"
