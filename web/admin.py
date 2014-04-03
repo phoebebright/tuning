@@ -102,7 +102,7 @@ class BookingAdmin(admin.ModelAdmin):
 
     list_display = ('client','booker', 'studio', 'instrument', 'tuner')
     search_fields =	 ('client__name','studio__name', 'instrument__name', 'tuner__username', 'booker_username')
-    fields = [ 'client', 'booker','tuner', 'requested_from', 'requested_to', 'duration', 'studio', 'instrument', 'deadline', 'client_ref', 'comments']
+    fields = [ 'client', 'booker','tuner', 'requested_from', 'requested_to', 'duration', 'studio', 'instrument', 'deadline', 'client_ref']
 
 
 admin.site.register(CustomUser, CustomUserAdmin)
