@@ -18,10 +18,12 @@ User = get_user_model()
 from django.conf import settings
 
 from datetime import date, timedelta, time
+from django.utils.timezone import utc
 
-# faketime allows the actual date to be set in the future past - for testing can be useful
-from libs.faketime import now
-NOW = now()
+# # faketime allows the actual date to be set in the future past - for testing can be useful
+# from libs.faketime import now
+# NOW = now()
+NOW = datetime.utcnow().replace(tzinfo=utc)
 TODAY = NOW.date()
 TODAY_START = make_time(TODAY, "start")
 TODAY_END = make_time(TODAY, "end")
@@ -231,6 +233,45 @@ class BookingTest(TestCase):
         self.o2.active = False
         self.o2.save()
         self.assertEqual(Client.objects.active().count(), 3)
+
+    def test_booking_querysets(self):
+        # TODO: Better test of to_complete
+
+        self.assertEqual(Booking.objects.current().count(), 0)
+        self.assertEqual(Booking.objects.requested().count(), 0)
+        self.assertEqual(Booking.objects.booked().count(), 0)
+        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.archived().count(), 0)
+        self.assertEqual(Booking.objects.to_complete().count(), 0)
+
+        book1 = self.jima.request_booking(when=YESTERDAY, client_ref="Jam", deadline=YESTERDAY)
+        self.assertEqual(Booking.objects.current().count(), 1)
+        self.assertEqual(Booking.objects.requested().count(), 1)
+        self.assertEqual(Booking.objects.booked().count(), 0)
+        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.archived().count(), 0)
+        self.assertEqual(Booking.objects.to_complete().count(), 0)
+
+        # to complete set as this booking was yesterday
+        book1.book(tuner=self.matt, start_time=YESTERDAY)
+        self.assertEqual(Booking.objects.current().count(), 1)
+        self.assertEqual(Booking.objects.requested().count(), 0)
+        self.assertEqual(Booking.objects.booked().count(), 1)
+        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.archived().count(), 0)
+        self.assertEqual(Booking.objects.to_complete().count(), 1)
+
+        # the to_complete only pulls bookings that are past their start time so add another to differentiate
+        book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam2", deadline=TOMORROW)
+        book2.book(tuner=self.matt)
+
+
+        self.assertEqual(Booking.objects.current().count(), 2)
+        self.assertEqual(Booking.objects.requested().count(), 0)
+        self.assertEqual(Booking.objects.booked().count(), 2)
+        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.archived().count(), 0)
+        self.assertEqual(Booking.objects.to_complete().count(), 1)
 
 
     def test_user_properties(self):

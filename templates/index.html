@@ -14,194 +14,119 @@
 {% endblock extra_head %}
 {% block main %}
 
-
-    <div class="container">
-        <div class="row">
-
-
-            <h1>New Booking</h1>
-            <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
-                {% bootstrap_form form %}
-                {% buttons %}
-                    <button type="submit" class="btn btn-primary">
-                        {% bootstrap_icon "star" %} Save
-                    </button>
-                {% endbuttons %}
-
-
-            </form>
-
-
-
-
+    <!--mini statistics start-->
+<div class="row">
+    <div class="col-md-3">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon booking_status_1"><i class="fa booking_status_1_icon"></i></span>
+            <div class="mini-stat-info">
+                <span>{{ new_bookings_today|length }}</span>
+                New Bookings
+            </div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon booking_status_3"><i class="fa booking_status_3_icon"></i></span>
+            <div class="mini-stat-info">
+                <span>{{ matched_today|length }}</span>
+                Matched Bookings
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon booking_status_5"><i class="fa booking_status_5_icon"></i></span>
+            <div class="mini-stat-info">
+                <span>{{ tunings_today|length }}</span>
+                Completed Tunings
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon booking_status_9"><i class="fa booking_status_9_icon"></i></span>
+            <div class="mini-stat-info">
+                <span>{{ paid_today|length }}</span>
+                Paid Tunings
+            </div>
+        </div>
+    </div>
+</div>
+<!--mini statistics end-->
 
+
+<!--mini statistics start-->
+<div class="row">
+    <div class="col-md-3">
+        <section class="panel">
+            <div class="panel-body">
+                <div class="top-stats-panel">
+                    <div class="gauge-canvas">
+                        <h4 class="widget-h">Pending Tuners</h4>
+                        <canvas width=160 height=100 id="gauge"></canvas>
+                    </div>
+                    <ul class="gauge-meta clearfix">
+                        <li id="gauge-textfield" class="pull-left gauge-value"></li>
+                        <li class="pull-right gauge-title">Safe</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-3">
+        <section class="panel">
+            <div class="panel-body">
+                <div class="top-stats-panel">
+                    <div class="daily-visit">
+                        <h4 class="widget-h">Daily Visitors</h4>
+                        <div id="daily-visit-chart" style="width:100%; height: 100px; display: block">
+
+                        </div>
+                        <ul class="chart-meta clearfix">
+                            <li class="pull-left visit-chart-value">3233</li>
+                            <li class="pull-right visit-chart-title"><i class="fa fa-arrow-up"></i> 15%</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-3">
+        <section class="panel">
+            <div class="panel-body">
+                <div class="top-stats-panel">
+                    <h4 class="widget-h">Top Advertise</h4>
+                    <div class="sm-pie">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-3">
+        <section class="panel">
+            <div class="panel-body">
+                <div class="top-stats-panel">
+                    <h4 class="widget-h">Daily Sales</h4>
+                    <div class="bar-stats">
+                        <ul class="progress-stat-bar clearfix">
+                            <li data-percent="50%"><span class="progress-stat-percent pink"></span></li>
+                            <li data-percent="90%"><span class="progress-stat-percent"></span></li>
+                            <li data-percent="70%"><span class="progress-stat-percent yellow-b"></span></li>
+                        </ul>
+                        <ul class="bar-legend">
+                            <li><span class="bar-legend-pointer pink"></span> New York</li>
+                            <li><span class="bar-legend-pointer green"></span> Los Angels</li>
+                            <li><span class="bar-legend-pointer yellow-b"></span> Dallas</li>
+                        </ul>
+                        <div class="daily-sales-info">
+                            <span class="sales-count">1200 </span> <span class="sales-label">Products Sold</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
 
 {% endblock main %}
-
-{% block js %}
-
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker.js"></script>
-
-    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
-
-    <script type="text/javascript">
-        API = "{{ API_URL }}"
-
-        $(document).ready(function () {
-
-            init();
-
-            // ON CHANGES
-
-            // when client is selected, show rest of form
-            $("#id_client").on("change", function() {
-                update_dropdowns(this.value);
-                $('.form-group').show();
-            })
-
-
-
-            $("#id_deadline").on("dp.change",function (e) {
-                // when the deadline is set, the requested time can't be after the deadline
-                var duration = parseInt($("#id_duration").val());
-                var max_from = moment(e.date).subtract('minutes', duration);
-                var max_to = moment(e.date);
-                $('#id_requested_from').data("DateTimePicker").setMaxDate(max_from);
-                $('#id_requested_from').data("DateTimePicker").setDate(max_from);
-                $('#id_requested_to').data("DateTimePicker").setMaxDate(max_to);
-                $('#id_requested_to').data("DateTimePicker").setDate(max_to);
-            });
-
-            $("#id_requested_from").on("dp.change",function (e) {
-                var duration = parseInt($("#id_duration").val());
-                var min_to = e.date.add('minutes', duration);
-                $('#id_requested_to').data("DateTimePicker").setMinDate(min_to);
-                $('#id_requested_to').data("DateTimePicker").setDate(min_to);
-            });
-
-
-            $("#id_deadline").on("dp.change",function (e) {
-                $('#id_requested_to').data("DateTimePicker").setMaxDate(e.date);
-            });
-
-
-
-            $('#id_duration').on('change', function(e) {
-                // increase from time
-                var totime = $('#id_requested_to').data("DateTimePicker").getDate();
-                var fromtime = totime.subtract('minutes', parseInt(this.value))
-                $("#id_requested_from").data("DateTimePicker").setDate(fromtime);
-
-
-            });
-
-        });
-
-        function init() {
-            // when page is first loaded
-
-            // hide everything except client
-            $('.form-group').hide();
-            $('.form-group:first').show();
-
-
-
-            // HANDLE DATES
-
-            var mindate = moment();
-            var maxdate = moment().add('days', {{ MAX_BOOK_DAYS_IN_ADVANCE }});
-
-            var dt_options = {
-                useSeconds: false,
-                format: 'YYYY-MM-DD HH:mm',
-                minuteStepping:5,
-                minDate:mindate,
-                maxDate: maxdate,
-                showToday: true,
-                language:'en',
-                sideBySide: true
-            };
-
-            $('#id_requested_from').datetimepicker(dt_options);
-
-            $('#id_requested_to').datetimepicker(dt_options);
-
-            $('#id_deadline').datetimepicker(dt_options);
-
-            //TODO: If one location then use that
-            //TODO: allow for entry of new locations and instruments
-
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
-
-                    var tuners = data.objects;
-                    requested_bookings(tuners);
-
-                }
-            });
-
-
-        }
-
-        // HANDLE CLIENT SPECIFIC DATA
-        function update_dropdowns(org_id) {
-
-            // studios for this client
-            $.ajax({
-                type:"get",
-                url:API+"studios",
-                data: {client_id: org_id},
-                dataType : 'json',
-                success:function(data){
-
-
-                    var select= '<select>';
-                    var options = '';
-                    $.each(data.objects, function(index, value) {
-                        options += '<option value="' + value.id + '">' + value.name + '</option>';
-                    });
-                    select = select + options + '</select>';
-
-
-                    $('#id_studio').html(select);
-
-
-
-                }
-
-
-            });
-
-            // instruments for this client
-            $.ajax({
-                type:"get",
-                url:API+"instruments",
-                data: {client_id: org_id},
-                dataType : 'json',
-                success:function(data){
-
-                    var select= '<select>';
-                    var options = '';
-
-                    $.each(data.objects, function(index, value) {
-                        options += '<option value="' + value.id + '">' + value.name + '</option>';
-                    });
-                    select = select + options + '</select>';
-                    $('#id_instrument').html(select);
-
-                }
-            });
-
-        }
-
-
-    </script>
-{% endblock js %}

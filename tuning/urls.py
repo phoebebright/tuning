@@ -20,7 +20,7 @@ API Stuff
 
 from tastypie.api import Api
 from web.api import *
-from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView
+from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView, BookingCompleteView
 
 v1_api = Api(api_name='v1')
 
@@ -34,9 +34,12 @@ v1_api.register(AcceptBookingResource())
 v1_api.register(RecentBookingsResource())
 v1_api.register(RequestedBookingsResource())
 v1_api.register(AcceptedBookingsResource())
+v1_api.register(BookingCompleteResource())
+v1_api.register(BookingsToCompleteResource())
 v1_api.register(MakeBookingResource())
 v1_api.register(StudioResource())
 v1_api.register(InstrumentResource())
+v1_api.register(LogResource())
 
 
 '''
@@ -68,22 +71,27 @@ urlpatterns = patterns('',
                        url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
-                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
+#                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
                        url(r'^admin/', include(admin.site.urls)),
 
+                       url(r'^blog/comments/', include('fluent_comments.urls')),
+
                        #login required
-                       url(r'^$', login_required(BookingCreate.as_view()), name='booking_add'),
                        url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
                        url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
-                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),  # not used?
+                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
+                       url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
+
                        #TODO: booking-detail and booking-list
                        )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 urlpatterns += patterns('web.views',
-                        url(r'^dashboard', 'dashboard', name="dashboard"),
+                        url(r'^$','dashboard' ,name="dashboard"),
                         url(r'^calendar', 'calendar', name="calendar"),
                         url(r'^booking/assign/', 'assign_tuner', name="assign_tuner"),
+                        url(r'^booking/to_completed/', 'to_completed', name="to_completed"),
+                        url(r'^booking/to_paid/', 'to_paid', name="to_paid"),
                         )
 
 if settings.DEBUG:

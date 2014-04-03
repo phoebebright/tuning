@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load bootstrap3 %}
-{% load comments %}
+{% load comments  %}
 
 
 
@@ -9,7 +9,6 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fluent_comments/css/ajaxcomments.css" />
 <script type="text/javascript" src="{{ STATIC_URL }}fluent_comments/js/ajaxcomments.js"></script>
-
 
 {% endblock extra_head %}
 
@@ -20,26 +19,63 @@
         <div class="row">
 
 
-            <h1>Assign Tuner</h1>
-            <div class="table-responsive">
-                <table id="requested_bookings" class="table table-striped table-condensed">
-                    <thead>
-                    <tr>
-                        <th>When</th>
-                        <th>Who</th>
-                        <th>Where</th>
-                        <th>What</th>
-                        <th >To Go</th>
 
 
 
-                    </tr>
-                    </thead>
-                    <tbody>
+            <section class="panel">
+                <header class="panel-heading">
+                    <h1>Tuning Completed Ref {{ object.ref }}</h1>
+                            <span class="tools pull-right">
+                                <a class="fa fa-chevron-down" href="javascript:;"></a>
+                                <a class="fa fa-cog" href="javascript:;"></a>
+                                <a class="fa fa-times" href="javascript:;"></a>
+                            </span>
+                </header>
 
-                    </tbody>
-                </table>
-            </div>
+                <div class="alert alert-block booking_status_{{ object.status }} fade in">
+                                Booking Status {{ object.get_status_display }}
+                            </div>
+
+                <div class="panel-body">
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Client</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.client }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Deadline</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.deadline }}</span>
+                        </div>
+                    </div>
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Session Ref</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.client_ref }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Studio</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.studio }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row m-bot20">
+                        <div class="col-md-5 col-xs-5">Instrument</div>
+                        <div class="col-md-7 col-xs-7">
+                            <span class="object">{{ object.instrument }}</span>
+                        </div>
+                    </div>
+                </div>
+
+</section>
+<hr />
+ {% render_comment_list for object %}
+        {% render_comment_form for object %}
 
         </div>
     </div>
@@ -49,14 +85,7 @@
 
 
 {% block js %}
-
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
-
-
-    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
-
-    <script type="text/javascript">
+   <script type="text/javascript">
         API = "{{ API_URL }}"
 
         $(document).ready(function () {
@@ -121,7 +150,7 @@
                         type: 'select',
                         source: tuners_list,
                         sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
+                        url: API + 'accept_booking/?format=json',
 
                         success: function(response, newValue) {
                             if(response.status == 'error') return response.msg; //msg will be shown in editable form

@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth.models import  AbstractUser
 from django.contrib.auth.models import UserManager
 from django.utils.translation import ugettext_lazy as _
+
 from django.conf import settings
 from django.http import  Http404
 from django.core.exceptions import ValidationError
@@ -24,7 +25,7 @@ from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
 from model_utils.managers import QueryManager, PassThroughManager
 
-from libs.utils import make_time, is_list
+from libs.utils import make_time, is_list, add_tz
 from web.exceptions import *
 
 from django_google_maps import fields as map_fields
@@ -40,7 +41,9 @@ TOMORROW = TODAY + timedelta(days = 1)
 
 BOOKING_REQUESTED = "1"   # waiting for a tuner
 BOOKING_BOOKED = "3"      # tuner has been assigned but not yet happened
+BOOKING_TOCOMPLETE = "4"      # booking has past and not marked complete
 BOOKING_COMPLETE = "5"    # tuning has been done but not yet paid
+BOOKING_CANCELLED = "8"    # tuning has been done but not yet paid
 BOOKING_ARCHIVED = "9"    # paid and finished
 
 # default booking request times
@@ -234,16 +237,27 @@ class Tuner(CustomUser):
 class BookingsQuerySet(QuerySet):
 
     def requested(self):
-        return self.filter(status=BOOKING_REQUESTED)
+        return self.filter(status=BOOKING_REQUESTED).order_by('-requested_at')
 
-    def current(self):
-        return self.filter(status__lt=BOOKING_ARCHIVED)
+    def booked(self):
+        return self.filter(status=BOOKING_BOOKED).order_by('-booked_time')
 
-    def complete(self):
-        return self.filter(status=BOOKING_COMPLETE)
+    def completed(self):
+        return self.filter(status=BOOKING_COMPLETE).order_by('-completed_at')
+
+    def cancelled(self):
+        return self.filter(status=BOOKING_CANCELLED).order_by('-cancelled_at')
 
     def archived(self):
-        return self.filter(status=BOOKING_ARCHIVED)
+        return self.filter(status=BOOKING_ARCHIVED).order_by('-archived_at')
+
+    def to_complete(self):
+        '''booked and past start time
+        '''
+        return self.filter(status=BOOKING_TOCOMPLETE).order_by('-requested_to')
+
+    def current(self):
+        return self.filter(status__lt=BOOKING_CANCELLED).order_by('-deadline')
 
     def mine(self, user):
 
@@ -274,9 +288,9 @@ class Booking(models.Model):
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
     completed_at = models.DateTimeField(_('when completed'), blank=True, null=True)
     cancelled_at = models.DateTimeField(_('when cancelled'), blank=True, null=True)
-
     paid_client_at = models.DateTimeField(_('when client paid'), blank=True, null=True)
     paid_provider = models.DateTimeField(_('when tuner paid'), blank=True, null=True)
+    archived_at = models.DateTimeField(_('when archived'), blank=True, null=True)
 
     requested_from = models.DateTimeField(_('from time'), default=default_start)
     requested_to = models.DateTimeField(_('to time'), default=default_end)
@@ -288,7 +302,6 @@ class Booking(models.Model):
 
     deadline =  models.DateTimeField(_('session start'), default=default_end)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
-    comments = models.TextField(_('comments'), blank=True, null=True)
 
     objects = PassThroughManager.for_queryset_class(BookingsQuerySet)()
 
@@ -315,6 +328,7 @@ class Booking(models.Model):
         # TODO:test
         if self.cancelled_at or (self.paid_provider and self.client_paid):
             self.status=BOOKING_ARCHIVED
+            self.archived_at = NOW
 
         super(Booking, self).save(*args, **kwargs)
 
@@ -399,6 +413,11 @@ class Booking(models.Model):
         else:
             return 100
 
+    def log(self, comment, user=None):
+
+
+        item = Log.objects.create(booking=self, comment= comment, created_by=user)
+        return item
 
     def cancel(self, user):
         #TODO: test
@@ -428,17 +447,21 @@ class Booking(models.Model):
 
         # can't bookin in the past
         # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
-
-        if to_time < NOW:
-            raise PastDateException
+        # commented out for the moment to make testing easier
+        # if to_time < NOW:
+        #     raise PastDateException
 
         # fix end time if possible
 
         if deadline:
 
+
             # make sure deadline is a datetime
             if not hasattr(deadline, 'hour'):
                 deadline = datetime.combine(deadline, time(23, 59))
+
+            # ensure deadline is timezone aware
+            deadline = add_tz(deadline)
 
             if deadline > from_time and deadline < to_time:
                 to_time = deadline
@@ -496,6 +519,23 @@ class Booking(models.Model):
         self.booked_at = NOW
         self.save()
 
+    def complete(self):
+
+
+        self.status = BOOKING_COMPLETE
+        self.completed_at = NOW
+        self.save()
+
+    def uncomplete(self):
+        ''' set status back, but only if called  within a minute(ish)
+        '''
+
+        if (NOW - self.completed_at).seconds < 90:
+
+            self.status = BOOKING_BOOKED
+            self.completed_at = None
+            self.save()
+
     def send_request(self):
         # schedule email http://www.cucumbertown.com/craft/scheduling-morning-emails-with-django-and-celery/
         subject = "Can you tune for %s between %s and %s" % (self.client.name, self.start_time, self.end_time)
@@ -506,3 +546,31 @@ class Booking(models.Model):
 
         send_mail(subject, message, from_email, [to_email,], fail_silently=True)
 
+
+    @classmethod
+    def check_to_complete(cls):
+        ''' once a booking has past the status become TOCOMPLETE
+        RUN VIA CRON web.cron.CheckBookingStatus
+        '''
+
+        for item in cls.objects.filter(status=BOOKING_BOOKED, booked_time__lt=NOW):
+            item.status = BOOKING_TOCOMPLETE
+            item.save()
+
+
+class Log(models.Model):
+    """
+    Record interesting activity
+    """
+
+    booking = models.ForeignKey(Booking)
+    comment = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    created_by = models.ForeignKey(CustomUser, blank=True, null=True)
+
+
+    def __unicode__(self):
+        return self.comment
+
+    class Meta:
+        ordering = ['-created',]

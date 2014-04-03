@@ -19,9 +19,14 @@ def add_stuff(request):
     context['YESTERDAY'] = context['TODAY'] - timedelta(days = 1)
     context['TOMORROW'] = context['TODAY'] + timedelta(days = 1)
 
-    context['requested'] = Booking.objects.requested()
-    context['current'] = Booking.objects.current()
-    context['complete'] = Booking.objects.complete()
+    context['num_requested'] = Booking.objects.requested().count()
+    context['list_requested'] = Booking.objects.requested()[0:5]
+    context['num_current'] = Booking.objects.current().count()
+    context['list_current'] = Booking.objects.current()[0:5]
+    context['num_to_complete'] = Booking.objects.to_complete().count()
+    context['list_to_complete'] = Booking.objects.to_complete()[0:5]
+    context['num_complete'] = Booking.objects.completed().count()
+    context['list_complete'] = Booking.objects.completed()[0:5]
 
 
     return context

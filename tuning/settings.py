@@ -113,7 +113,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'django_google_maps',
+    'django_cron',
+    'fluent_comments',
+    'crispy_forms',
+    'django.contrib.comments',
     'bootstrap3',
     'theme',  # holds themeforest template
     'web',
@@ -162,8 +167,12 @@ USE_I18N = False
 
 USE_L10N = False
 
-USE_TZ = False
+USE_TZ = True
 
+SITE_ID = 1
+
+FLUENT_COMMENTS_EXCLUDE_FIELDS = ('name', 'email', 'url')
+COMMENTS_APP = 'fluent_comments'
 
 
 AUTH_USER_MODEL = "web.CustomUser"
@@ -178,6 +187,14 @@ SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 
 API_URL = "http://tunemypiano.co.uk/api/v1/"
 
+
+CRON_CLASSES = [
+    "web.cron.CheckBookingStatus",
+
+]
+
+
+DATETIME_FORMAT = "D N j, P"
 try:
     from tuning.settings_local import *
 except ImportError:

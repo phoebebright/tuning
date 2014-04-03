@@ -7,8 +7,8 @@
 {% block extra_head %}
 
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fluent_comments/css/ajaxcomments.css" />
-<script type="text/javascript" src="{{ STATIC_URL }}fluent_comments/js/ajaxcomments.js"></script>
+    {#<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fluent_comments/css/ajaxcomments.css" />#}
+    {#<script type="text/javascript" src="{{ STATIC_URL }}fluent_comments/js/ajaxcomments.js"></script>#}
 
 
 {% endblock extra_head %}
@@ -20,16 +20,16 @@
         <div class="row">
 
 
-            <h1>Assign Tuner</h1>
+            <h1>Mark as Complete</h1>
             <div class="table-responsive">
-                <table id="requested_bookings" class="table table-striped table-condensed">
+                <table id="bookings" class="table table-striped table-condensed">
                     <thead>
                     <tr>
                         <th>When</th>
                         <th>Who</th>
                         <th>Where</th>
                         <th>What</th>
-                        <th >To Go</th>
+                        <th >Comments</th>
 
 
 
@@ -72,67 +72,87 @@
 
 
 
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
-
-                    var tuners = data.objects;
-                    requested_bookings(tuners);
-
-                }
-            });
+            bookings_to_complete();
 
 
         }
 
 
 
-        function requested_bookings(tuners) {
+        function bookings_to_complete() {
 
 
 
             $.ajax({
                 type:"get",
-                url:API+"requested_bookings",
+                url:API+"bookings_to_complete",
                 data: {
                     limit:10},
                 dataType : 'json',
                 success:function(json){
-                    data = new Array();
-                    $.each(json.objects, function(i,d) {
-                        d['togo'] = moment(d.when).fromNow()
-                        d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
-                        d['tuner'] = '<a href="#" class="tuners" data-pk="' + d['ref'] +'">?</a>';
-                        data.push(d)
-                    })
-                    build_table(data,
-                            ["when", "tuner", "where", "what", "togo"],
-                            "#requested_bookings");
 
-                    var tuners_list = [];
-                    $.each(tuners, function(i,d) {
-                        tuners_list.push({value: d.id, text: d.name});
+                    // put data in a table;
+                    bookings_table(json);
+
+                    // save state when switch toggled
+                    $(".switch").on("switch-change", function(e) {
+                        e.stopPropagation();
+
+                        // checked means not tuned and vv.
+                        var state = !(this.checked);
+                        var ref = this.dataset['pk'];
+
+                        $.ajax({
+                            type:"post",
+                            url:API+"booking_complete/",
+                            data: {
+                                ref:ref,
+                                state: state},
+                            dataType : 'json',
+                            success:function(json){
+                                x=json;
+                            }
+
+                        });
                     });
-
-                    $('.tuners').editable({
-                        type: 'select',
-                        source: tuners_list,
-                        sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'Select Tuner'
-                    });
-
                 }
             });
         }
 
+        function bookings_table(json) {
+            data = new Array();
+                    $.each(json.objects, function(i,d) {
+                        d['togo'] = moment(d.when).fromNow()
+                        d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
+
+                        // if booking has passed (status=4) then allow it to be closed
+                        if (d.status == "4") {
+                        d['done'] = '<input type="checkbox" class="switch" data-text-label="Tuned" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="complete_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
+
+                        } else {
+                        d['done'] = ''
+                        }
+                        d['comment'] = '<a href="#" class="comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
+                        data.push(d)
+                    })
+                    build_table(data,
+                            ["when", "tuner", "where", "what","done", "comment"],
+                            "#bookings");
+
+
+                    $(".switch").bootstrapSwitch();  // make checkboxes in table into switches
+
+                    $('.comment').editable({
+                        type: 'textarea',
+                        sourceCache: true,
+                        url: API + 'log/?format=json',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        },
+                        title: 'add comment'
+                    });
+        }
         function build_table(json, cols, tableid) {
 
 

@@ -22,6 +22,7 @@
     <link href="{{ STATIC_URL }}font-awesome/css/font-awesome.css" rel="stylesheet" />
 
     {#<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />#}
+    <link href="{{ STATIC_URL }}css/bootstrap-switch.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="{{ STATIC_URL }}css/style.css" rel="stylesheet">
@@ -67,20 +68,22 @@
                 <!-- REQUESTED BOOKIGNS -->
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="fa fa-envelope-o"></i>
-                        <span class="badge booking_status_1 num_requests">{{ requested|length }}</span>
+                        <i class="fa booking_status_1_icon"></i>
+                        <span class="badge booking_status_1">{{ num_requested }}</span>
                     </a>
                     <ul class="dropdown-menu extended tasks-bar">
                         <li>
-                            <p class="">You have <span class="num_requests">{{ requested|length }}</span> requests for tunings</p>
+                            <p class="">You have <span>{{ num_requested|length }}</span> requests for tunings</p>
                         </li>
-                        {%  for item in requested %}
+                        {%  for item in list_requested %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
                                             <h5>{{ item.where }}</h5>
-                                            <p>{{ item.when }}</p>
+
+                                            <p>requested at {{ item.requested_at|time:"h:i a" }}</p>
+                                            <p>for {{ item.when|date:"DATETIME_FORMAT" }}</p>
                                         </div>
                                     <span class="notification-pie-chart pull-right" data-percent="{{ item.sla_assign_tuner_pct }}">
                             <span class="percent"></span>
@@ -93,20 +96,23 @@
 
 
                         <li class="external">
-                            <a href="#">See All Tasks</a>
+                            <a href="{%  url "assign_tuner" %}">See All Unassigned Tunings</a>
                         </li>
                     </ul>
                 </li>
 
                 <!-- CURRENT BOOKINGS -->
 
-                <li id="header_inbox_bar" class="dropdown">
+                <li id="header_incomplete_bar" class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="fa fa-tasks"></i>
-                        <span class="badge booking_status_3 num_current">{{ current|length }}</span>
+                        <i class="fa booking_status_3_icon"></i>
+                        <span class="badge booking_status_3">{{ num_current }}</span>
                     </a>
                     <ul class="dropdown-menu extended inbox">
-                        {%  for item in current %}
+                        <li>
+                            <p class="">You have <span>{{ num_current }}</span> pending tunings</p>
+                        </li>
+                        {%  for item in list_current %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
@@ -116,58 +122,87 @@
                                             <p>Tuner: {{ item.tuner }}</p>
                                         </div>
                                 <span class="message pull-right">
-                                    {{ object.when|timeuntil }}
+                                    {{ item.when|timeuntil }}
                                 </span>
-                                        </div>
+                                    </div>
                                 </a>
                             </li>
                         {%  endfor %}
 
                         <li>
-                            <a href="#">See all current bookings</a>
+                           <a href="{%  url "to_completed" %}">See All Pending Bookings</a>
                         </li>
                     </ul>
                 </li>
-                <!-- inbox dropdown end -->
-                <!-- notification dropdown start-->
-                <li id="header_notification_bar" class="dropdown">
+
+                           <!-- INCOMPLETE BOOKINGS -->
+
+                <li id="header_incomplete_bar" class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-
-                        <i class="fa fa-bell-o"></i>
-                        <span class="badge bg-warning">3</span>
+                        <i class="fa booking_status_4_icon"></i>
+                        <span class="badge booking_status_4">{{ num_to_complete }}</span>
                     </a>
-                    <ul class="dropdown-menu extended notification">
+                    <ul class="dropdown-menu extended inbox">
                         <li>
-                            <p>Notifications</p>
+                            <p class="">You have <span>{{ num_to_complete }}</span> incomplete tunings</p>
                         </li>
-                        <li>
-                            <div class="alert alert-info clearfix">
-                                <span class="alert-icon"><i class="fa fa-bolt"></i></span>
-                                <div class="noti-info">
-                                    <a href="#"> Server #1 overloaded.</a>
-                                </div>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="alert alert-danger clearfix">
-                                <span class="alert-icon"><i class="fa fa-bolt"></i></span>
-                                <div class="noti-info">
-                                    <a href="#"> Server #2 overloaded.</a>
-                                </div>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="alert alert-success clearfix">
-                                <span class="alert-icon"><i class="fa fa-bolt"></i></span>
-                                <div class="noti-info">
-                                    <a href="#"> Server #3 overloaded.</a>
-                                </div>
-                            </div>
-                        </li>
+                        {%  for item in list_to_complete %}
+                            <li >
+                                <a href="{{item.get_absolute_url}}">
+                                    <div class="task-info clearfix">
+                                        <div class="desc pull-left">
+                                            <h5>{{ item.where }}</h5>
+                                            <p>{{ item.when }}</p>
+                                            <p>Tuner: {{ item.tuner }}</p>
+                                        </div>
+                                <span class="message pull-right">
+                                    {{ item.when|timesince }}
+                                </span>
+                                    </div>
+                                </a>
+                            </li>
+                        {%  endfor %}
 
+                        <li>
+                           <a href="{%  url "to_completed" %}">See All Incomplete Tunings</a>
+                        </li>
                     </ul>
                 </li>
-                <!-- notification dropdown end -->
+
+                           <!-- UNPAID BOOKINGS -->
+
+                <li id="header_unpaid_bar" class="dropdown">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <i class="fa booking_status_5_icon"></i>
+                        <span class="badge booking_status_5">{{ num_complete }}</span>
+                    </a>
+                    <ul class="dropdown-menu extended inbox">
+                        <li>
+                            <p class="">You have <span>{{ num_complete }}</span> pending payment</p>
+                        </li>
+                        {%  for item in list_complete %}
+                            <li >
+                                <a href="{{item.get_absolute_url}}">
+                                    <div class="task-info clearfix">
+                                        <div class="desc pull-left">
+                                            <h5>{{ item.where }}</h5>
+                                            <p>{{ item.when }}</p>
+                                            <p>Tuner: {{ item.tuner }}</p>
+                                        </div>
+                                <span class="message pull-right">
+                                    {{ item.when|timesince }}
+                                </span>
+                                    </div>
+                                </a>
+                            </li>
+                        {%  endfor %}
+
+                        <li>
+                        <a href="{%  url "to_paid" %}">See All Unpaid Tunings</a>
+                        </li>
+                    </ul>
+                </li>
+
             </ul>
             <!--  notification end -->
         </div>
@@ -183,18 +218,18 @@
                 {% if user.is_authenticated %}
 
 
-                            <li class="dropdown">
-            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                <img alt="" src="{{ STATIC_URL }}images/avatar1_small.jpg">
-                <span class="username">{{ user.get_full_name }}</span>
-                <b class="caret"></b>
-            </a>
-            <ul class="dropdown-menu extended logout">
-                <li><a href="#"><i class=" fa fa-suitcase"></i>Profile</a></li>
-                <li><a href="#"><i class="fa fa-cog"></i> Settings</a></li>
-                <li><a href="/logout/"><i class="fa fa-key"></i> Log Out</a></li>
-            </ul>
-        </li>
+                    <li class="dropdown">
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                            <img alt="" src="{{ STATIC_URL }}images/avatar1_small.jpg">
+                            <span class="username">{{ user.get_full_name }}</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu extended logout">
+                            <li><a href="#"><i class=" fa fa-suitcase"></i>Profile</a></li>
+                            <li><a href="#"><i class="fa fa-cog"></i> Settings</a></li>
+                            <li><a href="/logout/"><i class="fa fa-key"></i> Log Out</a></li>
+                        </ul>
+                    </li>
 
 
 
@@ -218,9 +253,9 @@
             <!-- sidebar menu start-->            <div class="leftside-navigation">
             <ul class="sidebar-menu" id="nav-accordion">
                 <li>
-                    <a href="index.html">
+                    <a href="/">
                         <i class="fa fa-dashboard"></i>
-                        <span>Dashboard</span>
+                        <span>Home</span>
                     </a>
                 </li>
                 {% if user.is_authenticated %}
@@ -236,7 +271,7 @@
                                 <li><a href="/calendar/">Calendar</a></li>
                                 <li><a href="/booking/add/">New Booking</a></li>
                                 <li><a href="/booking/assign/">Assign Tuner</a></li>
-                                <li><a href="/booking/complete/">Tuning Completed</a></li>
+                                <li><a href="/booking/to_completed/">Mark Completed</a></li>
                                 <li><a href="/booking/client_pay/">Client Payment</a></li>
                                 <li><a href="/booking/tuner_pay/">Tuner Payment</a></li>
                             </ul>
@@ -573,6 +608,7 @@
 {%  endblock %}
 
 <script src="{{ STATIC_URL }}js/easypiechart/jquery.easypiechart.js"></script>
+<script src="{{ STATIC_URL }}js/bootstrap-switch.js"></script>
 
 <script>
 
@@ -589,6 +625,12 @@
         scaleColor: "#cccccc"
 
     });
+
+    $(document).ready(function () {
+
+
+    });
+
 
 </script>
 

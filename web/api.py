@@ -32,7 +32,7 @@ class urlencodeSerializer(Serializer):
     def from_urlencode(self, data,options=None):
         """ handles basic formencoded url posts """
         qs = dict((k, v if len(v)>1 else v[0] )
-            for k, v in urlparse.parse_qs(data).iteritems())
+                  for k, v in urlparse.parse_qs(data).iteritems())
         return qs
 
     def to_urlencode(self,content):
@@ -75,7 +75,7 @@ class BookingsResource(ModelResource):
         filtering = {
             'client_id': ('exact',),
             'status': ('exact',),
-        }
+            }
         #
         # authorization = Authorization()
         # authentication = GMDAuthentication()
@@ -218,24 +218,6 @@ class AcceptBookingResource(Resource):
         authentication = Authentication()
         authorization = Authorization()
 
-    def detail_uri_kwargs(self, bundle_or_obj):
-        kwargs = {}
-
-        return kwargs
-
-    def get_object_list(self, request):
-        query = self._client().add('messages')
-        query.map("function(v) { var data = JSON.parse(v.values[0].data); return [[v.key, data]]; }")
-        results = []
-
-        for result in query.run():
-            pass
-
-        return results
-
-    def obj_get_list(self, bundle, **kwargs):
-        # Filtering disabled for brevity...
-        return self.get_object_list(bundle.request)
 
     def obj_create(self, bundle, request=None, **kwargs):
 
@@ -315,4 +297,106 @@ class AcceptedBookingsResource(ModelResource):
         include_resource_uri = True
         resource_name = 'booked_bookings'
         allowed_methods = ['get']
-        fields = ['booked_time','duration','client', 'studio','instrument']
+        fields = ['ref', 'booked_time','duration','client', 'studio','instrument', 'tuner']
+
+    def dehydrate(self, bundle):
+        bundle.data['status'] = bundle.obj.get_status_display()
+        bundle.data['who'] = ''
+        bundle.data['when'] = bundle.obj.when
+        bundle.data['where'] = bundle.obj.where
+        bundle.data['what'] = bundle.obj.what
+        bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
+        return bundle
+
+class BookingsToCompleteResource(AcceptedBookingsResource):
+
+    class Meta:
+        queryset = Booking.objects.to_complete()
+        resource_name = 'bookings_to_complete'
+
+
+
+class BookingCompleteResource(Resource):
+
+    class Meta:
+        include_resource_uri = True
+        resource_name = 'booking_complete'
+        allowed_methods = ['post','option']
+        object_class = SimpleObject
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['ref']
+        state = bundle.data['state']
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+        if state == "true":
+            booking.complete()
+            message = "Booking %s set to Completed" % (ref, )
+        else:
+            booking.uncomplete()
+            message = "Booking %s set back to Booked" % (ref, )
+
+        #TODO: This object is not being returned, it's not getting serialised for some reason
+        return  None
+
+class LogResource(ModelResource):
+
+    class Meta:
+        queryset = Log.objects.all()
+        include_resource_uri = False
+        resource_name = 'log'
+        limit = 100
+        allowed_methods = ['post','get', 'option']
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+        filtering = {
+            'booking_id': ['exact', ]
+        }
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['pk']
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+        Log.objects.create(booking = booking,
+                           comment = bundle.data['value'][0:254],
+                           created_by = bundle.request.user)
+
+
+        return None
+
+
+
+class RecentBookingsCount(Resource):
+
+    class Meta:
+        include_resource_uri = True
+        resource_name = 'recent_bookings_count'
+        allowed_methods = ['get]
+        object_class = SimpleObject
+
+    def get_object_list(self, request):
+        base = super(InstrumentResource, self).get_object_list(request)
+        if request._get.has_key('client_id'):
+            return base.filter(client_id = request._get['client_id'])
+        else:
+            return base
+        

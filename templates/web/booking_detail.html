@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% load bootstrap3 %}
-{
+{% load bootstrap3 comments%}
+
 {% block main %}
 
 
@@ -115,7 +115,7 @@
 
                     </div>
             </section>
-
+  {% render_comment_form for object %}
         </div>
     </div>
 

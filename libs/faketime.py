@@ -5,6 +5,7 @@ from datetime import datetime
 import pytz
 from django.utils.timezone import utc
 
+#TODO: should handle both tz and niave datetimes - see utils.add_tz
 
 filename = settings.FAKEDATE_FILE
 
