@@ -176,7 +176,7 @@ class StudioResource(ModelResource):
             return base
 
 class InstrumentResource(ModelResource):
-    studio = fields.ToOneField(StudioResource, "studio", full=False)
+    client = fields.ToOneField(ClientResource, "client", full=False)
 
     class Meta:
         queryset = Instrument.objects.all()
@@ -188,12 +188,12 @@ class InstrumentResource(ModelResource):
             'client_id': ['exact', ]
         }
 
-    def get_object_list(self, request):
-        base = super(InstrumentResource, self).get_object_list(request)
-        if request._get.has_key('client_id'):
-            return base.filter(client_id = request._get['client_id'])
-        else:
-            return base
+    # def get_object_list(self, request):
+    #     base = super(InstrumentResource, self).get_object_list(request)
+    #     if request._get.has_key('client_id'):
+    #         return base.filter(client_id = request._get['client_id'])
+    #     else:
+    #         return base
 
 
 
