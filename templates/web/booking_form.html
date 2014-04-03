@@ -135,18 +135,9 @@
             //TODO: If one location then use that
             //TODO: allow for entry of new locations and instruments
 
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
 
-                    var tuners = data.objects;
-                    requested_bookings(tuners);
 
-                }
-            });
+
 
 
         }
