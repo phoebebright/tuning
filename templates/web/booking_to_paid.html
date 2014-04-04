@@ -111,7 +111,7 @@
                     bookings_table(json);
 
                     // save state when switch toggled
-                    $(".switch").on("switch-change", function(e) {
+                    $(".provider_switch").on("switch-change", function(e) {
                         e.stopPropagation();
 
                         // checked means not tuned and vv.
@@ -120,7 +120,7 @@
 
                         $.ajax({
                             type:"post",
-                            url:API+"booking_pay/",
+                            url:API+"booking_provider_paid/",
                             data: {
                                 ref:ref,
                                 state: state},
@@ -142,30 +142,22 @@
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
                         d['pay_provider'] = '<input type="checkbox" class="provider_switch" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="provider_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
                         d['pay_client'] = '<input type="checkbox" class="client_switch" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="client_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
-                        d['provider_comment'] = '<a href="#" class="provider_comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
-                        d['client_comment'] = '<a href="#" class="client_comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
+                        d['comment'] = '<a href="#" class="comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
+
                         data.push(d)
                     })
                     build_table(data,
-                            ["when", "tuner", "where", "what","pay_provider", "provider_comment"],
+                            ["when", "tuner", "where", "what","pay_provider", "comment"],
                             "#providers");
                     build_table(data,
-                            ["when", "tuner", "where", "what","pay_client", "client_comment"],
+                            ["when", "tuner", "where", "what","pay_client", "comment"],
                             "#clients");
 
 
-                    $(".switch").bootstrapSwitch();  // make checkboxes in table into switches
+                    $(".provider_switch").bootstrapSwitch();  // make checkboxes in table into switches
+                    $(".client_switch").bootstrapSwitch();  // make checkboxes in table into switches
 
-                    $('.comment').editable({
-                        type: 'textarea',
-                        sourceCache: true,
-                        url: API + 'log/?format=json',
 
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'add comment'
-                    });
         }
         function build_table(json, cols, tableid) {
 

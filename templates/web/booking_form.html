@@ -22,6 +22,7 @@
             <h1>New Booking</h1>
             <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
                 {% bootstrap_form form %}
+{#            <div class="form-group"><a href="#" class="comment"  data-pk="{{ form.ref.value }}" data-value="">add comment</a></div>#}
                 {% buttons %}
                     <button type="submit" class="btn btn-primary">
                         {% bootstrap_icon "star" %} Save

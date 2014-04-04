@@ -2,7 +2,7 @@ import urlparse
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-
+from django.utils.translation import ugettext_lazy as _
 
 from tastypie import fields
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
@@ -11,6 +11,7 @@ from tastypie.authorization import DjangoAuthorization, Authorization, ReadOnlyA
 from tastypie.exceptions import NotFound, BadRequest
 from tastypie.paginator import Paginator
 from tastypie.serializers import Serializer
+
 
 from web.models import *
 
@@ -411,13 +412,13 @@ class LogResource(ModelResource):
 
         ref = bundle.data['pk']
 
-        try:
-            booking = Booking.objects.get(ref=ref)
-
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
-        Log.objects.create(booking = booking,
+        # try:
+        #     booking = Booking.objects.get(ref=ref)
+        #
+        # except Booking.DoesNotExist:
+        #     raise BadRequest('Invalid Booking reference %s' % ref)
+        #TODO: comment added to create booking form is added before the booking is created - how to handle this?
+        Log.objects.create(booking_id = ref,
                            comment = bundle.data['value'][0:254],
                            created_by = bundle.request.user)
 

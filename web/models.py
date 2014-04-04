@@ -320,20 +320,25 @@ class Booking(models.Model):
 
         # generate unique booking ref
         if not self.id:
-            self.ref =  str(uuid.uuid4())[:8]
+            if not self.ref:
+                self.ref = Booking.create_ref()
+
             self.requested_at = NOW
 
 
         # change status to archived if cancelled or when fully paid
         # TODO:test
-        if self.cancelled_at or (self.paid_provider and self.client_paid):
+        if self.cancelled_at or (self.paid_provider_at and self.paid_client_at):
             self.status=BOOKING_ARCHIVED
             self.archived_at = NOW
 
         super(Booking, self).save(*args, **kwargs)
 
 
-
+    @classmethod
+    def create_ref(cls):
+        #TODO: search for ref to make sure it's unique
+        return  str(uuid.uuid4())[:8]
 
     @property
     def start_time(self):
@@ -384,7 +389,7 @@ class Booking(models.Model):
     def provider_paid(self):
         ''' true if provider has been paid for tuning
         '''
-        return self.paid_provider
+        return self.paid_provider_at
 
 
     @property

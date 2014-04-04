@@ -273,8 +273,7 @@
                                     <li><a href="/booking/add/">New Booking</a></li>
                                     <li><a href="/booking/assign/">Assign Tuner</a></li>
                                     <li><a href="/booking/to_completed/">Mark Completed</a></li>
-                                    <li><a href="/booking/client_pay/">Client Payment</a></li>
-                                    <li><a href="/booking/tuner_pay/">Tuner Payment</a></li>
+                                    <li><a href="/booking/to_paid/">Payments</a></li>
                                 </ul>
                             </li>
 
@@ -361,47 +360,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="prog-row side-mini-stat">
-                    <div class="side-graph-info">
-                        <h4>product delivery</h4>
-                        <p>
-                            55%, Deadline 12 june 13
-                        </p>
-                    </div>
-                    <div class="side-mini-graph">
-                        <div class="p-delivery">
-                            <div class="sparkline" data-type="bar" data-resize="true" data-height="30" data-width="90%" data-bar-color="#39b7ab" data-bar-width="5" data-data="[200,135,667,333,526,996,564,123,890,564,455]">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="prog-row side-mini-stat">
-                    <div class="side-graph-info payment-info">
-                        <h4>payment collection</h4>
-                        <p>
-                            25%, Deadline 12 june 13
-                        </p>
-                    </div>
-                    <div class="side-mini-graph">
-                        <div class="p-collection">
-						<span class="pc-epie-chart" data-percent="45">
-						<span class="percent"></span>
-						</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="prog-row side-mini-stat">
-                    <div class="side-graph-info">
-                        <h4>delivery pending</h4>
-                        <p>
-                            44%, Deadline 12 june 13
-                        </p>
-                    </div>
-                    <div class="side-mini-graph">
-                        <div class="d-pending">
-                        </div>
-                    </div>
-                </div>
+
                 <div class="prog-row side-mini-stat">
                     <div class="col-md-12">
                         <h4>total progress</h4>
@@ -725,6 +684,18 @@ $('.notification-pie-chart').easyPieChart({
         // popovers
 
         $('.popovers').popover();
+
+
+          $('.comment').editable({
+                        type: 'textarea',
+                        sourceCache: true,
+                        url: API + 'log/?format=json',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        },
+                        title: 'add comment'
+                    });
 
 
     });

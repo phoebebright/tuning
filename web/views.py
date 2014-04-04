@@ -110,16 +110,14 @@ http://chriskief.com/2013/10/29/advanced-django-class-based-views-modelforms-and
 
 class BookingForm(forms.ModelForm):
 
-    # comments = forms.Textarea()
-    # user = forms.HiddenInput()
-
     class Meta:
         model = Booking
-        fields = [ 'client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument']
+        fields = ['client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument','ref']
 
     def __init__(self, *args, **kwargs):
             super(BookingForm, self).__init__(*args, **kwargs)
             self.fields['client'].queryset = Client.objects.active()
+
 
     # def form_valid(self, form):
     #
@@ -135,7 +133,9 @@ class BookingForm(forms.ModelForm):
 
 
 class ClientBookingForm(BookingForm):
-    client = forms.HiddenInput()
+    client = forms.CharField(widget=forms.HiddenInput())
+
+
 
     class Meta:
         model = Booking
@@ -144,6 +144,8 @@ class ClientBookingForm(BookingForm):
 
 class BookingCreate(CreateView):
     #TODO: if user is client, should make client a hidden field but it isnt
+
+    ref = forms.CharField(widget=forms.HiddenInput())
 
     form_class = BookingForm
     template_name = "web/booking_form.html"
@@ -170,7 +172,7 @@ class BookingCreate(CreateView):
         Returns an instance of the form to be used in this view.
         """
         form =  form_class(**self.get_form_kwargs())
-        form.initial = {'client': self.request.user.organisation, 'user': self.request.user}
+        form.initial = {'client': self.request.user.organisation, 'user': self.request.user, 'ref': Booking.create_ref()}
         return form
 
     def form_valid(self, form):
