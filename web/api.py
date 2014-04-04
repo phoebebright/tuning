@@ -314,6 +314,12 @@ class BookingsToCompleteResource(AcceptedBookingsResource):
         queryset = Booking.objects.to_complete()
         resource_name = 'bookings_to_complete'
 
+class BookingsToPaidResource(AcceptedBookingsResource):
+
+    class Meta:
+        queryset = Booking.objects.completed()
+        resource_name = 'bookings_to_paid'
+
 
 
 class BookingCompleteResource(Resource):
@@ -347,6 +353,41 @@ class BookingCompleteResource(Resource):
         else:
             booking.uncomplete()
             message = "Booking %s set back to Booked" % (ref, )
+
+        #TODO: This object is not being returned, it's not getting serialised for some reason
+        return  None
+
+class BookingProviderPaidResource(Resource):
+
+    class Meta:
+        include_resource_uri = True
+        resource_name = 'booking_provider_paid'
+        allowed_methods = ['post','option']
+        object_class = SimpleObject
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['ref']
+        state = bundle.data['state']
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+        if state == "true":
+            booking.provider_paid()
+            message = _("Booking %s tuner paid") % (ref, )
+        else:
+            booking.provider_unpaid()
+            message = _("Booking %s tuner unpaid") % (ref, )
 
         #TODO: This object is not being returned, it's not getting serialised for some reason
         return  None

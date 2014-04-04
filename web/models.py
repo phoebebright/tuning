@@ -289,7 +289,7 @@ class Booking(models.Model):
     completed_at = models.DateTimeField(_('when completed'), blank=True, null=True)
     cancelled_at = models.DateTimeField(_('when cancelled'), blank=True, null=True)
     paid_client_at = models.DateTimeField(_('when client paid'), blank=True, null=True)
-    paid_provider = models.DateTimeField(_('when tuner paid'), blank=True, null=True)
+    paid_provider_at = models.DateTimeField(_('when tuner paid'), blank=True, null=True)
     archived_at = models.DateTimeField(_('when archived'), blank=True, null=True)
 
     requested_from = models.DateTimeField(_('from time'), default=default_start)
@@ -534,6 +534,27 @@ class Booking(models.Model):
 
             self.status = BOOKING_BOOKED
             self.completed_at = None
+            self.save()
+
+    def provider_paid(self):
+
+
+
+        self.paid_provider_at = NOW
+
+        if self.paid_provider_at:
+            self.status = BOOKING_ARCHIVED
+
+        self.save()
+
+    def provider_unpaid(self):
+        ''' set status back, but only if called  within a minute(ish)
+        '''
+
+        if (NOW - self.paid_provider_at).seconds < 90:
+
+            self.status = BOOKING_COMPLETE
+            self.paid_provider_at = None
             self.save()
 
     def send_request(self):

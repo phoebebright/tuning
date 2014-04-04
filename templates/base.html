@@ -130,12 +130,12 @@
                         {%  endfor %}
 
                         <li>
-                           <a href="{%  url "to_completed" %}">See All Pending Bookings</a>
+                            <a href="{%  url "to_completed" %}">See All Pending Bookings</a>
                         </li>
                     </ul>
                 </li>
 
-                           <!-- INCOMPLETE BOOKINGS -->
+                <!-- INCOMPLETE BOOKINGS -->
 
                 <li id="header_incomplete_bar" class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
@@ -164,12 +164,12 @@
                         {%  endfor %}
 
                         <li>
-                           <a href="{%  url "to_completed" %}">See All Incomplete Tunings</a>
+                            <a href="{%  url "to_completed" %}">See All Incomplete Tunings</a>
                         </li>
                     </ul>
                 </li>
 
-                           <!-- UNPAID BOOKINGS -->
+                <!-- UNPAID BOOKINGS -->
 
                 <li id="header_unpaid_bar" class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
@@ -198,7 +198,7 @@
                         {%  endfor %}
 
                         <li>
-                        <a href="{%  url "to_paid" %}">See All Unpaid Tunings</a>
+                            <a href="{%  url "to_paid" %}">See All Unpaid Tunings</a>
                         </li>
                     </ul>
                 </li>
@@ -250,57 +250,59 @@
     <!--header end-->
     <aside>
         <div id="sidebar" class="nav-collapse">
-            <!-- sidebar menu start-->            <div class="leftside-navigation">
-            <ul class="sidebar-menu" id="nav-accordion">
-                <li>
-                    <a href="/">
-                        <i class="fa fa-dashboard"></i>
-                        <span>Home</span>
-                    </a>
-                </li>
-                {% if user.is_authenticated %}
+            <!-- sidebar menu start-->
+            <div class="leftside-navigation">
+                <ul class="sidebar-menu" id="nav-accordion">
+                    <li>
+                        <a href="/">
+                            <i class="fa fa-dashboard"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
 
-                    {% if user.is_staff %}
+                        {% if user.is_staff %}
 
-                        <li class="sub-menu">
-                            <a href="javascript:;">
-                                <i class="fa fa-laptop"></i>
-                                <span>Bookings</span>
-                            </a>
-                            <ul class="sub">
-                                <li><a href="/calendar/">Calendar</a></li>
-                                <li><a href="/booking/add/">New Booking</a></li>
-                                <li><a href="/booking/assign/">Assign Tuner</a></li>
-                                <li><a href="/booking/to_completed/">Mark Completed</a></li>
-                                <li><a href="/booking/client_pay/">Client Payment</a></li>
-                                <li><a href="/booking/tuner_pay/">Tuner Payment</a></li>
-                            </ul>
-                        </li>
-
-
+                            <li class="sub-menu">
+                                <a href="javascript:;">
+                                    <i class="fa fa-laptop"></i>
+                                    <span>Bookings</span>
+                                </a>
+                                <ul class="sub">
+                                    <li><a href="/calendar/">Calendar</a></li>
+                                    <li><a href="/booking/add/">New Booking</a></li>
+                                    <li><a href="/booking/assign/">Assign Tuner</a></li>
+                                    <li><a href="/booking/to_completed/">Mark Completed</a></li>
+                                    <li><a href="/booking/client_pay/">Client Payment</a></li>
+                                    <li><a href="/booking/tuner_pay/">Tuner Payment</a></li>
+                                </ul>
+                            </li>
 
 
-                        <li class="sub-menu">
-                            <a href="javascript:;">
-                                <i class="fa fa-laptop"></i>
-                                <span>Admin</span>
-                            </a>
-                            <ul class="sub">
-                                <li><a href="/admin/web/client/">Clients</a></li>
-                                <li><a href="/admin/web/tuner/">Tuners</a></li>
-                            </ul>
-                        </li>
 
+
+                            <li class="sub-menu">
+                                <a href="javascript:;">
+                                    <i class="fa fa-laptop"></i>
+                                    <span>Admin</span>
+                                </a>
+                                <ul class="sub">
+                                    <li><a href="/admin/web/client/">Clients</a></li>
+                                    <li><a href="/admin/web/tuner/">Tuners</a></li>
+                                </ul>
+                            </li>
+
+                        {% endif %}
                     {% endif %}
-                {% endif %}
 
-                <li>
-                    <a href="login.html">
-                        <i class="fa fa-user"></i>
-                        <span>Login Page</span>
-                    </a>
-                </li>
-            </ul></div>
+                    <li>
+                        <a href="login.html">
+                            <i class="fa fa-user"></i>
+                            <span>Login Page</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <!-- sidebar menu end-->
         </div>
     </aside>
@@ -416,170 +418,6 @@
             </li>
         </ul>
     </li>
-    <li class="widget-collapsible">
-        <a href="#" class="head widget-head terques-bg active clearfix">
-            <span class="pull-left">contact online (5)</span>
-            <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
-        </a>
-        <ul class="widget-container">
-            <li>
-                <div class="prog-row">
-                    <div class="user-thumb">
-                        <a href="#"><img src="images/avatar1_small.jpg" alt=""></a>
-                    </div>
-                    <div class="user-details">
-                        <h4><a href="#">Jonathan Smith</a></h4>
-                        <p>
-                            Work for fun
-                        </p>
-                    </div>
-                    <div class="user-status text-danger">
-                        <i class="fa fa-comments-o"></i>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb">
-                        <a href="#"><img src="images/avatar1.jpg" alt=""></a>
-                    </div>
-                    <div class="user-details">
-                        <h4><a href="#">Anjelina Joe</a></h4>
-                        <p>
-                            Available
-                        </p>
-                    </div>
-                    <div class="user-status text-success">
-                        <i class="fa fa-comments-o"></i>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb">
-                        <a href="#"><img src="images/chat-avatar2.jpg" alt=""></a>
-                    </div>
-                    <div class="user-details">
-                        <h4><a href="#">John Doe</a></h4>
-                        <p>
-                            Away from Desk
-                        </p>
-                    </div>
-                    <div class="user-status text-warning">
-                        <i class="fa fa-comments-o"></i>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb">
-                        <a href="#"><img src="images/avatar1_small.jpg" alt=""></a>
-                    </div>
-                    <div class="user-details">
-                        <h4><a href="#">Mark Henry</a></h4>
-                        <p>
-                            working
-                        </p>
-                    </div>
-                    <div class="user-status text-info">
-                        <i class="fa fa-comments-o"></i>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb">
-                        <a href="#"><img src="images/avatar1.jpg" alt=""></a>
-                    </div>
-                    <div class="user-details">
-                        <h4><a href="#">Shila Jones</a></h4>
-                        <p>
-                            Work for fun
-                        </p>
-                    </div>
-                    <div class="user-status text-danger">
-                        <i class="fa fa-comments-o"></i>
-                    </div>
-                </div>
-                <p class="text-center">
-                    <a href="#" class="view-btn">View all Contacts</a>
-                </p>
-            </li>
-        </ul>
-    </li>
-    <li class="widget-collapsible">
-        <a href="#" class="head widget-head purple-bg active">
-            <span class="pull-left"> recent activity (3)</span>
-            <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
-        </a>
-        <ul class="widget-container">
-            <li>
-                <div class="prog-row">
-                    <div class="user-thumb rsn-activity">
-                        <i class="fa fa-clock-o"></i>
-                    </div>
-                    <div class="rsn-details ">
-                        <p class="text-muted">
-                            just now
-                        </p>
-                        <p>
-                            <a href="#">Jim Doe </a>Purchased new equipments for zonal office setup
-                        </p>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb rsn-activity">
-                        <i class="fa fa-clock-o"></i>
-                    </div>
-                    <div class="rsn-details ">
-                        <p class="text-muted">
-                            2 min ago
-                        </p>
-                        <p>
-                            <a href="#">Jane Doe </a>Purchased new equipments for zonal office setup
-                        </p>
-                    </div>
-                </div>
-                <div class="prog-row">
-                    <div class="user-thumb rsn-activity">
-                        <i class="fa fa-clock-o"></i>
-                    </div>
-                    <div class="rsn-details ">
-                        <p class="text-muted">
-                            1 day ago
-                        </p>
-                        <p>
-                            <a href="#">Jim Doe </a>Purchased new equipments for zonal office setup
-                        </p>
-                    </div>
-                </div>
-            </li>
-        </ul>
-    </li>
-    <li class="widget-collapsible">
-        <a href="#" class="head widget-head yellow-bg active">
-            <span class="pull-left"> shipment status</span>
-            <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
-        </a>
-        <ul class="widget-container">
-            <li>
-                <div class="col-md-12">
-                    <div class="prog-row">
-                        <p>
-                            Full sleeve baby wear (SL: 17665)
-                        </p>
-                        <div class="progress progress-xs mtop10">
-                            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 40%">
-                                <span class="sr-only">40% Complete</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="prog-row">
-                        <p>
-                            Full sleeve baby wear (SL: 17665)
-                        </p>
-                        <div class="progress progress-xs mtop10">
-                            <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 70%">
-                                <span class="sr-only">70% Completed</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-        </ul>
-    </li>
     </ul>
     </div>
     </div>
@@ -601,6 +439,10 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
 {% bootstrap_javascript %}
+<script src="{{ STATIC_URL }}js/jquery.scrollTo.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.slimscroll.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.nicescroll.js"></script>
+
 {#<script src="https://raw.github.com/andris9/jStorage/master/jstorage.js"></script>#}
 <script src="{{ STATIC_URL }}js/moment.min.js"></script>
 
@@ -613,23 +455,282 @@
 <script>
 
 
-    $('.notification-pie-chart').easyPieChart({
-        onStep: function (from, to, percent) {
-            //TODO: harding coding sla as 60 mins here, should refer back to settings.SLA
-            $(this.el).find('.percent').text(Math.round(percent));
-        },
-        barColor: "#39b6ac",
-        lineWidth: 3,
-        size: 50,
-        trackColor: "#efefef",
-        scaleColor: "#cccccc"
+$('.notification-pie-chart').easyPieChart({
+    onStep: function (from, to, percent) {
+        //TODO: harding coding sla as 60 mins here, should refer back to settings.SLA
+        $(this.el).find('.percent').text(Math.round(percent));
+    },
+    barColor: "#39b6ac",
+    lineWidth: 3,
+    size: 50,
+    trackColor: "#efefef",
+    scaleColor: "#cccccc"
 
-    });
+});
 
+(function ($) {
+    "use strict";
     $(document).ready(function () {
+        /*==Left Navigation Accordion ==*/
+        if ($.fn.dcAccordion) {
+            $('#nav-accordion').dcAccordion({
+                eventType: 'click',
+                autoClose: true,
+                saveState: true,
+                disableLink: true,
+                speed: 'slow',
+                showCount: false,
+                autoExpand: true,
+                classExpand: 'dcjq-current-parent'
+            });
+        }
+        /*==Slim Scroll ==*/
+        if ($.fn.slimScroll) {
+            $('.event-list').slimscroll({
+                height: '305px',
+                wheelStep: 20
+            });
+            $('.conversation-list').slimscroll({
+                height: '360px',
+                wheelStep: 35
+            });
+            $('.to-do-list').slimscroll({
+                height: '300px',
+                wheelStep: 35
+            });
+        }
+        /*==Nice Scroll ==*/
+        if ($.fn.niceScroll) {
+
+
+            $(".leftside-navigation").niceScroll({
+                cursorcolor: "#1FB5AD",
+                cursorborder: "0px solid #fff",
+                cursorborderradius: "0px",
+                cursorwidth: "3px"
+            });
+
+            $(".leftside-navigation").getNiceScroll().resize();
+            if ($('#sidebar').hasClass('hide-left-bar')) {
+                $(".leftside-navigation").getNiceScroll().hide();
+            }
+            $(".leftside-navigation").getNiceScroll().show();
+
+            $(".right-stat-bar").niceScroll({
+                cursorcolor: "#1FB5AD",
+                cursorborder: "0px solid #fff",
+                cursorborderradius: "0px",
+                cursorwidth: "3px"
+            });
+
+        }
+
+
+
+        {#        /*== SPARKLINE==*/#}
+        {#        if ($.fn.sparkline) {#}
+        {##}
+        {#            $(".d-pending").sparkline([3, 1], {#}
+        {#                type: 'pie',#}
+        {#                width: '40',#}
+        {#                height: '40',#}
+        {#                sliceColors: ['#e1e1e1', '#8175c9']#}
+        {#            });#}
+        {##}
+        {##}
+        {##}
+        {#            var sparkLine = function () {#}
+        {#                $(".sparkline").each(function () {#}
+        {#                    var $data = $(this).data();#}
+        {#                    ($data.type == 'pie') && $data.sliceColors && ($data.sliceColors = eval($data.sliceColors));#}
+        {#                    ($data.type == 'bar') && $data.stackedBarColor && ($data.stackedBarColor = eval($data.stackedBarColor));#}
+        {##}
+        {#                    $data.valueSpots = {#}
+        {#                        '0:': $data.spotColor#}
+        {#                    };#}
+        {#                    $(this).sparkline($data.data || "html", $data);#}
+        {##}
+        {##}
+        {#                    if ($(this).data("compositeData")) {#}
+        {#                        $spdata.composite = true;#}
+        {#                        $spdata.minSpotColor = false;#}
+        {#                        $spdata.maxSpotColor = false;#}
+        {#                        $spdata.valueSpots = {#}
+        {#                            '0:': $spdata.spotColor#}
+        {#                        };#}
+        {#                        $(this).sparkline($(this).data("compositeData"), $spdata);#}
+        {#                    };#}
+        {#                });#}
+        {#            };#}
+        {##}
+        {#            var sparkResize;#}
+        {#            $(window).resize(function (e) {#}
+        {#                clearTimeout(sparkResize);#}
+        {#                sparkResize = setTimeout(function () {#}
+        {#                    sparkLine(true)#}
+        {#                }, 500);#}
+        {#            });#}
+        {#            sparkLine(false);#}
+        {##}
+        {##}
+        {##}
+        {#        }#}
+        {##}
+        {##}
+        {##}
+        {#        if ($.fn.plot) {#}
+        {#            var datatPie = [30, 50];#}
+        {#            // DONUT#}
+        {#            $.plot($(".target-sell"), datatPie, {#}
+        {#                series: {#}
+        {#                    pie: {#}
+        {#                        innerRadius: 0.6,#}
+        {#                        show: true,#}
+        {#                        label: {#}
+        {#                            show: false#}
+        {##}
+        {#                        },#}
+        {#                        stroke: {#}
+        {#                            width: .01,#}
+        {#                            color: '#fff'#}
+        {##}
+        {#                        }#}
+        {#                    }#}
+        {##}
+        {##}
+        {##}
+        {##}
+        {#                },#}
+        {##}
+        {#                legend: {#}
+        {#                    show: true#}
+        {#                },#}
+        {#                grid: {#}
+        {#                    hoverable: true,#}
+        {#                    clickable: true#}
+        {#                },#}
+        {##}
+        {#                colors: ["#ff6d60", "#cbcdd9"]#}
+        {#            });#}
+        {#        }#}
+
+
+
+        /*==Collapsible==*/
+        $('.widget-head').click(function (e) {
+            var widgetElem = $(this).children('.widget-collapse').children('i');
+
+            $(this)
+                    .next('.widget-container')
+                    .slideToggle('slow');
+            if ($(widgetElem).hasClass('ico-minus')) {
+                $(widgetElem).removeClass('ico-minus');
+                $(widgetElem).addClass('ico-plus');
+            } else {
+                $(widgetElem).removeClass('ico-plus');
+                $(widgetElem).addClass('ico-minus');
+            }
+            e.preventDefault();
+        });
+
+
+
+
+        /*==Sidebar Toggle==*/
+
+        $(".leftside-navigation .sub-menu > a").click(function () {
+            var o = ($(this).offset());
+            var diff = 80 - o.top;
+            if (diff > 0)
+                $(".leftside-navigation").scrollTo("-=" + Math.abs(diff), 500);
+            else
+                $(".leftside-navigation").scrollTo("+=" + Math.abs(diff), 500);
+        });
+
+
+
+        $('.sidebar-toggle-box .fa-bars').click(function (e) {
+
+            $(".leftside-navigation").niceScroll({
+                cursorcolor: "#1FB5AD",
+                cursorborder: "0px solid #fff",
+                cursorborderradius: "0px",
+                cursorwidth: "3px"
+            });
+
+            $('#sidebar').toggleClass('hide-left-bar');
+            if ($('#sidebar').hasClass('hide-left-bar')) {
+                $(".leftside-navigation").getNiceScroll().hide();
+            }
+            $(".leftside-navigation").getNiceScroll().show();
+            $('#main-content').toggleClass('merge-left');
+            e.stopPropagation();
+            if ($('#container').hasClass('open-right-panel')) {
+                $('#container').removeClass('open-right-panel')
+            }
+            if ($('.right-sidebar').hasClass('open-right-bar')) {
+                $('.right-sidebar').removeClass('open-right-bar')
+            }
+
+            if ($('.header').hasClass('merge-header')) {
+                $('.header').removeClass('merge-header')
+            }
+
+
+        });
+        $('.toggle-right-box .fa-bars').click(function (e) {
+            $('#container').toggleClass('open-right-panel');
+            $('.right-sidebar').toggleClass('open-right-bar');
+            $('.header').toggleClass('merge-header');
+
+            e.stopPropagation();
+        });
+
+        $('.header,#main-content,#sidebar').click(function () {
+            if ($('#container').hasClass('open-right-panel')) {
+                $('#container').removeClass('open-right-panel')
+            }
+            if ($('.right-sidebar').hasClass('open-right-bar')) {
+                $('.right-sidebar').removeClass('open-right-bar')
+            }
+
+            if ($('.header').hasClass('merge-header')) {
+                $('.header').removeClass('merge-header')
+            }
+
+
+        });
+
+
+        $('.panel .tools .fa').click(function () {
+            var el = $(this).parents(".panel").children(".panel-body");
+            if ($(this).hasClass("fa-chevron-down")) {
+                $(this).removeClass("fa-chevron-down").addClass("fa-chevron-up");
+                el.slideUp(200);
+            } else {
+                $(this).removeClass("fa-chevron-up").addClass("fa-chevron-down");
+                el.slideDown(200); }
+        });
+
+
+
+        $('.panel .tools .fa-times').click(function () {
+            $(this).parents(".panel").parent().remove();
+        });
+
+        // tool tips
+
+        $('.tooltips').tooltip();
+
+        // popovers
+
+        $('.popovers').popover();
 
 
     });
+
+
+})(jQuery);
 
 
 </script>
