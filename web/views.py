@@ -21,7 +21,7 @@ from django.views.generic import ListView
 from django.views.generic.base import View
 from django.forms.models import modelformset_factory
 from django.forms.models import inlineformset_factory
-
+from django.utils.translation import ugettext_lazy as _
 #python
 from datetime import datetime, timedelta, date
 
@@ -171,8 +171,14 @@ class BookingCreate(CreateView):
         """
         Returns an instance of the form to be used in this view.
         """
+        '''
+        in order to add comments on the form, the booking must already exist, so create a booking now with
+        a temporary ref.
+        '''
+        new = Booking.objects.create(ref = Booking.create_temp_ref())
+
         form =  form_class(**self.get_form_kwargs())
-        form.initial = {'client': self.request.user.organisation, 'user': self.request.user, 'ref': Booking.create_ref()}
+        form.initial = {'client': self.request.user.organisation, 'user': self.request.user, 'ref': new.ref}
         return form
 
     def form_valid(self, form):
@@ -194,6 +200,24 @@ class BookingDelete(DeleteView):
 
 class BookingDetailView(DetailView):
     model = Booking
+
+    def get_object(self, queryset=None):
+        '''can retrieve object by id or ref
+        '''
+        if self.kwargs.has_key('ref'):
+
+            try:
+                obj = Booking.objects.get(ref=self.kwargs['ref'])
+            except Booking.DoesNotExist:
+                raise Http404(_("No Booking with ref %s" % self.kwargs['ref']))
+        else:
+            try:
+                obj = Booking.objects.get(id=self.kwargs['pk'])
+            except Booking.DoesNotExist:
+                raise Http404(_("No Booking with id %s" % self.kwargs['pk']))
+
+
+        return obj
 
 class BookingCompleteView(DetailView):
     model = Booking

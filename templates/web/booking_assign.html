@@ -106,10 +106,11 @@
                         d['togo'] = moment(d.when).fromNow()
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
                         d['tuner'] = '<a href="#" class="tuners" data-pk="' + d['ref'] +'">?</a>';
+                        d['comment'] = '<a href="#" class="comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
                         data.push(d)
                     })
                     build_table(data,
-                            ["when", "tuner", "where", "what", "togo"],
+                            ["when", "tuner","comment," "where", "what", "togo"],
                             "#requested_bookings");
 
                     var tuners_list = [];

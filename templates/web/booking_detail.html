@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap3 comments%}
+{% load bootstrap3 %}
 
 {% block main %}
 
@@ -7,6 +7,21 @@
     <div class="container">
         <div class="row">
 
+            <div class="col-sm-3">
+                <section class="panel">
+                    <div class="panel-body">
+                        <a href="mail_compose.html"  class="btn btn-compose">
+                            {{ object.ref }}
+                        </a>
+                        <ul class="nav nav-pills nav-stacked mail-nav">
+                            <li class="active"><a href="mail.html"> <i class="fa fa-inbox"></i> Inbox  <span class="label label-danger pull-right inbox-notification">9</span></a></li>
+                            <li><a href="#"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
+                            <li><a href="#"> <i class="fa fa-certificate"></i> Important</a></li>
+                            <li><a href="#"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-info pull-right inbox-notification">123</span></a></a></li>
+                            <li><a href="#"> <i class="fa fa-trash-o"></i> Trash</a></li>
+                        </ul>
+                    </div>
+                </section>
 
 
 
@@ -22,8 +37,8 @@
                 </header>
 
                 <div class="alert alert-block booking_status_{{ object.status }} fade in">
-                                Booking Status {{ object.get_status_display }}
-                            </div>
+                    Booking Status {{ object.get_status_display }}
+                </div>
 
                 <div class="panel-body">
                     <div class="row m-bot20">
@@ -85,7 +100,7 @@
 
                 </div>
 
-                                <div class="panel-body">
+                <div class="panel-body">
                     <div class="row m-bot20">
                         <div class="col-md-5 col-xs-5">Tuner</div>
                         <div class="col-md-7 col-xs-7">
@@ -108,40 +123,76 @@
 
                 </div>
 
-                                <div class="panel-body">
+                <div class="panel-body">
                     <div class="row m-bot20">
                         <p>Comments</p>
-                            <span class="object">{{ object.comments }}</span>
+
+                        <div class="form-group"><a href="#" class="comment"  data-pk="{{ form.ref.value }}" data-value="">add comment</a></div>
+
+{#                        <div class="timeline">#}
+{#                            <article class="timeline-item alt">#}
+{#                                <div class="text-right">#}
+{#                                    <div class="time-show first">#}
+{#                                        <a href="#" class="btn btn-primary">Today</a>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </article>#}
+                            <span id="comment_list"></span>
+
+
+
+                        </div>
+                        </span>
 
                     </div>
+
             </section>
-  {% render_comment_form for object %}
+
         </div>
     </div>
 
 
 {% endblock main %}
-ref =
-booker
-client
-tuner
-status
-requested_at =
-booked_at = mo
-completed_at =
-cancelled_at =
 
-paid_client_at
-paid_provider
+{%  block js %}
+    <script type='text/x-jquery-tmpl' id="comment_template">
 
-requested_from
-requested_to =
-booked_time =
-duration = mod
+                    <article class="timeline-item alt">
+                        <div class="timeline-desk">
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <span class="arrow-alt"></span>
 
-studio = model
-instrument = m
+                                    <span class="timeline-icon red">
+                                        <i class="fa fa-check"></i>
+                                    </span>
+                                    <span class="timeline-date">${created}</span>
+                                    <h1 class="red">${ago}</h1>
+                                    <p>${comment}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+     </script>
+    <script type="text/javascript">
+        API = "{{ API_URL }}"
 
-deadline =  mo
-client_ref = m
-comments = mod
+        $(document).ready(function () {
+
+            init();
+
+        });
+
+        function init() {
+            // when page is first loaded
+
+
+            show_comments({{ object.id }});
+
+        }
+
+
+
+
+    </script>
+{% endblock js %}

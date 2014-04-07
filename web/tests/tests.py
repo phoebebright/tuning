@@ -97,6 +97,51 @@ class BookingTest(TestCase):
         self.i6 = Instrument.objects.get(name="Upright")
 
 
+    def test_refs(self):
+        """
+        a temporary ref is created when a new bookings is being added from a form in order to be able
+        to add comments (comments needs a booking ref)
+        """
+
+        temp_ref = Booking.create_temp_ref()
+        self.assertEqual(len(temp_ref), 6)
+
+        temp_ref2 = Booking.create_temp_ref()
+        self.assertNotEqual(temp_ref, temp_ref2)
+
+
+        """
+        if a booking is created without a studio and with a ref, then assume the ref is a temporary one and
+        replace with a proper one
+        """
+
+        book = Booking.objects.create(ref = Booking.create_temp_ref())
+
+        self.assertTrue(book.has_temp_ref)
+
+        book.client = self.o1
+        book.studio = self.s1
+        book.save()
+
+        self.assertTrue(book.has_temp_ref)
+
+        book.deadline = TOMORROW
+        book.save()
+
+        # has the data to create a permanent ref
+        self.assertFalse(book.has_temp_ref)
+
+
+        book2 = Booking.objects.create(
+        client = self.o1,
+        studio = self.s1,
+        deadline = TOMORROW)
+
+        self.assertNotEqual(book.ref, book2.ref)
+        self.assertEqual(book.ref[:8], book2.ref[:8])
+        self.assertEqual(book.ref[-1], 'a')
+        self.assertEqual(book2.ref[-1], 'b')
+
 
     def test_make_booking(self):
 

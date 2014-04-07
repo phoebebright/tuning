@@ -99,6 +99,7 @@ class Provider(Organisation):
 
 class Studio(models.Model):
     name = models.CharField(max_length=20)
+    short_code = models.CharField(max_length=3, unique=True)
     client = models.ForeignKey(Client, null=True, blank=True)
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
@@ -279,9 +280,9 @@ class Booking(models.Model):
                      (BOOKING_ARCHIVED, _('archived')),
                      )
 
-    ref = models.CharField(max_length=8, unique=True)
-    booker = models.ForeignKey(CustomUser, related_name="booker_user")
-    client = models.ForeignKey(Client, related_name="client")
+    ref = models.CharField(max_length=10, unique=True)
+    booker = models.ForeignKey(CustomUser, related_name="booker_user", blank=True, null=True)
+    client = models.ForeignKey(Client, related_name="client", blank=True, null=True)
     tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
     status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
@@ -292,15 +293,15 @@ class Booking(models.Model):
     paid_provider_at = models.DateTimeField(_('when tuner paid'), blank=True, null=True)
     archived_at = models.DateTimeField(_('when archived'), blank=True, null=True)
 
-    requested_from = models.DateTimeField(_('from time'), default=default_start)
-    requested_to = models.DateTimeField(_('to time'), default=default_end)
+    requested_from = models.DateTimeField(_('from time'), default=default_start, blank=True, null=True)
+    requested_to = models.DateTimeField(_('to time'), default=default_end, blank=True, null=True)
     booked_time =  models.DateTimeField(_('booked time'), blank=True, null=True)
-    duration = models.PositiveSmallIntegerField(_('duration'), default = settings.DEFAULT_SLOT_TIME )
+    duration = models.PositiveSmallIntegerField(_('duration'), default = settings.DEFAULT_SLOT_TIME, blank=True, null=True)
 
     studio = models.ForeignKey(Studio, blank=True, null=True)
     instrument = models.ForeignKey(Instrument, blank=True, null=True)
 
-    deadline =  models.DateTimeField(_('session start'), default=default_end)
+    deadline =  models.DateTimeField(_('session start'), blank=True, null=True)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
 
     objects = PassThroughManager.for_queryset_class(BookingsQuerySet)()
@@ -321,9 +322,15 @@ class Booking(models.Model):
         # generate unique booking ref
         if not self.id:
             if not self.ref:
-                self.ref = Booking.create_ref()
+                self.ref = Booking.create_ref(self.studio, self.deadline)
 
             self.requested_at = NOW
+
+        # replace temporary ref with permanent one if data is available
+        if self.has_temp_ref and self.studio and self.deadline:
+            self.ref = Booking.create_ref(self.studio, self.deadline)
+
+
 
 
         # change status to archived if cancelled or when fully paid
@@ -336,9 +343,45 @@ class Booking(models.Model):
 
 
     @classmethod
-    def create_ref(cls):
-        #TODO: search for ref to make sure it's unique
-        return  str(uuid.uuid4())[:8]
+    def create_temp_ref(cls):
+
+        code = str(uuid.uuid4())[:6]
+        while True:
+            try:
+                used = Booking.objects.get(ref = code)
+                code = str(uuid.uuid4())[:6]
+            except Booking.DoesNotExist:
+                # not found so is unique
+                return code
+
+
+    @classmethod
+    def create_ref(cls, studio=None, deadline=None):
+
+        code = "%s-%s%sa" % (studio.short_code, deadline.strftime('%b'), deadline.strftime('%d'))
+        while True:
+            try:
+                used = Booking.objects.get(ref = code)
+                code = code[:-1] + chr(ord(used.ref[-1]) + 1)
+            except Booking.DoesNotExist:
+                # not found so is unique
+                return code
+
+    @property
+    def has_temp_ref(self):
+        return len(self.ref) == 6
+
+    @property
+    def short_heading(self):
+        return self.ref
+
+    @property
+    def long_heading(self):
+        return "%s (%s)" % (self.client, self.ref)
+
+    @property
+    def comments(self):
+        return Log.objects.filter(booking=self)
 
     @property
     def start_time(self):

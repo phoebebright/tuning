@@ -63,37 +63,7 @@ class RequestBookingResource(ModelResource):
             raise BadRequest('That username already exists')
         return bundle
 
-class BookingsResource(ModelResource):
-    #TODO: Only return own bookings
 
-    class Meta:
-        queryset = Booking.objects.all()
-        include_resource_uri = True
-        resource_name = 'bookings'
-        allowed_methods = ['get']
-        limit = 0
-        fields = ['requested_from','requested_to','studio','instrument', 'status']
-        filtering = {
-            'client_id': ('exact',),
-            'status': ('exact',),
-            }
-        #
-        # authorization = Authorization()
-        # authentication = GMDAuthentication()
-
-    def dehydrate(self, bundle):
-        # for fullCalendar
-        # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
-
-        bundle.data['title'] = "%s in %s" % (bundle.obj.instrument, bundle.obj.studio)
-
-        bundle.data['start'] = bundle.obj.start_time
-        bundle.data['end'] = bundle.obj.end_time
-        bundle.data['className'] = bundle.obj.status
-
-
-
-        return bundle
 
 class UserResource(ModelResource):
     class Meta:
@@ -105,7 +75,12 @@ class UserResource(ModelResource):
         list_allowed_methods = ['get', ]
         detail_allowed_methods = ['get',]
 
+    def dehydrate(self, bundle):
+        # for fullCalendar
+        # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
 
+        bundle.data['full_name'] = bundle.obj.get_full_name()
+        return bundle
 
 class ClientResource(ModelResource):
     class Meta:
@@ -197,6 +172,40 @@ class InstrumentResource(ModelResource):
     #         return base
 
 
+class BookingsResource(ModelResource):
+    #TODO: Only return own bookings
+    client = fields.ToOneField(ClientResource, "client", full=True)
+    booker = fields.ToOneField(UserResource, "booker", full=True)
+    tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
+
+    class Meta:
+        queryset = Booking.objects.all()
+        include_resource_uri = True
+        resource_name = 'bookings'
+        allowed_methods = ['get']
+        limit = 0
+        fields = ['ref','requested_from','requested_to','studio','instrument', 'status']
+        filtering = {
+            'client_id': ('exact',),
+            'status': ('exact',),
+            }
+        #
+        # authorization = Authorization()
+        # authentication = GMDAuthentication()
+
+    def dehydrate(self, bundle):
+        # for fullCalendar
+        # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
+
+        bundle.data['title'] = "%s in %s" % (bundle.obj.instrument, bundle.obj.studio)
+
+        bundle.data['start'] = bundle.obj.start_time
+        bundle.data['end'] = bundle.obj.end_time
+        bundle.data['className'] = bundle.obj.status
+
+
+
+        return bundle
 
 class MakeBookingResource(ModelResource):
     #TODO: Only return own bookings
@@ -395,6 +404,9 @@ class BookingProviderPaidResource(Resource):
 
 class LogResource(ModelResource):
 
+    created_by = fields.ToOneField(UserResource, "created_by", full=True)
+
+    #TODO: Only return comments on booking where involved
     class Meta:
         queryset = Log.objects.all()
         include_resource_uri = False

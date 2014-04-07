@@ -401,10 +401,39 @@
 <script src="{{ STATIC_URL }}js/jquery.scrollTo.min.js"></script>
 <script src="{{ STATIC_URL }}js/jquery.slimscroll.min.js"></script>
 <script src="{{ STATIC_URL }}js/jquery.nicescroll.js"></script>
+<script src="{{ STATIC_URL }}js/jquery.tmpl.min.js"></script>  <!-- for displaying comments -->
 
 {#<script src="https://raw.github.com/andris9/jStorage/master/jstorage.js"></script>#}
 <script src="{{ STATIC_URL }}js/moment.min.js"></script>
 
+<script>
+            function show_comments(id) {
+
+            var html = '';
+
+            $.ajax({
+                type:"get",
+                url:API+"log",
+                data: {
+                    limit:100,
+                    booking_id: id},
+                dataType : 'json',
+                success:function(json){
+                    var data =json.objects;
+                    $.each(data, function(i, d) {
+
+                        var when = moment(d.created).format('ddd Do MMM - HH:mm')
+                        var since = moment(d.created).fromNow()
+
+                        html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + when +'</li>';
+                    })
+
+                    $("#comment_list").html(html);
+
+                }
+            });
+        }
+</script>
 {%  block js %}
 {%  endblock %}
 
@@ -430,6 +459,8 @@ $('.notification-pie-chart').easyPieChart({
 (function ($) {
     "use strict";
     $(document).ready(function () {
+
+        API = "{{ API_URL }}";
         /*==Left Navigation Accordion ==*/
         if ($.fn.dcAccordion) {
             $('#nav-accordion').dcAccordion({
@@ -696,6 +727,8 @@ $('.notification-pie-chart').easyPieChart({
                         },
                         title: 'add comment'
                     });
+
+
 
 
     });

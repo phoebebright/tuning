@@ -110,14 +110,14 @@ def base_data(request=None):
     u.save()
 
     # Studios
-    s1 = Studio.objects.create(name="Studio Red")
-    s2 = Studio.objects.create(name="Studio Blue")
-    s3 = Studio.objects.create(name="Studio Yellow")
-    s4 = Studio.objects.create(name="Studio Green")
-    s5 = Studio.objects.create(name="Studio Orange")
-    s6 = Studio.objects.create(name="Studio 1")
-    s7 = Studio.objects.create(name="Studio 2")
-    s8 = Studio.objects.create(name="Test Studio")
+    s1 = Studio.objects.create(name="Studio Red", short_code="RED")
+    s2 = Studio.objects.create(name="Studio Blue", short_code="BLU")
+    s3 = Studio.objects.create(name="Studio Yellow", short_code="YEL")
+    s4 = Studio.objects.create(name="Studio Green", short_code="GRN")
+    s5 = Studio.objects.create(name="Studio Orange", short_code="ORG")
+    s6 = Studio.objects.create(name="Studio 1", short_code="ONE")
+    s7 = Studio.objects.create(name="Studio 2", short_code="TWO")
+    s8 = Studio.objects.create(name="Test Studio", short_code="TST")
 
     # Instruments
     Instrument.objects.create(name="Steinway Grand")

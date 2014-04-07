@@ -3,10 +3,10 @@
 {% load bootstrap3 %}
 {% block extra_head %}
 
-{#    <link href="{{ STATIC_URL }}css/bootstrap-fullcalendar.css" rel="stylesheet">#}
-{#    <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">#}
-   <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
-   <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">
+    {#    <link href="{{ STATIC_URL }}css/bootstrap-fullcalendar.css" rel="stylesheet">#}
+    {#    <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">#}
+    <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">
 
     <style>
         .fc-header-title h2 {
@@ -25,7 +25,7 @@
             <h4 class="drg-event-title">Clients</h4>
             <div id='external-events'>
                 {%  for item in clients %}
-                <div class='external-event label label-primary'>{{ item.name }}</div>
+                    <div class='external-event label label-primary'>{{ item.name }}</div>
                 {% endfor %}
             </div>
         </aside>
@@ -126,10 +126,23 @@
                             }
 
                         },
-                        events: data
-                    })
+                        events: data,
+                        eventClick: function(event, jsEvent, view) {
+
+                            location.href = "/booking/"+event.ref+"/";
+                            return false;
+
+
+
+                    // change the border color just for fun
+                    $(this).css('border-color', 'red');
+
                 }
             });
+
+
+        }
+        });
         }
 
     </script>
