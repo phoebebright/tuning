@@ -7,8 +7,8 @@
 {% block extra_head %}
 
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fluent_comments/css/ajaxcomments.css" />
-<script type="text/javascript" src="{{ STATIC_URL }}fluent_comments/js/ajaxcomments.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}fluent_comments/css/ajaxcomments.css" />
+    <script type="text/javascript" src="{{ STATIC_URL }}fluent_comments/js/ajaxcomments.js"></script>
 
 {% endblock extra_head %}
 
@@ -33,8 +33,8 @@
                 </header>
 
                 <div class="alert alert-block booking_status_{{ object.status }} fade in">
-                                Booking Status {{ object.get_status_display }}
-                            </div>
+                    Booking Status {{ object.get_status_display }}
+                </div>
 
                 <div class="panel-body">
                     <div class="row m-bot20">
@@ -72,10 +72,10 @@
                     </div>
                 </div>
 
-</section>
-<hr />
- {% render_comment_list for object %}
-        {% render_comment_form for object %}
+            </section>
+            <hr />
+            {% render_comment_list for object %}
+            {% render_comment_form for object %}
 
         </div>
     </div>
@@ -85,7 +85,7 @@
 
 
 {% block js %}
-   <script type="text/javascript">
+    <script type="text/javascript">
         API = "{{ API_URL }}"
 
         $(document).ready(function () {
@@ -121,6 +121,8 @@
 
         function requested_bookings(tuners) {
 
+            var template = $('#add_comment_template').html();
+            Mustache.parse(template);
 
 
             $.ajax({
@@ -135,10 +137,14 @@
                         d['togo'] = moment(d.when).fromNow()
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
                         d['tuner'] = '<a href="#" class="tuners" data-pk="' + d['ref'] +'">?</a>';
+                        d['comment'] =  Mustache.render(template, {ref: d.ref}) +
+                                '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
+                                '<div class="comment_list" data-pk="' + d.ref + '"></div>';
+
                         data.push(d)
                     })
                     build_table(data,
-                            ["when", "tuner", "where", "what", "togo"],
+                            ["when", "tuner", "where", "what", "togo", "comment"],
                             "#requested_bookings");
 
                     var tuners_list = [];

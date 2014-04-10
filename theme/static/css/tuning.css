@@ -10,18 +10,50 @@ a.logo {
 }
 
 .booking_status_3 {
-    background-color: #aec785
+    background-color: #aec785;
 }
 .booking_status_4 {
-    background-color: #1fb5ac
+    background-color: #1fb5ac;
 }
 
 .booking_status_5 {
-    background-color: #a48ad4
+    background-color: #a48ad4;
+}
+.booking_status_6 {
+    background-color: #7EBCD4;
+}
+.booking_status_8 {
+    background-color: #8C98AB;
+}
+.booking_status_9 {
+    background-color: #fdd752;
 }
 
-.booking_status_9 {
-    background-color: #fdd752
+tr.booking_status_1{
+    background-color: rgba(252, 135, 101, 0.49);
+}
+
+tr.booking_status_3{
+    background-color: rgba(174, 199, 133, 0.52);
+}
+tr.booking_status_4{
+    background-color: rgba(31, 181, 172, 0.51);
+}
+
+tr.booking_status_5{
+    background-color: rgba(164, 138, 212, 0.51);
+}
+
+tr.booking_status_6{
+    background-color: rgba(126, 188, 212, 0.46);
+}
+
+tr.booking_status_8{
+    background-color: rgba(140, 152, 171, 0.52);;
+}
+
+tr.booking_status_9{
+    background-color: rgba(253, 215, 82, 0.49);
 }
 
 .booking_status_1_icon:before  {
@@ -31,12 +63,29 @@ a.logo {
   content: "\f00c";
 }
 .booking_status_4_icon:before  {
-  content: "\f00c";
+  content: "\f024";
 }
 .booking_status_5_icon:before  {
-content: "\f06e";
+content: "\f154";
+}
+.booking_status_8_icon:before  {
+content: "\f056";
 }
 .booking_status_9_icon:before  {
-  content: "\f154";
+  content: "\f0f2";
 }
 
+.comment_list {
+        list-style: none;
+    display: none;
+}
+.comment_badge {
+    display: inline;
+}
+.has-switch {
+    background: white;
+}
+
+.comment {
+    margin-bottom: 5px;
+}

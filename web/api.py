@@ -3,6 +3,7 @@ import urlparse
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from tastypie import fields
 from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
@@ -18,6 +19,11 @@ from web.models import *
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
+'''
+NOTE: TIMEZONE handling = model.py deals in timezone aware dates, the tempalates will automatically display local
+datetimes.  In the API all times need to be converted to local.
+'''
 class urlencodeSerializer(Serializer):
     #http://stackoverflow.com/questions/14074149/tastypie-with-application-x-www-form-urlencoded
     formats = ['json', 'jsonp', 'xml', 'yaml', 'html', 'plist', 'urlencode']
@@ -164,12 +170,12 @@ class InstrumentResource(ModelResource):
             'client_id': ['exact', ]
         }
 
-    # def get_object_list(self, request):
-    #     base = super(InstrumentResource, self).get_object_list(request)
-    #     if request._get.has_key('client_id'):
-    #         return base.filter(client_id = request._get['client_id'])
-    #     else:
-    #         return base
+    def get_object_list(self, request):
+        base = super(InstrumentResource, self).get_object_list(request)
+        if request._get.has_key('client_id'):
+            return base.filter(client_id = request._get['client_id'])
+        else:
+            return base
 
 
 class BookingsResource(ModelResource):
@@ -197,11 +203,16 @@ class BookingsResource(ModelResource):
         # for fullCalendar
         # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
 
-        bundle.data['title'] = "%s in %s" % (bundle.obj.instrument, bundle.obj.studio)
+        bundle.data['title'] = bundle.obj.long_heading
 
-        bundle.data['start'] = bundle.obj.start_time
-        bundle.data['end'] = bundle.obj.end_time
-        bundle.data['className'] = bundle.obj.status
+        bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
+        bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
+        bundle.data['status_display'] = bundle.obj.get_status_display()
+
+        bundle.data['who'] = bundle.obj.who
+        bundle.data['when'] = timezone.localtime(bundle.obj.when)
+        bundle.data['where'] = bundle.obj.where
+        bundle.data['what'] = bundle.obj.what
 
 
 
@@ -267,7 +278,7 @@ class RecentBookingsResource(ModelResource):
     def dehydrate(self, bundle):
         bundle.data['status'] = bundle.obj.get_status_display()
         bundle.data['who'] = bundle.obj.who
-        bundle.data['when'] = bundle.obj.when
+        bundle.data['when'] = timezone.localtime(bundle.obj.when)
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
@@ -288,7 +299,7 @@ class RequestedBookingsResource(ModelResource):
     def dehydrate(self, bundle):
         bundle.data['status'] = bundle.obj.get_status_display()
         bundle.data['who'] = ''
-        bundle.data['when'] = bundle.obj.when
+        bundle.data['when'] = timezone.localtime(bundle.obj.when)
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
@@ -310,9 +321,10 @@ class AcceptedBookingsResource(ModelResource):
         fields = ['ref', 'booked_time','duration','client', 'studio','instrument', 'tuner']
 
     def dehydrate(self, bundle):
-        bundle.data['status'] = bundle.obj.get_status_display()
+
+        bundle.data['booked_time'] = timezone.localtime(bundle.obj.booked_time)
         bundle.data['who'] = ''
-        bundle.data['when'] = bundle.obj.when
+        bundle.data['when'] = timezone.localtime(bundle.obj.when)
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
         bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
@@ -358,10 +370,10 @@ class BookingCompleteResource(Resource):
 
 
         if state == "true":
-            booking.complete()
+            booking.set_complete()
             message = "Booking %s set to Completed" % (ref, )
         else:
-            booking.uncomplete()
+            booking.set_uncomplete()
             message = "Booking %s set back to Booked" % (ref, )
 
         #TODO: This object is not being returned, it's not getting serialised for some reason
@@ -393,13 +405,78 @@ class BookingProviderPaidResource(Resource):
 
 
         if state == "true":
-            booking.provider_paid()
+            booking.set_provider_paid()
             message = _("Booking %s tuner paid") % (ref, )
         else:
-            booking.provider_unpaid()
+            booking.set_provider_unpaid()
             message = _("Booking %s tuner unpaid") % (ref, )
 
-        #TODO: This object is not being returned, it's not getting serialised for some reason
+
+        return  None
+
+class BookingClientPaidResource(Resource):
+
+    class Meta:
+        include_resource_uri = True
+        resource_name = 'booking_client_paid'
+        allowed_methods = ['post','option']
+        object_class = SimpleObject
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['ref']
+        state = bundle.data['state']
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+        if state == "true":
+            booking.set_client_paid()
+            message = _("Booking %s client paid") % (ref, )
+        else:
+            booking.set_client_unpaid()
+
+            message = _("Booking %s client unpaid") % (ref, )
+
+        return  None
+
+class BookingCancelResource(Resource):
+
+    class Meta:
+        include_resource_uri = True
+        resource_name = 'booking_cancel'
+        allowed_methods = ['post','option']
+        object_class = SimpleObject
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['ref']
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+
+        booking.cancel(me)
+        message = _("Booking %s cancelled") % (ref, )
+
         return  None
 
 class LogResource(ModelResource):
@@ -417,20 +494,18 @@ class LogResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         filtering = {
-            'booking_id': ['exact', ]
+            'booking_id': ['exact', ],
+            'ref': ['exact']
         }
 
     def obj_create(self, bundle, request=None, **kwargs):
 
-        ref = bundle.data['pk']
+        try:
+            booking = Booking.objects.get(ref = bundle.data['pk'])
+        except Booking.DoesNotExist:
+             raise BadRequest('Invalid Booking reference %s' % bundle.data['pk'])
 
-        # try:
-        #     booking = Booking.objects.get(ref=ref)
-        #
-        # except Booking.DoesNotExist:
-        #     raise BadRequest('Invalid Booking reference %s' % ref)
-        #TODO: comment added to create booking form is added before the booking is created - how to handle this?
-        Log.objects.create(booking_id = ref,
+        Log.objects.create(booking = booking,
                            comment = bundle.data['value'][0:254],
                            created_by = bundle.request.user)
 
@@ -438,6 +513,17 @@ class LogResource(ModelResource):
         return None
 
 
+    def get_object_list(self, request):
+        base = super(LogResource, self).get_object_list(request)
+        if request._get.has_key('ref'):
+            return base.filter(booking__ref = request._get['ref'])
+        else:
+            return base
+
+
+    def dehydrate(self, bundle):
+        bundle.data['created'] = timezone.localtime(bundle.obj.created)
+        return bundle
 
 class RecentBookingsCount(Resource):
 

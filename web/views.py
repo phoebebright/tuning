@@ -30,9 +30,20 @@ from django.conf import settings
 
 from web.models import *
 
+@login_required()
+def bookings_list(request):
+    return render_to_response('web/booking_list.html',{
+
+       },
+    context_instance=RequestContext(request)
+    )
 
 @login_required()
 def dashboard(request):
+
+    Booking.check_to_complete()
+    #TODO: Write management command to clean up unused booking records
+
 
     # TODO: Only admins
     today_start = make_time(date.today(), "start")
@@ -134,7 +145,7 @@ class BookingForm(forms.ModelForm):
 
 class ClientBookingForm(BookingForm):
     client = forms.CharField(widget=forms.HiddenInput())
-
+    ref = forms.CharField(widget=forms.HiddenInput())
 
 
     class Meta:
@@ -145,7 +156,7 @@ class ClientBookingForm(BookingForm):
 class BookingCreate(CreateView):
     #TODO: if user is client, should make client a hidden field but it isnt
 
-    ref = forms.CharField(widget=forms.HiddenInput())
+
 
     form_class = BookingForm
     template_name = "web/booking_form.html"

@@ -22,7 +22,7 @@
 
             <h1>Mark as Complete</h1>
             <div class="table-responsive">
-                <table id="bookings" class="table table-striped table-condensed">
+                <table id="bookings" class="table table-condensed">
                     <thead>
                     <tr>
                         <th>When</th>
@@ -50,10 +50,10 @@
 
 {% block js %}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.min.js"></script>
 
-
+    <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
     <script type="text/javascript">
@@ -87,71 +87,49 @@
                 type:"get",
                 url:API+"bookings_to_complete",
                 data: {
-                    limit:10},
+                    limit:0},
                 dataType : 'json',
                 success:function(json){
 
                     // put data in a table;
                     bookings_table(json);
 
-                    // save state when switch toggled
-                    $(".switch").on("switch-change", function(e) {
-                        e.stopPropagation();
-
-                        // checked means not tuned and vv.
-                        var state = !(this.checked);
-                        var ref = this.dataset['pk'];
-
-                        $.ajax({
-                            type:"post",
-                            url:API+"booking_complete/",
-                            data: {
-                                ref:ref,
-                                state: state},
-                            dataType : 'json',
-                            success:function(json){
-                                x=json;
-                            }
-
-                        });
-                    });
                 }
             });
         }
 
         function bookings_table(json) {
+
+            var template = $('#add_comment_template').html();
+            Mustache.parse(template);
+
             data = new Array();
-                    $.each(json.objects, function(i,d) {
-                        d['togo'] = moment(d.when).fromNow()
-                        d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
+            $.each(json.objects, function(i,d) {
+                d['togo'] = moment(d.when).fromNow()
+                d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
 
-                        // if booking has passed (status=4) then allow it to be closed
-                        if (d.status == "4") {
-                        d['done'] = '<input type="checkbox" class="switch" data-text-label="Tuned" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="complete_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
+                // if booking has passed (status=4) then allow it to be closed
+                if (d.status == "4") {
+                    d['done'] = '<input type="checkbox" class="switch switch_complete" data-text-label="Tuned" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="complete_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
 
-                        } else {
-                        d['done'] = ''
-                        }
-                        d['comment'] = '<a href="#" class="comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
-                        data.push(d)
-                    })
-                    build_table(data,
-                            ["when", "tuner", "where", "what","done", "comment"],
-                            "#bookings");
+                } else {
+                    d['done'] = ''
+                }
+                d['comment'] =  Mustache.render(template, {ref: d.ref}) +
+                        '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
+                        '<div class="comment_list" data-pk="' + d.ref + '"></div>';
+                data.push(d)
+            })
+            build_table(data,
+                    ["when", "tuner", "where", "what","done", "comment"],
+                    "#bookings");
 
+            $(".datarow").on("dblclick", function(e) {
 
-                    $(".switch").bootstrapSwitch();  // make checkboxes in table into switches
-
-                    $('.comment').editable({
-                        type: 'textarea',
-                        sourceCache: true,
-                        url: API + 'log/?format=json',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'add comment'
-                    });
+                document.location.href = "/booking/"+this.dataset['id'];
+            });
+            update_events();
+            do_last();
         }
         function build_table(json, cols, tableid) {
 
@@ -163,8 +141,7 @@
             var rows = "";
             $.each(json, function (i, d) {
 
-                var tr = '<tr class="' + d.status + '" data-id="'+d.ref+'">';
-
+                var tr = '<tr class="datarow booking_status_' + d.status + '" data-id="'+d.ref+'">';
                 $.each(cols, function(i,c){
 
                     tr += '<td class="name" >' + d[c] + '</td>';

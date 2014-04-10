@@ -9,7 +9,6 @@
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
 
 
-
 {% endblock extra_head %}
 
 {% block main %}
@@ -19,16 +18,17 @@
         <div class="row">
 
 
-            <h1>Assign Tuner</h1>
+            <h1>Current Bookings</h1>
             <div class="table-responsive">
-                <table id="requested_bookings" class="table table-condensed">
+                <table id="bookings" class="table table-condensed tablesorter">
                     <thead>
                     <tr>
                         <th>When</th>
-                        <th>Who</th>
                         <th>Where</th>
                         <th>What</th>
-                        <th >To Go</th>
+                        <th>Who</th>
+                        <th>Status</th>
+                        <th>Comments</th>
 
 
 
@@ -56,13 +56,11 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
     <script type="text/javascript">
-        API = "{{ API_URL }}"
+        API = "{{ API_URL }}";
 
         $(document).ready(function () {
 
             init();
-
-
 
         });
 
@@ -74,12 +72,11 @@
             // get list of tuners
             $.ajax({
                 type:"get",
-                url:API+"tuners",
+                url:API+"bookings",
                 dataType : 'json',
                 success:function(data){
 
-                    var tuners = data.objects;
-                    requested_bookings(tuners);
+                    show_bookings(data.objects);
 
                 }
             });
@@ -89,7 +86,7 @@
 
 
 
-        function requested_bookings(tuners) {
+        function show_bookings(tuners) {
 
             var template = $('#add_comment_template').html();
             Mustache.parse(template);
@@ -97,46 +94,29 @@
 
             $.ajax({
                 type:"get",
-                url:API+"requested_bookings",
+                url:API+"bookings",
                 data: {
-                    limit:0},
+                    limit:10},
                 dataType : 'json',
                 success:function(json){
                     data = new Array();
                     $.each(json.objects, function(i,d) {
                         d['togo'] = moment(d.when).fromNow()
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
-                        d['tuner'] = '<a href="#" class="tuners" data-pk="' + d['ref'] +'">?</a>';
+                        if (!$.isEmptyObject(d.tuner)) {
+                            d['tuner'] = d.tuner.full_name;
+                        } else {
+                            d['tuner'] = '';
+                        }
                         d['comment'] =  Mustache.render(template, {ref: d.ref}) +
                                 '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
                                 '<div class="comment_list" data-pk="' + d.ref + '"></div>';
                         data.push(d)
+
                     })
                     build_table(data,
-                            ["when", "tuner","comment", "where", "what", "togo"],
-                            "#requested_bookings");
-
-                    var tuners_list = [];
-                    $.each(tuners, function(i,d) {
-                        tuners_list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.tuners').editable({
-                        type: 'select',
-                        source: tuners_list,
-                        sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'Select Tuner'
-                    });
-
-                    $(".datarow").on("dblclick", function(e) {
-
-                        document.location.href = "/booking/"+this.dataset['id'];
-                    });
+                            ["when", "where","what", "tuner", "status_display","comment"],
+                            "#bookings");
                     do_last();
 
                 }
@@ -154,14 +134,25 @@
             $.each(json, function (i, d) {
 
                 var tr = '<tr class="datarow booking_status_' + d.status + '" data-id="'+d.ref+'">';
+
                 $.each(cols, function(i,c){
 
-                    tr += '<td class="name" >' + d[c] + '</td>';
+                    tr += '<td class="field_'+c+'">' + d[c] + '</td>';
                 });
                 rows += tr + '</tr>';
             });
 
             body.append(rows);
+
+            $("#bookings").tablesorter( {
+                sortList: [[0,0], [1,0]],
+                //widthFixed : true,
+                widgets: [ "filter"]
+            } );
+            $(".datarow").on("dblclick", function(e) {
+
+                document.location.href = "/booking/"+this.dataset['id'];
+            });
 
         }
 

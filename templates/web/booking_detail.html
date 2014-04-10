@@ -1,197 +1,257 @@
 {% extends "base.html" %}
 {% load bootstrap3 %}
 
+{% block extra_head %}
+
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+
+    <style>
+        .shout {
+            font-size: 140%;
+            color: white;
+        }
+        .input-block a{
+            float: none;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .fa {
+            padding-right: 10px;
+        }
+
+        .chunk {
+            padding: 15px;
+        }
+
+    </style>
+{% endblock extra_head %}
+
 {% block main %}
 
 
     <div class="container">
         <div class="row">
 
-            <div class="col-sm-3">
+            <div class="col-sm-12">
                 <section class="panel">
+                    <header class="panel-heading">
+                        {{ object.heading_long }}
+                    </header>
                     <div class="panel-body">
-                        <a href="mail_compose.html"  class="btn btn-compose">
-                            {{ object.ref }}
-                        </a>
-                        <ul class="nav nav-pills nav-stacked mail-nav">
-                            <li class="active"><a href="mail.html"> <i class="fa fa-inbox"></i> Inbox  <span class="label label-danger pull-right inbox-notification">9</span></a></li>
-                            <li><a href="#"> <i class="fa fa-envelope-o"></i> Send Mail</a></li>
-                            <li><a href="#"> <i class="fa fa-certificate"></i> Important</a></li>
-                            <li><a href="#"> <i class="fa fa-file-text-o"></i> Drafts <span class="label label-info pull-right inbox-notification">123</span></a></a></li>
-                            <li><a href="#"> <i class="fa fa-trash-o"></i> Trash</a></li>
-                        </ul>
+
+                        <div class="alert alert-block shout booking_status_{{ object.status }} fade in">{{ object.description }}</div>
+
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-sm-4">
+                <section class="panel">
+                    <header class="panel-heading">
+                        {{ object.short_heading }} History
+                    </header>
+
+                    <div class="panel-body">
+
+                        <div class="row">
+                            <div class="chunk">
+                                <i class="fa booking_status_1_icon"></i>Requested by <strong>{{ object.booker }}</strong><span class="label pull-right booking_status_1">{{ object.requested_at }}</span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="chunk">
+                                {%  if object.status == '1' %}
+
+                                    <i class="fa booking_status_3_icon"></i>Assign Tuner &nbsp;&nbsp:<strong><span class="label pull-right booking_status_3"></span><a href="#" class="tuners" data-pk="{{ object.ref }}">?</a></strong>
+
+                                {%  else  %}
+                                    <i class="fa booking_status_3_icon"></i>Tuner <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
+                                {%  endif %}
+                            </div>
+                        </div>
+
+
+                        {%  if object.status == '4' %}
+                            <div class="row">
+                                <div class="chunk">
+
+                                    <i class="fa booking_status_4_icon"></i>Mark as Complete
+                                    <span class="label pull-right booking_status_3">
+                               <input type="checkbox" class="switch switch_complete" data-text-label="Tuned" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="complete_{{ object_ref }}" data-pk="{{ object.ref }}" /></span>
+
+                                </div>
+                            </div>
+                        {%  endif %}
+
+                        {%  if object.status >= '5' %}
+                            {%  if not object.cancelled %}
+                                <div class="row">
+                                    <div class="chunk">
+                                        <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_4">{{ object.completed_at }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+
+                            {%  if object.has_provider_paid %}
+                                <div class="row">
+                                    <div class="chunk">
+                                        <i class="fa booking_status_5_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {%  if not object.cancelled %}
+                                    <div class="row">
+                                        <div class="chunk">
+                                            <i class="fa booking_status_5_icon"></i>Pay Tuner
+                                            <span class="label pull-right booking_status_6">
+                                                <input type="checkbox" class="switch switch_tuner" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="tuner_paid_{{ object_ref }}" data-pk="{{ object.ref }}" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {%  endif %}
+
+
+
+                            {%  if  object.has_client_paid %}
+                                <div class="row">
+                                    <div class="chunk">
+                                        <i class="fa booking_status_5_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {%  if not object.cancelled %}
+                                    <div class="row">
+                                        <div class="chunk">
+                                            <i class="fa booking_status_5_icon"></i>Client Paid
+                                            <span class="label pull-right booking_status_6"></li>
+                                                <input type="checkbox" class="switch switch_client" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="client_paid_{{ object_ref }}" data-pk="{{ object.ref }}" /></span>
+                                        </div>
+                                    </div>
+                                {%  endif %}
+                            {% endif %}
+                        {% endif %}
+
+
+                        {%  if object.status == '9'  %}
+                            <div class="row">
+                                <div class="chunk">
+                                    <i class="fa booking_status_9_icon"></i>Archived<span class="label pull-right booking_status_9">{{ object.archived_at }}</span>
+                                </div>
+                            </div>
+                        {%  endif %}
+                        {%  if object.status == '8'  %}
+                            <div class="row">
+                                <div class="chunk">
+                                    <i class="fa booking_status_8_icon"></i>Cancelled<span class="label pull-right booking_status_8">{{ object.cancelled_at }}</span>
+                                </div>
+                            </div>
+                        {%  endif %}
+
                     </div>
                 </section>
 
 
 
+            </div>
+            <div class="col-sm-8">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                        Details
+                    </header>
 
-            <section class="panel">
-                <header class="panel-heading">
-                    <h1>Booking Ref {{ object.ref }}</h1>
-                            <span class="tools pull-right">
-                                <a class="fa fa-chevron-down" href="javascript:;"></a>
-                                <a class="fa fa-cog" href="javascript:;"></a>
-                                <a class="fa fa-times" href="javascript:;"></a>
-                            </span>
-                </header>
+                    <div class="panel-body">
 
-                <div class="alert alert-block booking_status_{{ object.status }} fade in">
-                    Booking Status {{ object.get_status_display }}
-                </div>
+                        <p>Client: {{ object.client }}</p>
+                        <p>Session Ref: {{ object.session_ref }}</p>
+                        <p>Session Deadline: {{ object.deadline }}</p>
 
-                <div class="panel-body">
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Client</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.client }}</span>
-                        </div>
+                        <p>Tuning to start at: {{ object.start_time }}</p>
+                        {% if object.status < '5' %}
+                            <button type="button" class="btn btn-danger cancel_booking" data-pk="{{ object.ref }}">Cancel Booking</button>
+                        {% endif %}
                     </div>
 
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Deadline</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.deadline }}</span>
-                        </div>
-                    </div>
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Session Ref</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.client_ref }}</span>
-                        </div>
-                    </div>
-
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Studio</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.studio }}</span>
-                        </div>
-                    </div>
-
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Instrument</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.instrument }}</span>
-                        </div>
-                    </div>
-                </div>
+                </section>
 
 
-                <div class="panel-body">
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Booker</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.booker }}</span>
-                        </div>
-                    </div>
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                        Comments
+                        <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="{{ object.ref }}" data-value="">Comment</a>
+                    </header>
 
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Booking Requested</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.requested_at }}</span>
-                        </div>
-                    </div>
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Requested For</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.requested_from }} - {{ object.requested_to }}</span>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="panel-body">
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Tuner</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.tuner }}</span>
-                        </div>
-                    </div>
-
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Tuning Booked for</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.booked_time }}</span>
-                        </div>
-                    </div>
-                    <div class="row m-bot20">
-                        <div class="col-md-5 col-xs-5">Tuning Completed</div>
-                        <div class="col-md-7 col-xs-7">
-                            <span class="object">{{ object.completed_at }}</span>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="panel-body">
-                    <div class="row m-bot20">
-                        <p>Comments</p>
-
-                        <div class="form-group"><a href="#" class="comment"  data-pk="{{ form.ref.value }}" data-value="">add comment</a></div>
-
-{#                        <div class="timeline">#}
-{#                            <article class="timeline-item alt">#}
-{#                                <div class="text-right">#}
-{#                                    <div class="time-show first">#}
-{#                                        <a href="#" class="btn btn-primary">Today</a>#}
-{#                                    </div>#}
-{#                                </div>#}
-{#                            </article>#}
-                            <span id="comment_list"></span>
+                    <div class="panel-body">
 
 
-
-                        </div>
-                        </span>
+                        <div class="comment_list" data-pk="{{ object.ref }}"></div>
 
                     </div>
 
-            </section>
 
+
+                </section>
+
+
+            </div>
         </div>
     </div>
-
 
 {% endblock main %}
 
 {%  block js %}
-    <script type='text/x-jquery-tmpl' id="comment_template">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
 
-                    <article class="timeline-item alt">
-                        <div class="timeline-desk">
-                            <div class="panel">
-                                <div class="panel-body">
-                                    <span class="arrow-alt"></span>
-
-                                    <span class="timeline-icon red">
-                                        <i class="fa fa-check"></i>
-                                    </span>
-                                    <span class="timeline-date">${created}</span>
-                                    <h1 class="red">${ago}</h1>
-                                    <p>${comment}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-     </script>
     <script type="text/javascript">
-        API = "{{ API_URL }}"
+        API = "{{ API_URL }}";
 
         $(document).ready(function () {
 
             init();
+            update_events();  // in tuning_updates.js
+            do_last();   // in base
 
         });
 
         function init() {
             // when page is first loaded
 
+            // get list of tuners
+            $.ajax({
+                type:"get",
+                url:API+"tuners",
+                dataType : 'json',
+                success:function(data){
 
-            show_comments({{ object.id }});
+                    var tuners = data.objects;
+                    var tuners_list = [];
+                    $.each(tuners, function(i,d) {
+                        tuners_list.push({value: d.id, text: d.name});
+                    });
+
+                    $('.tuners').editable({
+                        type: 'select',
+                        source: tuners_list,
+                        sourceCache: true,
+                        url: API + 'accept_booking/?format=json&limit=0',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        },
+                        title: 'Select Tuner'
+                    });
+
+
+                }
+            });
+
 
         }
-
-
 
 
     </script>

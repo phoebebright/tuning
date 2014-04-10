@@ -38,6 +38,8 @@ v1_api.register(BookingCompleteResource())
 v1_api.register(BookingsToCompleteResource())
 v1_api.register(BookingsToPaidResource())
 v1_api.register(BookingProviderPaidResource())
+v1_api.register(BookingClientPaidResource())
+v1_api.register(BookingCancelResource())
 v1_api.register(MakeBookingResource())
 v1_api.register(StudioResource())
 v1_api.register(InstrumentResource())
@@ -84,6 +86,7 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/assign/$', 'assign_tuner', name="assign_tuner"),
                         url(r'^booking/to_completed/$', 'to_completed', name="to_completed"),
                         url(r'^booking/to_paid/$', 'to_paid', name="to_paid"),
+                        url(r'^bookings/$', 'bookings_list', name="bookings_list"),
 
                         )
 urlpatterns += patterns('',
@@ -94,7 +97,6 @@ urlpatterns += patterns('',
                        url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
                        url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
 
-                       #TODO: booking-detail and booking-list
 )+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 

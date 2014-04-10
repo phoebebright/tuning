@@ -11,7 +11,7 @@
     <meta name="author" content="PhoebeBright">
     <link rel="shortcut icon" href="{{ STATIC_URL }}images/favicon.png">
 
-    <title>{% block title %}Tuning My Piano{% endblock %}</title>
+    <title>{% block title %}Tune My Piano{% endblock %}</title>
 
 
 
@@ -274,6 +274,7 @@
                                     <li><a href="/booking/assign/">Assign Tuner</a></li>
                                     <li><a href="/booking/to_completed/">Mark Completed</a></li>
                                     <li><a href="/booking/to_paid/">Payments</a></li>
+                                    <li><a href="/bookings/">Browse Bookings</a></li>
                                 </ul>
                             </li>
 
@@ -336,49 +337,49 @@
     <!--main content end-->
     <!--right sidebar start-->
     <div class="right-sidebar">
-    <div class="search-row">
-        <input type="text" placeholder="Search" class="form-control">
-    </div>
-    <div class="right-stat-bar">
-    <ul class="right-side-accordion">
-    <li class="widget-collapsible">
-        <a href="#" class="head widget-head red-bg active clearfix">
-            <span class="pull-left">work progress (5)</span>
-            <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
-        </a>
-        <ul class="widget-container">
-            <li>
-                <div class="prog-row side-mini-stat clearfix">
-                    <div class="side-graph-info">
-                        <h4>Target sell</h4>
-                        <p>
-                            25%, Deadline 12 june 13
-                        </p>
-                    </div>
-                    <div class="side-mini-graph">
-                        <div class="target-sell">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="prog-row side-mini-stat">
-                    <div class="col-md-12">
-                        <h4>total progress</h4>
-                        <p>
-                            50%, Deadline 12 june 13
-                        </p>
-                        <div class="progress progress-xs mtop10">
-                            <div style="width: 50%" aria-valuemax="100" aria-valuemin="0" aria-valuenow="20" role="progressbar" class="progress-bar progress-bar-info">
-                                <span class="sr-only">50% Complete</span>
+        <div class="search-row">
+            <input type="text" placeholder="Search" class="form-control">
+        </div>
+        <div class="right-stat-bar">
+            <ul class="right-side-accordion">
+                <li class="widget-collapsible">
+                    <a href="#" class="head widget-head red-bg active clearfix">
+                        <span class="pull-left">work progress (5)</span>
+                        <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
+                    </a>
+                    <ul class="widget-container">
+                        <li>
+                            <div class="prog-row side-mini-stat clearfix">
+                                <div class="side-graph-info">
+                                    <h4>Target sell</h4>
+                                    <p>
+                                        25%, Deadline 12 june 13
+                                    </p>
+                                </div>
+                                <div class="side-mini-graph">
+                                    <div class="target-sell">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </li>
-        </ul>
-    </li>
-    </ul>
-    </div>
+
+                            <div class="prog-row side-mini-stat">
+                                <div class="col-md-12">
+                                    <h4>total progress</h4>
+                                    <p>
+                                        50%, Deadline 12 june 13
+                                    </p>
+                                    <div class="progress progress-xs mtop10">
+                                        <div style="width: 50%" aria-valuemax="100" aria-valuemin="0" aria-valuenow="20" role="progressbar" class="progress-bar progress-bar-info">
+                                            <span class="sr-only">50% Complete</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </div>
     <!--right sidebar end-->
 
@@ -405,40 +406,209 @@
 
 {#<script src="https://raw.github.com/andris9/jStorage/master/jstorage.js"></script>#}
 <script src="{{ STATIC_URL }}js/moment.min.js"></script>
+<script src="{{ STATIC_URL }}js/q.js"></script>
 
 <script>
-            function show_comments(id) {
+    //TODO: remember status of left hand sidebar - keeps popping back out
+    function show_comments(id) {
 
-            var html = '';
+        var html = '';
 
-            $.ajax({
-                type:"get",
-                url:API+"log",
-                data: {
-                    limit:100,
-                    booking_id: id},
-                dataType : 'json',
-                success:function(json){
-                    var data =json.objects;
-                    $.each(data, function(i, d) {
+        $.ajax({
+            type:"get",
+            url:API+"log",
+            data: {
+                limit:100,
+                booking_id: id},
+            dataType : 'json',
+            success:function(json){
+                var data =json.objects;
+                $.each(data, function(i, d) {
 
-                        var when = moment(d.created).format('ddd Do MMM - HH:mm')
-                        var since = moment(d.created).fromNow()
+                    var when = moment(d.created).format('ddd Do MMM - HH:mm')
+                    var since = moment(d.created).fromNow()
 
-                        html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + when +'</li>';
-                    })
+                    html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + when +'</li>';
+                })
 
-                    $("#comment_list").html(html);
+                $("#comment_list").html(html);
 
-                }
-            });
-        }
+            }
+        });
+    }
 </script>
+
+<!-- templates -->
+{% verbatim %}
+<script id="add_comment_template" type="x-tmpl-mustache">
+
+<a href="#" class="comment btn btn-info fa fa-pencil"  data-pk="{{ ref }}" data-value=""> Comment</a>
+</script>
+
+<script id="comment_list_template" type="x-tmpl-mustache">
+  <div class="alert alert-info clearfix">
+                <div class="notification-info">
+                    <ul class="clearfix notification-meta">
+                        <li class="pull-left notification-sender"><span><a href="#">{{ user }}</a></span></li>
+                        <li class="pull-right notification-time">{{ time }}</li>
+                    </ul>
+                    <p>{{ text }} </p>
+                </div>
+            </div>
+
+
+</script>
+
+<script id="comment_badge_template" type="x-tmpl-mustache">
+<span class="badge comment_count pull-right">{{ num }}</span>
+</script>
+{% endverbatim %}
+<script>
+
+    function do_last() {
+
+        // tool tips
+
+        $('.tooltips').tooltip();
+
+        // popovers
+
+        $('.popovers').popover();
+
+        /*
+         the comment code below attempts to load comment data and setup forms for one or more bookings
+         displayed on the template.
+
+         The non-base template calls do_last() once all bookings are loaded and the html with classes:
+         .comment - for adding a comment
+         <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="XYZ" data-value="">Comment</a>
+
+
+         .comment_list - to display all the existing comments
+         <div class="comment_list" data-pk="XYZ"></div>
+
+         */
+        $('.comment').editable({
+            type: 'textarea',
+            sourceCache: true,
+            url: API + 'log/?format=json',
+
+            success: function(response, newValue) {
+                if(response.status == 'error') return response.msg; //msg will be shown in editable form
+
+                // refresh list of comments
+                var pk = this.dataset['pk'];
+                var sel = $('.comment_list[data-pk="' + pk + '"]');
+                update_comment_list(sel, pk)
+
+                // show comment list
+                sel.show('slow');
+
+
+            },
+            title: 'add comment',
+            display: false
+        });
+
+        $(".comment_list").each(function(i,d) {
+
+            update_comment_list($(this), d.dataset['pk']);
+
+        });
+
+        var template = $('#comment_badge_template').html();
+        Mustache.parse(template);
+        var promises = [];
+
+
+        $(".comment_badge").each(function(i,d) {
+            var selection = $(this);
+            promises.push(load_comment_count(d.dataset['pk'], selection, template));
+
+        });
+
+        Q.all(promises).then(function() {
+
+            // once all comments loaded
+
+            $(".comment_badge").on("click", function(e) {
+                $(".comment_list[data-pk="+this.dataset['pk']+"]").toggle('slow');
+            })
+        });
+    }
+
+    function load_comment_count(pk, selection, template) {
+
+        $.ajax({
+            type:"get",
+            url:API+"log",
+            data: {
+                limit:100,
+                ref:pk},
+            dataType : 'json',
+            success:function(json){
+                var num = json.meta['total_count'];
+                if (num > 0) {
+                    selection.html(Mustache.render(template, {num: num}));
+                }
+
+
+            }
+        });
+    }
+
+    function update_comment_list(selection, pk) {
+
+        var template = $('#comment_list_template').html();
+        Mustache.parse(template);
+
+        $.ajax({
+            type:"get",
+            url:API+"log",
+            data: {
+                limit:100,
+                ref:pk},
+            dataType : 'json',
+            success:function(json){
+                var html = '';
+                $.each(json.objects, function(i, d) {
+                    html += comment_html(d, template);
+                });
+
+                selection.html(html);
+
+                // update badge
+                var badge = $('.comment_badge[data-pk='+pk+']');
+                if (badge.length) {
+                    badge.children('span').html(json.meta['total_count']);
+                }
+
+            }
+        });
+    }
+
+    function comment_html(d, template) {
+
+        if (typeof template == "undefined") {
+            var template = $('#comment_list_template').html();
+            Mustache.parse(template);
+        }
+
+        return Mustache.render(template, {
+            user: d['created_by']['full_name'],
+            time: moment(d['created']).fromNow(),
+            text: d['comment']});
+    }
+
+</script>
+
+
 {%  block js %}
 {%  endblock %}
 
 <script src="{{ STATIC_URL }}js/easypiechart/jquery.easypiechart.js"></script>
 <script src="{{ STATIC_URL }}js/bootstrap-switch.js"></script>
+<script src="{{ STATIC_URL }}js/mustache.js"></script>
 
 <script>
 
@@ -708,30 +878,9 @@ $('.notification-pie-chart').easyPieChart({
             $(this).parents(".panel").parent().remove();
         });
 
-        // tool tips
-
-        $('.tooltips').tooltip();
-
-        // popovers
-
-        $('.popovers').popover();
-
-
-          $('.comment').editable({
-                        type: 'textarea',
-                        sourceCache: true,
-                        url: API + 'log/?format=json',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'add comment'
-                    });
-
-
-
 
     });
+
 
 
 })(jQuery);

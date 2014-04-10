@@ -285,7 +285,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 0)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 0)
-        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.set_complete().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 0)
 
@@ -293,7 +293,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 1)
         self.assertEqual(Booking.objects.requested().count(), 1)
         self.assertEqual(Booking.objects.booked().count(), 0)
-        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.set_complete().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 0)
 
@@ -302,7 +302,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 1)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 1)
-        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.set_complete().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 1)
 
@@ -314,7 +314,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 2)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 2)
-        self.assertEqual(Booking.objects.complete().count(), 0)
+        self.assertEqual(Booking.objects.set_complete().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 1)
 
@@ -328,6 +328,56 @@ class BookingTest(TestCase):
         self.assertTrue(self.testera.is_test)
         self.assertFalse(self.o1.is_test)
         self.assertFalse(self.matt.is_test)
+
+
+    def test_status(self):
+
+        # new booking
+        book = self.jima.request_booking(when=YESTERDAY, client_ref="Jam2", deadline=YESTERDAY)
+        self.assertTrue(book.status, "1")
+
+        book.book(tuner=self.matt)
+        self.assertTrue(book.status, "3")
+
+        Booking.check_to_complete()
+        self.assertTrue(book.status, "4")
+
+
+        book.set_complete()
+        self.assertTrue(book.status, "5")
+        self.assertFalse(book.has_provider_paid)
+        self.assertFalse(book.has_client_paid)
+
+        book.set_provider_paid()
+        self.assertTrue(book.status, "5")
+        self.assertTrue(book.has_provider_paid)
+        self.assertFalse(book.has_client_paid)
+
+        book.set_client_paid()
+        self.assertTrue(book.status, "9")
+        self.assertTrue(book.has_provider_paid)
+        self.assertTrue(book.has_client_paid)
+
+
+        book.client_unpaid()
+        self.assertTrue(book.status, "5")
+        self.assertTrue(book.has_provider_paid)
+        self.assertFalse(book.has_client_paid)
+
+        book.set_provider_unpaid()
+        self.assertTrue(book.status, "5")
+        self.assertFalse(book.has_provider_paid)
+        self.assertFalse(book.has_client_paid)
+
+        book.set_client_paid()
+        self.assertTrue(book.status, "5")
+        self.assertFalse(book.has_provider_paid)
+        self.assertTrue(book.has_client_paid)
+
+        book.set_provider_paid()
+        self.assertTrue(book.status, "9")
+        self.assertTrue(book.has_provider_paid)
+        self.assertTrue(book.has_client_paid)
 
 
 def roundTime(dt=None, roundTo=60):

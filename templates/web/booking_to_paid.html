@@ -22,8 +22,8 @@
 
             <h1>Mark as Paid</h1>
             <div class="table-responsive">
-                <h3>Tuners for Payment</h3>
-                <table id="providers" class="table table-striped table-condensed">
+                <h3>Payments</h3>
+                <table id="providers" class="table  table-condensed">
                     <thead>
                     <tr>
                         <th>When</th>
@@ -39,22 +39,7 @@
                     </tbody>
                 </table>
 
-                <h3>Payments from Clients</h3>
-                <table id="clients" class="table table-striped table-condensed">
-                    <thead>
-                    <tr>
-                        <th>When</th>
-                        <th>Who</th>
-                        <th>Where</th>
-                        <th>What</th>
-                        <th>Paid</th>
-                        <th >Comments</th>
-                    </tr>
-                    </thead>
-                    <tbody>
 
-                    </tbody>
-                </table>
             </div>
 
         </div>
@@ -66,10 +51,10 @@
 
 {% block js %}
 
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.min.js"></script>
 
-
+    <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
     <script type="text/javascript">
@@ -98,65 +83,61 @@
         function bookings_to_paid() {
 
 
-
             $.ajax({
                 type:"get",
                 url:API+"bookings_to_paid",
                 data: {
-                    limit:10},
+                    limit:0},
                 dataType : 'json',
                 success:function(json){
 
                     // put data in a table;
                     bookings_table(json);
+                    update_events();
+                    do_last();
 
-                    // save state when switch toggled
-                    $(".provider_switch").on("switch-change", function(e) {
-                        e.stopPropagation();
 
-                        // checked means not tuned and vv.
-                        var state = !(this.checked);
-                        var ref = this.dataset['pk'];
-
-                        $.ajax({
-                            type:"post",
-                            url:API+"booking_provider_paid/",
-                            data: {
-                                ref:ref,
-                                state: state},
-                            dataType : 'json',
-                            success:function(json){
-                                x=json;
-                            }
-
-                        });
-                    });
                 }
             });
         }
 
         function bookings_table(json) {
+            /* populated list of bookings */
+
+            var template = $('#add_comment_template').html();
+            Mustache.parse(template);
+
+
             data = new Array();
-                    $.each(json.objects, function(i,d) {
+            $.each(json.objects, function(i,d) {
 
-                        d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
-                        d['pay_provider'] = '<input type="checkbox" class="provider_switch" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="provider_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
-                        d['pay_client'] = '<input type="checkbox" class="client_switch" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="client_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
-                        d['comment'] = '<a href="#" class="comment"  data-pk="' + d['ref'] +'" data-value="">add comment</a>';
+                d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
 
-                        data.push(d)
-                    })
-                    build_table(data,
-                            ["when", "tuner", "where", "what","pay_provider", "comment"],
-                            "#providers");
-                    build_table(data,
-                            ["when", "tuner", "where", "what","pay_client", "comment"],
-                            "#clients");
+                d['pay_provider'] = '<input type="checkbox" class="switch switch_tuner" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="provider_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
+                // turn off if already paid
+                if (d.paid_provider_at != null) {
+                    d['pay_provider'] = d['pay_provider'].replace('checked', '');
+                }
+                d['pay_client'] = '<input type="checkbox" class="switch switch_client" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="client_' + d['ref'] + '" data-pk="' + d['ref'] +'">'
+                // turn off if already paid
+                if (d.paid_client_at != null) {
+                    d['pay_client'] = d['pay_client'].replace('checked', '');
+                }
+                d['comment'] =  Mustache.render(template, {ref: d.ref}) +
+                        '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
+                        '<div class="comment_list" data-pk="' + d.ref + '"></div>';
+                data.push(d)
+            })
+            build_table(data,
+                    ["when", "tuner", "where", "what","pay_provider","pay_client", "comment"],
+                    "#providers");
 
 
-                    $(".provider_switch").bootstrapSwitch();  // make checkboxes in table into switches
-                    $(".client_switch").bootstrapSwitch();  // make checkboxes in table into switches
 
+            $(".datarow").on("dblclick", function(e) {
+
+                document.location.href = "/booking/"+this.dataset['id'];
+            });
 
         }
         function build_table(json, cols, tableid) {
@@ -169,8 +150,7 @@
             var rows = "";
             $.each(json, function (i, d) {
 
-                var tr = '<tr class="' + d.status + '" data-id="'+d.ref+'">';
-
+                var tr = '<tr class="datarow booking_status_' + d.status + '" data-id="'+d.ref+'">';
                 $.each(cols, function(i,c){
 
                     tr += '<td class="name" >' + d[c] + '</td>';

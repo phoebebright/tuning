@@ -1,29 +1,30 @@
 import uuid
 from datetime import datetime, date, timedelta, time
 
-from django.db import models
-from django.contrib.auth.models import  AbstractUser
-from django.contrib.auth.models import UserManager
-from django.utils.translation import ugettext_lazy as _
 
 from django.conf import settings
-from django.http import  Http404
-from django.core.exceptions import ValidationError
-from django.db.models.query import QuerySet
-from django.db.models import Q
-from django.forms.models import model_to_dict
-from django.template import Context, Template
+from django.contrib.auth.models import  AbstractUser, UserManager
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.mail import send_mail
+from django.core.urlresolvers import reverse
 from django.core.validators import  MinValueValidator
+from django.db import models
+from django.db.models import Q
+from django.db.models.query import QuerySet
+from django.forms.models import model_to_dict
+from django.http import  Http404
+from django.template import Context, Template
+from django.utils import formats
+from django.utils.translation import ugettext_lazy as _
 
 
 
 from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
 from model_utils.managers import QueryManager, PassThroughManager
+
 
 from libs.utils import make_time, is_list, add_tz
 from web.exceptions import *
@@ -53,6 +54,20 @@ def default_start():
 
 def default_end():
    return datetime.combine(TOMORROW, time(12, 30))
+
+
+class Activity(models.Model):
+    name = models.CharField(_('Type of Activity'), max_length=12, unique=True)
+    name_plural = models.CharField(_('Plural'), max_length=15)
+    duration = models.PositiveIntegerField(_('Default time slot in minutes '), max_length=5, default=60)
+    order = models.PositiveSmallIntegerField(_('Order to display in lists'), default=0)
+    price = models.DecimalField(_('Default price per hour'), max_digits=10, decimal_places=2, default=50)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['order', 'name']
 
 class OrgQuerySet(QuerySet):
 
@@ -199,6 +214,7 @@ class Tuner(CustomUser):
     provider = models.ForeignKey(Provider, null=True, blank=True)
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
+    activities = models.ManyToManyField(Activity, blank=True, null=True)
 
     class Meta:
         verbose_name = _("Users - Tuner")
@@ -235,7 +251,15 @@ class Tuner(CustomUser):
 
         return booking
 
+class BookingsPassThroughManager(PassThroughManager):
+
+    def get_queryset(self):
+        return super(BookingsPassThroughManager, self).get_queryset().filter(client__isnull=False)
+
+
 class BookingsQuerySet(QuerySet):
+
+
 
     def requested(self):
         return self.filter(status=BOOKING_REQUESTED).order_by('-requested_at')
@@ -276,7 +300,9 @@ class Booking(models.Model):
 
     STATUS = Choices((BOOKING_REQUESTED, _('requested')),
                      (BOOKING_BOOKED, _('booked')),
+                     (BOOKING_TOCOMPLETE, _('completed?')),
                      (BOOKING_COMPLETE, _('completed')),
+                     (BOOKING_CANCELLED, _('cancelled')),
                      (BOOKING_ARCHIVED, _('archived')),
                      )
 
@@ -284,6 +310,7 @@ class Booking(models.Model):
     booker = models.ForeignKey(CustomUser, related_name="booker_user", blank=True, null=True)
     client = models.ForeignKey(Client, related_name="client", blank=True, null=True)
     tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
+    activity = models.ForeignKey(Activity, blank=True, null=True)
     status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
@@ -304,7 +331,7 @@ class Booking(models.Model):
     deadline =  models.DateTimeField(_('session start'), blank=True, null=True)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
 
-    objects = PassThroughManager.for_queryset_class(BookingsQuerySet)()
+    objects = BookingsPassThroughManager.for_queryset_class(BookingsQuerySet)()
 
 
     def __unicode__(self):
@@ -333,9 +360,9 @@ class Booking(models.Model):
 
 
 
-        # change status to archived if cancelled or when fully paid
+        # change status to archived  when fully paid
         # TODO:test
-        if self.cancelled_at or (self.paid_provider_at and self.paid_client_at):
+        if self.status == 5 and self.paid_provider_at and self.paid_client_at:
             self.status=BOOKING_ARCHIVED
             self.archived_at = NOW
 
@@ -357,6 +384,12 @@ class Booking(models.Model):
 
     @classmethod
     def create_ref(cls, studio=None, deadline=None):
+        ''' create reference based on studio and time
+         if studio and dealine not available return a temporary ref
+        '''
+
+        if not studio or not deadline:
+            return Booking.create_temp_ref()
 
         code = "%s-%s%sa" % (studio.short_code, deadline.strftime('%b'), deadline.strftime('%d'))
         while True:
@@ -378,6 +411,32 @@ class Booking(models.Model):
     @property
     def long_heading(self):
         return "%s (%s)" % (self.client, self.ref)
+
+
+    @property
+    def description(self):
+
+        txt = ''
+
+        if self.status < 3:
+            txt = "Tune "
+        elif self.status < 4:
+            txt = "%s to tune " % self.tuner
+        else:
+            txt = "%s tuned " % self.tuner
+
+        if self.instrument:
+            txt += "%s " % self.instrument
+
+        if self.studio:
+            txt += "at %s " % self.studio
+
+        txt += "for session that starts at %s (%s)" % (formats.date_format(self.deadline, "DATETIME_FORMAT"), self.ref)
+
+        if self.status == 4:
+            txt += "?"
+
+        return txt.capitalize()
 
     @property
     def comments(self):
@@ -419,21 +478,27 @@ class Booking(models.Model):
 
     @property
     def who(self):
-
-        return "%s(%s)" % (self.client.name, self.booker.username)
+        try:
+            return "%s(%s)" % (self.client.name, self.booker.username)
+        except:
+            return ''
 
     @property
-    def client_paid(self):
+    def has_client_paid(self):
         ''' true if client has paid for tuning
         '''
-        return self.paid_client_at
+        return self.paid_client_at != None
 
     @property
-    def provider_paid(self):
+    def has_provider_paid(self):
         ''' true if provider has been paid for tuning
         '''
-        return self.paid_provider_at
+        return self.paid_provider_at != None
 
+    @property
+    def cancelled(self):
+
+        return self.cancelled_at != None
 
     @property
     def sla_assign_tuner_by(self):
@@ -472,6 +537,7 @@ class Booking(models.Model):
         #TODO: prevent cancellation when status is complete
         #TODO: can only be cancelled by admin or person who created
         self.cancelled_at = NOW
+        self.status = BOOKING_CANCELLED
         self.save()
 
 
@@ -567,14 +633,13 @@ class Booking(models.Model):
         self.booked_at = NOW
         self.save()
 
-    def complete(self):
-
+    def set_complete(self):
 
         self.status = BOOKING_COMPLETE
         self.completed_at = NOW
         self.save()
 
-    def uncomplete(self):
+    def set_uncomplete(self):
         ''' set status back, but only if called  within a minute(ish)
         '''
 
@@ -584,18 +649,16 @@ class Booking(models.Model):
             self.completed_at = None
             self.save()
 
-    def provider_paid(self):
-
-
+    def set_provider_paid(self):
 
         self.paid_provider_at = NOW
 
-        if self.paid_provider_at:
+        if self.paid_client_at:
             self.status = BOOKING_ARCHIVED
 
         self.save()
 
-    def provider_unpaid(self):
+    def set_provider_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
         '''
 
@@ -603,6 +666,25 @@ class Booking(models.Model):
 
             self.status = BOOKING_COMPLETE
             self.paid_provider_at = None
+            self.save()
+
+    def set_client_paid(self):
+
+        self.paid_client_at = NOW
+
+        if self.paid_provider_at:
+            self.status = BOOKING_ARCHIVED
+
+        self.save()
+
+    def client_unpaid(self):
+        ''' set status back, but only if called  within a minute(ish)
+        '''
+
+        if (NOW - self.paid_client_at).seconds < 90:
+
+            self.status = BOOKING_COMPLETE
+            self.paid_client_at = None
             self.save()
 
     def send_request(self):
