@@ -410,6 +410,9 @@
 
 <script>
     //TODO: remember status of left hand sidebar - keeps popping back out
+
+    API = "{{ API_URL }}";
+
     function show_comments(id) {
 
         var html = '';
@@ -630,7 +633,7 @@ $('.notification-pie-chart').easyPieChart({
     "use strict";
     $(document).ready(function () {
 
-        API = "{{ API_URL }}";
+
         /*==Left Navigation Accordion ==*/
         if ($.fn.dcAccordion) {
             $('#nav-accordion').dcAccordion({
