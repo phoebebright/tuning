@@ -4,6 +4,8 @@
     <link href="{{ STATIC_URL }}css/bootstrap-datetimepicker.min.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+    {# TODO: better datetimepicker http://www.malot.fr/bootstrap-datetimepicker/#}
+    {#    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}js/bootstrap-datetimepicker/css/datetimepicker.css" />#}
 
 
     <style>
@@ -22,7 +24,7 @@
             <h1>New Booking</h1>
             <form id="booking" role="form" class="form-horizontal" action="" method="post">{% csrf_token %}
                 {% bootstrap_form form %}
-{#            <div class="form-group"><a href="#" class="comment"  data-pk="{{ form.ref.value }}" data-value="">add comment</a></div>#}
+                {#            <div class="form-group"><a href="#" class="comment"  data-pk="{{ form.ref.value }}" data-value="">add comment</a></div>#}
                 {% buttons %}
                     <button type="submit" class="btn btn-primary">
                         {% bootstrap_icon "star" %} Save
@@ -45,6 +47,7 @@
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.min.js"></script>
+    {#    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>#}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker.js"></script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>

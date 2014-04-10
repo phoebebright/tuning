@@ -34,3 +34,10 @@ class InvalidQueryset(ModelException):
     '''
     txtMessage = 'Filter requested for this queryset is not valid'
     errorCode = 104
+
+class InvalidActivity(ModelException):
+    '''
+    eg. "mine" queryset is required by user of type system as only valid for clients and providers
+    '''
+    txtMessage = 'This is not a valid activity'
+    errorCode = 105

@@ -96,7 +96,8 @@
                 type:"get",
                 url:API+"bookings",
                 data: {
-                    limit:10},
+                    limit:0,
+                dataset:"current"},
                 dataType : 'json',
                 success:function(json){
                     data = new Array();

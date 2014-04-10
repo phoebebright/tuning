@@ -141,8 +141,8 @@
             var rows = "";
             $.each(json, function (i, d) {
 
-                var tr = '<tr class="datarow booking_status_' + d.status + '" data-id="'+d.ref+'">';
-                $.each(cols, function(i,c){
+                 var tr = '<tr class="datarow booking_status_' + d.status + '" data-id="'+d.ref+'">';
+              $.each(cols, function(i,c){
 
                     tr += '<td class="name" >' + d[c] + '</td>';
                 });

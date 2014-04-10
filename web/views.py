@@ -123,7 +123,7 @@ class BookingForm(forms.ModelForm):
 
     class Meta:
         model = Booking
-        fields = ['client', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument','ref']
+        fields = ['client','activity', 'client_ref', 'deadline','duration', 'requested_from', 'requested_to', 'studio', 'instrument','ref']
 
     def __init__(self, *args, **kwargs):
             super(BookingForm, self).__init__(*args, **kwargs)
@@ -189,7 +189,7 @@ class BookingCreate(CreateView):
         new = Booking.objects.create(ref = Booking.create_temp_ref())
 
         form =  form_class(**self.get_form_kwargs())
-        form.initial = {'client': self.request.user.organisation, 'user': self.request.user, 'ref': new.ref}
+        form.initial = {'client': self.request.user.organisation, 'user': self.request.user, 'ref': new.ref, 'activity': Activity.default_activity()}
         return form
 
     def form_valid(self, form):

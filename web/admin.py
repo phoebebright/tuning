@@ -73,6 +73,13 @@ class InstrumentInline(admin.TabularInline):
     model           = Instrument
 
 
+class ActivityAdmin(admin.ModelAdmin):
+
+    class Meta:
+        model = Activity
+
+    list_display = ('name', 'name_plural')
+
 
 
 #class OrgAdmin(reversion.VersionAdmin):
@@ -112,3 +119,4 @@ admin.site.register(Client, ClientAdmin)
 admin.site.register(Provider, ProviderAdmin)
 admin.site.register(Studio, StudioAdmin)
 admin.site.register(Booking, BookingAdmin)
+admin.site.register(Activity, ActivityAdmin)

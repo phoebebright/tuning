@@ -16,7 +16,7 @@ def make_time(dt, round_direction="start"):
     '''
     if hasattr(dt, 'hour'):
 
-        return dt
+        return add_tz(dt)
 
     else:
         if round_direction == "start":

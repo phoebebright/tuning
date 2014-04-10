@@ -566,7 +566,7 @@
             type:"get",
             url:API+"log",
             data: {
-                limit:100,
+                limit:0,
                 ref:pk},
             dataType : 'json',
             success:function(json){
@@ -878,6 +878,32 @@ $('.notification-pie-chart').easyPieChart({
             $(this).parents(".panel").parent().remove();
         });
 
+
+
+        $('.search').on("change", function(e) {
+            // search for booking ref
+
+            var ref = this.value;
+
+            $.ajax({
+                type:"get",
+                url:API+"bookings",
+                data: {
+                    limit:2,
+                    ref:ref},
+                dataType : 'json',
+                success:function(json){
+
+                    if (json.meta['total_count'] == 1) {
+                        document.location.href = "/booking/" + ref;
+
+                    }
+
+                }
+            });
+
+
+        });
 
     });
 

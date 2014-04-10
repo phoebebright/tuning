@@ -33,6 +33,10 @@ def base_data(request=None):
     except Client.DoesNotExist:
         pass
 
+    #activities
+    a1 = Activity.objects.create(name="Tuning", name_plural="Tunings", order=0, duration=60)
+    a2 = Activity.objects.create(name="Repair", name_plural="Repairs", order=1, duration=120)
+
     # create organisations
     o1=Client.objects.create(name="Recording Studio A")
     o2=Client.objects.create(name="Recording Studio B")
@@ -72,30 +76,45 @@ def base_data(request=None):
     u.mobile = "754456"
     u.client = o3
     u.save()
+
     u = Tuner.objects.create_user('matt', 'phoebebright310+matt@gmail.com', 'pass')
     u.first_name = "Matt"
     u.last_name = "Apostle"
     u.mobile = "434534534"
     u.provider=t1
     u.save()
+    u.activities.add(a1)
+    u.activities.add(a2)
+    u.save()
+
     u = Tuner.objects.create_user('mark', 'phoebebright310+mark@gmail.com', 'pass')
     u.first_name = "Mark"
     u.last_name = "Apostle"
     u.mobile = "789876756"
     u.provider=t2
     u.save()
+    u.activities.add(a1)
+    u.activities.add(a2)
+    u.save()
+
     u = Tuner.objects.create_user('luke', 'phoebebright310+luke@gmail.com', 'pass')
     u.first_name = "Luke"
     u.last_name = "Apostle"
     u.mobile = "56756445"
     u.provider=t3
     u.save()
+    u.activities.add(a1)
+    u.save()
+
     u = Tuner.objects.create_user('john', 'phoebebright310+john@gmail.com', 'pass')
     u.first_name = "John"
     u.last_name = "Apostle"
     u.mobile = "6764523"
     u.provider=t4
     u.save()
+    u.activities.add(a2)
+    u.save()
+
     u = Booker.objects.create_user('testera', 'phoebebright310+testa@gmail.com', 'pass')
     u.first_name = "Tester"
     u.last_name = "A"
@@ -108,6 +127,10 @@ def base_data(request=None):
     u.mobile = "6764523"
     u.provider=tstp
     u.save()
+    u.activities.add(a1)
+    u.activities.add(a2)
+    u.save()
+
 
     # Studios
     s1 = Studio.objects.create(name="Studio Red", short_code="RED")
@@ -148,10 +171,12 @@ def test_bookings(request=None):
     t3=Provider.objects.get(name="Tuner C")
     t4=Provider.objects.get(name="Tuner D")
 
+    #get activities
+    a1 = Activity.objects.get(name="Tuning")
+    a2 = Activity.objects.get(name="Repair")
 
 
     # get users
-
     freda = Booker.objects.get(username='fredA')
     jima = Booker.objects.get(username='jimA')
     maryb = Booker.objects.get(username='maryB')

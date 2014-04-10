@@ -7,6 +7,7 @@ from django.db.models import get_model
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 
 from web.models import *
 from web.exceptions import *
@@ -19,6 +20,8 @@ from django.conf import settings
 
 from datetime import date, timedelta, time
 from django.utils.timezone import utc
+
+
 
 # # faketime allows the actual date to be set in the future past - for testing can be useful
 # from libs.faketime import now
@@ -39,7 +42,10 @@ def list_orgs():
     return txt
 
 
+'''
 
+NOTE - not all tests pass when checking for bookings in the past
+'''
 
 
 class BookingTest(TestCase):
@@ -95,6 +101,11 @@ class BookingTest(TestCase):
         self.i4 = Instrument.objects.get(name="Harpsicord")
         self.i5 = Instrument.objects.get(name="Grand")
         self.i6 = Instrument.objects.get(name="Upright")
+
+
+        #get activities
+        self.a1 = Activity.objects.get(name="Tuning")
+        self.a2 = Activity.objects.get(name="Repair")
 
 
     def test_refs(self):
@@ -153,19 +164,20 @@ class BookingTest(TestCase):
         self.assertRaises(PastDateException, self.freda.request_booking, when=YESTERDAY)
         self.assertRaises(PastDateException, self.freda.request_booking, when=datetime.combine(YESTERDAY, time(12,00)))
         self.assertRaises(DeadlineBeforeBookingException, self.freda.request_booking,
-                          when=datetime.combine(TODAY, time(12,00)),
+                          when=datetime.combine(TODAY, time(23,00)),
                           deadline=YESTERDAY)
 
         #TODO: Test unique ref not being unique - should generate another ref and try again
 
         # test passes
-        self.assertEqual(self.freda.requested_bookings.count(),0)
+        self.assertEqual(Booking.objects.mine(self.freda).count(),0)
         book1 = self.freda.request_booking(when=TODAY)
         book1a = Booking.objects.get(id=book1.id)
-        self.assertEqual(self.freda.requested_bookings.count(),1)
+        self.assertEqual(Booking.objects.mine(self.freda).count(),1)
 
         # populated fields
         self.assertEqual(book1.status, BOOKING_REQUESTED)
+        self.assertEqual(book1.activity, self.a1)
         self.assertEqual(book1.booker, self.freda)
         self.assertEqual(book1.client, self.o1)
         self.assertEqual(roundTime(book1.requested_at, 120), roundTime(NOW, 120))  # within 2 seconds
@@ -174,17 +186,18 @@ class BookingTest(TestCase):
         self.assertIsNotNone(book1.ref)
 
         # unpopulated fields
-        self.assertIsNone(book1.provider)
+        self.assertIsNone(book1.tuner)
         self.assertIsNone(book1.completed_at)
         self.assertIsNone(book1.cancelled_at)
         self.assertIsNone(book1.paid_client_at)
-        self.assertIsNone(book1.paid_provider)
+        self.assertIsNone(book1.paid_provider_at)
         self.assertIsNone(book1.booked_time)
         self.assertIsNone(book1.studio)
         self.assertIsNone(book1.instrument)
         self.assertIsNone(book1.deadline)
         self.assertIsNone(book1.client_ref)
-        self.assertIsNone(book1.comments)
+
+        #TODO: test comments
 
         book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
 
@@ -206,7 +219,6 @@ class BookingTest(TestCase):
         self.assertEqual(book4.client_ref, "testref")
         self.assertEqual(book4.studio, self.sr)
         self.assertEqual(book4.instrument, self.i1)
-        self.assertEqual(book4.comments, "fulltest")
         self.assertEqual(book4.deadline, deadline)
         self.assertIsNotNone(book4.ref)
 
@@ -382,12 +394,14 @@ class BookingTest(TestCase):
 
 def roundTime(dt=None, roundTo=60):
 
-   """Round a datetime object to any time laps in seconds
+   """Round a datetime object to avoid overlaps during testing
    dt : datetime.datetime object, default now.
    roundTo : Closest number of seconds to round to, default 1 minute.
    Author: Thierry Husson 2012 - Use it as you want but don't blame me.
    http://stackoverflow.com/questions/3463930/how-to-round-the-minute-of-a-datetime-object-python
    """
+   tz = timezone.get_current_timezone()
+   dt = timezone.make_naive(dt, tz)
    if dt == None :
         return None
    seconds = (dt - dt.min).seconds

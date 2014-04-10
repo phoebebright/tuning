@@ -57,8 +57,9 @@ def default_end():
 
 
 class Activity(models.Model):
-    name = models.CharField(_('Type of Activity'), max_length=12, unique=True)
-    name_plural = models.CharField(_('Plural'), max_length=15)
+    name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
+    name_plural = models.CharField(_('eg. Tunings'), max_length=15)
+    name_verb = models.CharField(_('eg. Tune'), max_length=12)
     duration = models.PositiveIntegerField(_('Default time slot in minutes '), max_length=5, default=60)
     order = models.PositiveSmallIntegerField(_('Order to display in lists'), default=0)
     price = models.DecimalField(_('Default price per hour'), max_digits=10, decimal_places=2, default=50)
@@ -68,6 +69,13 @@ class Activity(models.Model):
 
     class Meta:
         ordering = ['order', 'name']
+
+    @classmethod
+    def default_activity(cls):
+        '''returns the top of the list
+        '''
+
+        return cls.objects.all()[0]
 
 class OrgQuerySet(QuerySet):
 
@@ -197,16 +205,15 @@ class Booker(CustomUser):
 
         return False
 
-    def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None):
+    def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, activity=None, comments=None):
 
 
         #TODO: may want to limit users who can create bookings
 
-        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, comments )
+        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, activity, comments )
 
 
         return booking
-
 
 
 class Tuner(CustomUser):
@@ -472,9 +479,9 @@ class Booking(models.Model):
     @property
     def what(self):
          if self.instrument:
-            return self.instrument.name
+            return self.activity.name_verb + " " + self.instrument.name
          else:
-            return ""
+            return self.activity.name
 
     @property
     def who(self):
@@ -542,8 +549,20 @@ class Booking(models.Model):
 
 
     @classmethod
-    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, comments=None, client=None, ):
+    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, activity=None, comments=None, client=None, ):
 
+        # if activity not specified, get default
+        if not activity:
+            activity = Activity.default_activity()
+        else:
+            # convert name to object if passed as a string
+            if activity == unicode(activity):
+                try:
+                    activity = Activity.objects.get(name=activity)
+                except Activity.DoesNotExist:
+                    raise InvalidActivity
+
+            # else assume activity is an object, it will fail further down if not
 
         # get start and end times for booking
         if is_list(when):
@@ -562,8 +581,8 @@ class Booking(models.Model):
         # can't bookin in the past
         # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
         # commented out for the moment to make testing easier
-        # if to_time < NOW:
-        #     raise PastDateException
+        if to_time < NOW:
+            raise PastDateException
 
         # fix end time if possible
 
@@ -592,6 +611,7 @@ class Booking(models.Model):
         #TODO: handle case where show does not have an organisation or is not a client
 
         booking = Booking.objects.create(booker=who,
+                                         activity = activity,
                                          client = client,
                                          requested_from = from_time,
                                          requested_to = to_time,
@@ -608,8 +628,7 @@ class Booking(models.Model):
             booking.deadline = deadline
         if client_ref:
             booking.client_ref = client_ref
-        if comments:
-            booking.comments = comments
+
 
         booking.save()
         booking.send_request()

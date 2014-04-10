@@ -136,6 +136,13 @@ class ClientMinResource(ModelResource):
         resource_name = 'minclient'
         allowed_methods = ['get']
 
+class ActivityResource(ModelResource):
+    class Meta:
+        queryset = Activity.objects.all()
+        include_resource_uri = False
+        limit = 0
+        resource_name = 'activities'
+        allowed_methods = ['get']
 
 class StudioResource(ModelResource):
     client = fields.ToOneField(ClientResource, "client", full=False)
@@ -180,9 +187,13 @@ class InstrumentResource(ModelResource):
 
 class BookingsResource(ModelResource):
     #TODO: Only return own bookings
+    ''' can pass status = current or status = archived or the numeric value of the status required
+    '''
     client = fields.ToOneField(ClientResource, "client", full=True)
     booker = fields.ToOneField(UserResource, "booker", full=True)
     tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
+    activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
+    # dataset = fields.CharField(attribute="dataset", blank=True, null=True)
 
     class Meta:
         queryset = Booking.objects.all()
@@ -194,6 +205,8 @@ class BookingsResource(ModelResource):
         filtering = {
             'client_id': ('exact',),
             'status': ('exact',),
+            'ref': ('exact',),
+            # 'dataset': ('exact',),
             }
         #
         # authorization = Authorization()
@@ -214,9 +227,22 @@ class BookingsResource(ModelResource):
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
-
+        bundle.data['activity'] = bundle.obj.activity.name
 
         return bundle
+
+    def get_object_list(self, request):
+        base = super(BookingsResource, self).get_object_list(request)
+        if request._get.has_key('dataset'):
+            dataset = request._get.get('dataset')
+            if dataset.lower() == "current":
+                return base.current()
+            elif dataset.lower() == "archived":
+                return base.archived()
+
+        else:
+            return base
+
 
 class MakeBookingResource(ModelResource):
     #TODO: Only return own bookings
@@ -273,10 +299,10 @@ class RecentBookingsResource(ModelResource):
         include_resource_uri = True
         resource_name = 'recent_bookings'
         allowed_methods = ['get']
-        fields = ['ref', 'status','id']
+        fields = ['ref', 'status','id', "activity"]
 
     def dehydrate(self, bundle):
-        bundle.data['status'] = bundle.obj.get_status_display()
+        bundle.data['status_display'] = bundle.obj.get_status_display()
         bundle.data['who'] = bundle.obj.who
         bundle.data['when'] = timezone.localtime(bundle.obj.when)
         bundle.data['where'] = bundle.obj.where
@@ -288,20 +314,22 @@ class RequestedBookingsResource(ModelResource):
     #TODO: Only return own bookings
     client = fields.ToOneField(ClientResource, "client", full=True)
     booker = fields.ToOneField(UserResource, "booker", full=True)
+    activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
 
     class Meta:
         queryset = Booking.objects.requested()
         include_resource_uri = True
         resource_name = 'requested_bookings'
         allowed_methods = ['get']
-        fields = ['ref', 'requested_from','requested_to', 'studio','instrument']
+        fields = ['ref', 'requested_from','requested_to', 'studio','instrument',"activity", "status"]
 
     def dehydrate(self, bundle):
-        bundle.data['status'] = bundle.obj.get_status_display()
+        bundle.data['status_display'] = bundle.obj.get_status_display()
         bundle.data['who'] = ''
         bundle.data['when'] = timezone.localtime(bundle.obj.when)
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
+        bundle.data['activity'] = bundle.obj.activity.name
 
         return bundle
 
