@@ -89,3 +89,7 @@ content: "\f056";
 .comment {
     margin-bottom: 5px;
 }
+
+.form-control {
+color: #454545;
+}

@@ -206,9 +206,10 @@ class BookingTest(TestCase):
         self.assertEqual(book3.studio, self.sr)
 
         # specify all fields
-        starts = datetime.combine(TOMORROW, time(11,00))
-        ends = datetime.combine(TOMORROW, time(14,15))
-        deadline = datetime.combine(TOMORROW, time(15,00))
+        starts = make_time(datetime.combine(TOMORROW, time(11,00)))
+        ends = make_time(datetime.combine(TOMORROW, time(14,15)))
+        deadline = make_time(datetime.combine(TOMORROW, time(15,00)))
+
         book4 = Booking.create_booking(self.jima, when=(starts, ends), deadline=deadline, where=self.sr, what=self.i1, client_ref="testref", comments="fulltest" )
         self.assertEqual(book4.status, BOOKING_REQUESTED)
         self.assertEqual(book4.booker, self.jima)

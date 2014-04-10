@@ -338,6 +338,8 @@ class Booking(models.Model):
     deadline =  models.DateTimeField(_('session start'), blank=True, null=True)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
 
+    price = models.DecimalField(_('Price for job'), max_digits=10, decimal_places=2, default=0)
+
     objects = BookingsPassThroughManager.for_queryset_class(BookingsQuerySet)()
 
 
@@ -358,6 +360,8 @@ class Booking(models.Model):
             if not self.ref:
                 self.ref = Booking.create_ref(self.studio, self.deadline)
 
+            self.activity = Activity.default_activity()
+            self.price = self.activity.price * (settings.DEFAULT_SLOT_TIME / 60)
             self.requested_at = NOW
 
         # replace temporary ref with permanent one if data is available
