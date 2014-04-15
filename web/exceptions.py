@@ -1,3 +1,4 @@
+from django.core.exceptions import *
 
 class ModelException(Exception):
     errorCode = 100
@@ -35,9 +36,28 @@ class InvalidQueryset(ModelException):
     txtMessage = 'Filter requested for this queryset is not valid'
     errorCode = 104
 
-class InvalidActivity(ModelException):
+class InvalidActivity(PermissionDenied):
     '''
     eg. "mine" queryset is required by user of type system as only valid for clients and providers
     '''
-    txtMessage = 'This is not a valid activity'
+    txtMessage = 'This is not a valid activity for this user'
     errorCode = 105
+
+    def __init__(self, message=None, *args, **kwargs):
+        if message:
+            self.txtMessage = message
+        print self.txtMessage
+
+class InvalidID(ModelException):
+    '''
+    eg. incorrect client id passed to new booking
+    '''
+    txtMessage = 'This is not a valid id'
+    errorCode = 106
+
+class InvalidData(ModelException):
+    '''
+    eg. incorrect client id passed to new booking
+    '''
+    txtMessage = 'This is not a valid data'
+    errorCode = 107

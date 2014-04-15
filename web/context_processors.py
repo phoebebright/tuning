@@ -13,6 +13,7 @@ def add_stuff(request):
     context['DEFAULT_SLOT_TIME'] = settings.DEFAULT_SLOT_TIME
     context['API_URL'] = settings.API_URL
     context['MAX_BOOK_DAYS_IN_ADVANCE'] = settings.MAX_BOOK_DAYS_IN_ADVANCE
+    context['MAX_DATE'] = now() + timedelta(days=settings.MAX_BOOK_DAYS_IN_ADVANCE)
 
     context['NOW'] = now()
     context['TODAY'] = context['NOW'].date()

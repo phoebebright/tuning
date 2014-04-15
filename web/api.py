@@ -1,4 +1,5 @@
 import urlparse
+from datetime import datetime
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -6,11 +7,12 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 
 from tastypie import fields
-from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.authentication import SessionAuthentication, Authentication, BasicAuthentication
 from tastypie.authorization import DjangoAuthorization, Authorization, ReadOnlyAuthorization
+from tastypie.bundle import Bundle
 from tastypie.exceptions import NotFound, BadRequest
 from tastypie.paginator import Paginator
+from tastypie.resources import Resource, ModelResource, ALL, ALL_WITH_RELATIONS
 from tastypie.serializers import Serializer
 
 
@@ -196,7 +198,7 @@ class BookingsResource(ModelResource):
     # dataset = fields.CharField(attribute="dataset", blank=True, null=True)
 
     class Meta:
-        queryset = Booking.objects.all()
+        queryset = Booking.objects.current()
         include_resource_uri = True
         resource_name = 'bookings'
         allowed_methods = ['get']
@@ -218,12 +220,26 @@ class BookingsResource(ModelResource):
 
         bundle.data['title'] = bundle.obj.long_heading
 
-        bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
-        bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
+        if bundle.obj.start_time:
+            bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
+        else:
+            bundle.data['start'] = ''
+
+        if bundle.obj.end_time:
+            bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
+        else:
+            bundle.data['end'] = ''
+
         bundle.data['status_display'] = bundle.obj.get_status_display()
 
         bundle.data['who'] = bundle.obj.who
-        bundle.data['when'] = timezone.localtime(bundle.obj.when)
+
+        if bundle.obj.when:
+            bundle.data['when'] = timezone.localtime(bundle.obj.when)
+        else:
+            bundle.data['when'] = ''
+
+
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
@@ -232,7 +248,7 @@ class BookingsResource(ModelResource):
         return bundle
 
     def get_object_list(self, request):
-        base = super(BookingsResource, self).get_object_list(request)
+        base = super(BookingsResource, self).get_object_list(request).mine(request.user)
         if request._get.has_key('dataset'):
             dataset = request._get.get('dataset')
             if dataset.lower() == "current":
@@ -244,14 +260,199 @@ class BookingsResource(ModelResource):
             return base
 
 
-class MakeBookingResource(ModelResource):
-    #TODO: Only return own bookings
+
+
+
+
+
+class BookingUpdateResource(Resource):
 
     class Meta:
-        queryset = Booking.objects.all()
         include_resource_uri = True
+        resource_name = 'set_instrument_booking'
+        allowed_methods = ['post','put','get','options']
+        include_resource_uri = False
+        object_class = SimpleObject
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['pk']
+        value = bundle.data['value']
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+
+            self.update_booking(booking, bundle, value)
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+        #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
+        #TODO: This object is not being returned, it's not getting serialised for some reason
+        return  None
+
+    def update_booking(self, booking, bundle):
+        pass
+
+    def get_resource_uri(self, bundle_or_obj):
+        kwargs = {
+            'resource_name': self._meta.resource_name,
+        }
+
+        if isinstance(bundle_or_obj, Bundle):
+            kwargs['pk'] = bundle_or_obj.obj.id # pk is referenced in ModelResource
+        else:
+            kwargs['pk'] = bundle_or_obj.id
+
+        if self._meta.api_name is not None:
+            kwargs['api_name'] = self._meta.api_name
+
+        return self._build_reverse_url('api_dispatch_detail', kwargs = kwargs)
+
+
+class MakeBookingResource(BookingUpdateResource):
+    #TODO: Couldn't quite get this to work as won't return ref as valid json to jquery
+    '''
+    without always_return_data = True the jquery ajax fails with 201 and no response data
+    with always_return_data = True it retuns a copy of the post data but what I want is the ID.
+    '''
+
+    class Meta(BookingUpdateResource.Meta):
         resource_name = 'make_booking'
-        allowed_methods = ['post']
+        always_return_data = True
+
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        client_id = bundle.data['client_id']
+        when = datetime.strptime(bundle.data['when'], "%Y-%m-%d %H:%M")
+        user_id = bundle.data['user_id']
+
+        try:
+            client = Client.objects.get(id=client_id)
+            if not client.active:
+                raise BadRequest('This Client %s is not active' % client)
+        except Client.DoesNotExist:
+            raise BadRequest('This Client id does not exist: %s' % client_id)
+
+
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            if not user.can_book:
+                raise BadRequest('This User %s is not allowed to make bookings' % user)
+        except CustomUser.DoesNotExist:
+            raise BadRequest('This User id does not exist: %s' % user_id)
+
+
+        # all ok so create booking
+        booking = Booking.create_booking(user, deadline=when, client=client)
+
+        # create a simpleobject to return ref
+
+        bundle.obj = SimpleObject()
+        bundle = self.full_hydrate(bundle)
+
+        bundle.obj.id = booking.ref
+        return bundle
+
+
+
+class BookingActivityResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_activity_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        try:
+            booking.activity = Activity.objects.get(id=value)
+            booking.save()
+        except Activity.DoesNotExist:
+            raise BadRequest('Invalid Activity id %s' % value)
+
+
+class BookingInstrumentResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_instrument_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        try:
+            booking.instrument = Instrument.objects.get(id=value)
+            booking.save()
+        except Instrument.DoesNotExist:
+            raise BadRequest('Invalid Instrument id %s' % value)
+
+
+class BookingStudioResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_studio_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        try:
+            booking.studio = Studio.objects.get(id=value)
+            booking.save()
+        except Studio.DoesNotExist:
+            raise BadRequest('Invalid Studio id %s' % value)
+
+
+
+class BookingDeadlineResource(BookingUpdateResource):
+
+    class Meta(BookingStudioResource.Meta):
+        resource_name = 'set_deadline_booking'
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+
+        ref = bundle.data['pk']
+        [y, m, d] = bundle.data['value'].split('-')
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+            if booking.deadline:
+                booking.deadline.replace(year=y, month=m, date=d)
+            else:
+                booking.deadline = datetime(int(y), int(m), int(d), 12, 0)
+
+            booking.save()
+
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+
+        #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
+        #TODO: This object is not being returned, it's not getting serialised for some reason
+        return  None
+
+
+class BookingClientrefResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_clientref_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        booking.client_ref = value
+        booking.save()
+
+
+
 
 class AcceptBookingResource(Resource):
 

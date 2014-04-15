@@ -21,29 +21,36 @@ API Stuff
 from tastypie.api import Api
 from web.api import *
 from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView, BookingCompleteView
+from libs.utils import required
 
 v1_api = Api(api_name='v1')
 
-v1_api.register(ClientResource())
-v1_api.register(ProviderResource())
-v1_api.register(TunerResource())
-v1_api.register(ClientMinResource())
-v1_api.register(RequestBookingResource())
-v1_api.register(BookingsResource())
 v1_api.register(AcceptBookingResource())
-v1_api.register(RecentBookingsResource())
-v1_api.register(RequestedBookingsResource())
 v1_api.register(AcceptedBookingsResource())
+v1_api.register(ActivityResource())
+v1_api.register(BookingActivityResource())
+v1_api.register(BookingCancelResource())
+v1_api.register(BookingClientPaidResource())
 v1_api.register(BookingCompleteResource())
+v1_api.register(BookingInstrumentResource())
+v1_api.register(BookingProviderPaidResource())
+v1_api.register(BookingsResource())
 v1_api.register(BookingsToCompleteResource())
 v1_api.register(BookingsToPaidResource())
-v1_api.register(BookingProviderPaidResource())
-v1_api.register(BookingClientPaidResource())
-v1_api.register(BookingCancelResource())
-v1_api.register(MakeBookingResource())
-v1_api.register(StudioResource())
+v1_api.register(BookingStudioResource())
+v1_api.register(ClientMinResource())
+v1_api.register(ClientResource())
 v1_api.register(InstrumentResource())
 v1_api.register(LogResource())
+v1_api.register(MakeBookingResource())
+v1_api.register(ProviderResource())
+v1_api.register(RecentBookingsResource())
+v1_api.register(RequestBookingResource())
+v1_api.register(RequestedBookingsResource())
+v1_api.register(StudioResource())
+v1_api.register(TunerResource())
+v1_api.register(BookingDeadlineResource())
+v1_api.register(BookingClientrefResource())
 
 
 '''
@@ -64,6 +71,27 @@ class DirectTemplateView(TemplateView):
 
 admin.autodiscover()
 
+def is_admin(user):
+    if user and user.is_admin:
+        return user.is_staff
+    else:
+        return False
+
+def is_booker(user):
+    if user and user.is_booker:
+        return True
+    else:
+        return False
+
+def is_tuner(user):
+    if user and user.is_tuner:
+        return True
+    else:
+        return False
+
+
+
+
 urlpatterns = patterns('',
                        url(r'^api/', include(v1_api.urls)),
 
@@ -78,11 +106,21 @@ urlpatterns = patterns('',
                        #                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
                        url(r'^admin/', include(admin.site.urls)),
 
-                       )
+                       ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# urlpatterns += required(
+#     is_admin,
+#     patterns('',
+#         (r'^private/', include('admin.urls'))
+#     )
+# )
 
 urlpatterns += patterns('web.views',
                         url(r'^$','dashboard' ,name="dashboard"),
                         url(r'^calendar', 'calendar', name="calendar"),
+                        url(r'^booking/add/$', 'bookings_add', name='booking_add'),
+                        url(r'^booking/add/(?P<client_id>\d+)/$', 'bookings_add', name='booking_add_client'),
+                        url(r'^booking/add/(?P<client_id>\d+)/(?P<deadline>\d+)/$', 'bookings_add', name='booking_add_client_deadline'),
                         url(r'^booking/assign/$', 'assign_tuner', name="assign_tuner"),
                         url(r'^booking/to_completed/$', 'to_completed', name="to_completed"),
                         url(r'^booking/to_paid/$', 'to_paid', name="to_paid"),
@@ -91,13 +129,13 @@ urlpatterns += patterns('web.views',
                         )
 urlpatterns += patterns('',
                        #login required
-                       url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
+                       #url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
                        url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
                        url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
                        url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
                        url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
 
-)+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+)
 
 
 

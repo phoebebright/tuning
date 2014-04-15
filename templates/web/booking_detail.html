@@ -41,7 +41,7 @@
                     </header>
                     <div class="panel-body">
 
-                        <div class="alert alert-block shout booking_status_{{ object.status }} fade in">{{ object.description }}</div>
+                        <div class="alert alert-block shout booking_status_{{ object.status }} fade in">{{ object.description|safe }}</div>
 
                     </div>
                 </section>

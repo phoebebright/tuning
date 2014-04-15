@@ -55,6 +55,10 @@ def default_start():
 def default_end():
    return datetime.combine(TOMORROW, time(12, 30))
 
+def default_start_time(deadline):
+
+    return make_time(deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
+
 
 class Activity(models.Model):
     name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
@@ -111,6 +115,43 @@ class Client(Organisation):
     @property
     def bookers(self):
         return Booker.objects.filter(client=self)
+
+    @property
+    def studios(self):
+        return Studio.objects.filter(client=self)
+
+    @property
+    def instruments(self):
+        return Instrument.objects.filter(client=self)
+
+
+    def new_booking(self):
+        how = None
+        where = None
+        what = None
+        who = None
+        when = None
+
+        how = Activity.default_activity()
+
+        # pick first in list as default
+
+
+        studios = self.studios
+        if len(studios) > 0:
+            where = studios[0]
+
+        instruments = self.instruments
+        if len(instruments) > 0:
+            what = instruments[0]
+
+        bookers = self.bookers
+        if len(bookers) > 0:
+            who = bookers[0]
+
+        booking = Booking.create_booking(self, when=when, where=where, what=what, how=how)
+
+        return booking
 
 class Provider(Organisation):
 
@@ -178,6 +219,13 @@ class CustomUser(AbstractUser):
     def is_booker(self):
         return False
 
+    @property
+    def is_admin(self):
+        return self.is_staff
+
+    @property
+    def can_book(self):
+        return self.is_staff
 
 class Booker(CustomUser):
 
@@ -187,11 +235,15 @@ class Booker(CustomUser):
         verbose_name = _("Users - Booker")
 
     @property
-    def is_tuner(self):
+    def is_admin(self):
         return False
 
     @property
     def is_booker(self):
+        return True
+
+    @property
+    def can_book(self):
         return True
 
     @property
@@ -205,12 +257,12 @@ class Booker(CustomUser):
 
         return False
 
-    def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, activity=None, comments=None):
+    def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None):
 
 
         #TODO: may want to limit users who can create bookings
 
-        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, activity, comments )
+        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, how, comments )
 
 
         return booking
@@ -231,7 +283,11 @@ class Tuner(CustomUser):
         return True
 
     @property
-    def is_booker(self):
+    def is_admin(self):
+        return False
+
+    @property
+    def can_book(self):
         return False
 
     @property
@@ -299,8 +355,11 @@ class BookingsQuerySet(QuerySet):
         elif user.is_tuner:
             return self.filter(tuner=user)
 
+        elif user.is_admin:
+            return self
+
         else:
-            raise InvalidQueryset
+            raise InvalidQueryset(message = "user %s must be booker, tuner or admin" % user)
 
 class Booking(models.Model):
     #TODO: Add geodjango: http://django-model-utils.readthedocs.org/en/latest/managers.html#passthroughmanager
@@ -364,9 +423,9 @@ class Booking(models.Model):
             self.price = self.activity.price * (settings.DEFAULT_SLOT_TIME / 60)
             self.requested_at = NOW
 
-        # replace temporary ref with permanent one if data is available
-        if self.has_temp_ref and self.studio and self.deadline:
-            self.ref = Booking.create_ref(self.studio, self.deadline)
+        # # replace temporary ref with permanent one if data is available
+        # if self.has_temp_ref and self.studio and self.deadline:
+        #     self.ref = Booking.create_ref(self.studio, self.deadline)
 
 
 
@@ -428,21 +487,40 @@ class Booking(models.Model):
     def description(self):
 
         txt = ''
+        if self.tuner:
+            tuner = self.tuner
+        else:
+            tuner = "?"
+
+        if self.instrument:
+            instrument = self.instrument
+        else:
+            instrument = "?"
+
+        if self.studio:
+            studio = self.studio
+        else:
+            studio = "?"
+
+        if self.deadline:
+            deadline = formats.date_format(self.deadline, "DATETIME_FORMAT")
+        else:
+            deadline = "?"
 
         if self.status < 3:
             txt = "Tune "
         elif self.status < 4:
-            txt = "%s to tune " % self.tuner
+            txt = '<span id="tuner">%s</span> to tune ' % tuner
         else:
-            txt = "%s tuned " % self.tuner
+            txt = '<span id="tuner">%s</span> tuned ' % tuner
 
         if self.instrument:
-            txt += "%s " % self.instrument
+            txt += '<span id="instrument">%s</span> ' % instrument
 
         if self.studio:
-            txt += "at %s " % self.studio
+            txt += 'at <span id="studio">%s</span> ' % studio
 
-        txt += "for session that starts at %s (%s)" % (formats.date_format(self.deadline, "DATETIME_FORMAT"), self.ref)
+        txt += 'for session that starts at <span id="deadline">%s</span> (<span id="ref">%s</span>)' % (deadline, self.ref)
 
         if self.status == 4:
             txt += "?"
@@ -553,16 +631,16 @@ class Booking(models.Model):
 
 
     @classmethod
-    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, activity=None, comments=None, client=None, ):
+    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None, client=None, ):
 
         # if activity not specified, get default
-        if not activity:
+        if not how:
             activity = Activity.default_activity()
         else:
             # convert name to object if passed as a string
-            if activity == unicode(activity):
+            if how == unicode(how):
                 try:
-                    activity = Activity.objects.get(name=activity)
+                    activity = Activity.objects.get(name=how)
                 except Activity.DoesNotExist:
                     raise InvalidActivity
 
@@ -577,16 +655,22 @@ class Booking(models.Model):
                 pass
                 # TODO: raise error
         else:
-            from_time = make_time(when, "start")
-            to_time = make_time(when, "end")
+            if when:
+                from_time = make_time(when, "start")
+                to_time = make_time(when, "end")
+                # can't bookin in the past
+                # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
+                # commented out for the moment to make testing easier
+                if to_time < NOW:
+                    raise PastDateException
+
+            else:
+                from_time = default_start_time(deadline)
+                to_time = make_time(deadline)
 
 
 
-        # can't bookin in the past
-        # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
-        # commented out for the moment to make testing easier
-        if to_time < NOW:
-            raise PastDateException
+
 
         # fix end time if possible
 
@@ -600,6 +684,7 @@ class Booking(models.Model):
             # ensure deadline is timezone aware
             deadline = add_tz(deadline)
 
+
             if deadline > from_time and deadline < to_time:
                 to_time = deadline
             elif deadline < from_time:
@@ -612,6 +697,9 @@ class Booking(models.Model):
             except:
                 pass
 
+
+
+
         #TODO: handle case where show does not have an organisation or is not a client
 
         booking = Booking.objects.create(booker=who,
@@ -619,14 +707,30 @@ class Booking(models.Model):
                                          client = client,
                                          requested_from = from_time,
                                          requested_to = to_time,
-                                         requested_at = NOW)
+                                         requested_at = NOW,
+                                         )
 
         if where:
             booking.studio = where
+        else:
+            if booking.client:
+                # make studio and instrument default if they are the only ones
+                studios = booking.client.studios
+                if len(studios) > 0:
+                   booking.studio = studios[0]
+
+
+
 
         if what:
             #TODO: prevent instruments not belonging to this org
             booking.instrument = what
+        else:
+            if booking.client:
+                # make studio and instrument default if they are the only ones
+                instruments = booking.client.instruments
+                if len(instruments) > 0:
+                   booking.instrument = instruments[0]
 
         if deadline:
             booking.deadline = deadline

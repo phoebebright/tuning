@@ -27,7 +27,6 @@
     <!-- Custom styles for this template -->
     <link href="{{ STATIC_URL }}css/style.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/style-responsive.css" rel="stylesheet" />
-    <link href="{{ STATIC_URL }}css/tuning.css" rel="stylesheet">
 
 
 
@@ -40,6 +39,13 @@
 
     {% block extra_head %}
     {% endblock extra_head %}
+
+    <!-- tuning.css needs to be after extra_head where widget related css may be loaded but before
+    the css block where page specific css can override it -->
+   <link href="{{ STATIC_URL }}css/tuning.css" rel="stylesheet">
+
+    {% block css %}
+    {% endblock css %}
 
 </head>
 <!-- NAVBAR
@@ -261,6 +267,11 @@
                     </li>
                     {% if user.is_authenticated %}
 
+                        <a href="javascript:;">
+                            <i class="fa fa-laptop"></i>
+                            <span>Bookings</span>
+                        </a>
+
                         {% if user.is_staff %}
 
                             <li class="sub-menu">
@@ -293,7 +304,25 @@
                             </li>
 
                         {% endif %}
+
+                        {% if user.is_booker %}
+
+                            <li class="sub-menu">
+                                <a href="javascript:;">
+                                    <i class="fa fa-laptop"></i>
+                                    <span>Bookings</span>
+                                </a>
+                                <ul class="sub">
+                                    <li><a href="/calendar/">Calendar</a></li>
+                                    <li><a href="/booking/add/">New Booking</a></li>
+                                    <li><a href="/bookings/">Browse Bookings</a></li>
+                                </ul>
+                            </li>
+
+                        {% endif %}
+
                     {% endif %}
+
 
                     <li>
                         <a href="login.html">

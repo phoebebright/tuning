@@ -18,16 +18,17 @@
 {% block content %}
 
     <div class="row">
-        <aside class="col-lg-9">
-            <div id="calendar" class="has-toolbar"></div>
-        </aside>
+
         <aside class="col-lg-3">
             <h4 class="drg-event-title">Clients</h4>
             <div id='external-events'>
                 {%  for item in clients %}
-                    <div class='external-event label label-primary'>{{ item.name }}</div>
+                    <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
                 {% endfor %}
             </div>
+        </aside>
+        <aside class="col-lg-9">
+            <div id="calendar" class="has-toolbar"></div>
         </aside>
     </div>
 
@@ -38,7 +39,8 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/fullcalendar/fullcalendar.js"></script>
 
     <script type="text/javascript">
-        API = "{{ API_URL }}"
+        API = "{{ API_URL }}";
+        USER_ID = "{{ user.id }}";
 
         $(document).ready(function () {
 
@@ -81,7 +83,7 @@
                 type:"get",
                 url:API+"bookings",
                 data: {
-                    limit:10},
+                    limit:0},
                 dataType : 'json',
                 success:function(json){
 
@@ -90,6 +92,7 @@
                     $.each(json.objects, function(i,d) {
                         d['start'] = moment(d.start);
                         d['end'] = moment(d.end);
+                        d['className'] = "booking_status_"+d['status'];
 
                         data.push(d)
                     })
@@ -107,29 +110,82 @@
 
                         },
 
-                        editable: true,
+                        editable: false,
                         droppable: true, // this allows things to be dropped onto the calendar !!!
                         drop: function(date, allDay) { // this function is called when something is dropped
 
-                            // retrieve the dropped element's stored Event Object
-                            var originalEventObject = $(this).data('eventObject');
+                            var client = $(this);
 
-                            // we need to copy it, so that multiple events don't have a reference to the same object
-                            var copiedEventObject = $.extend({}, originalEventObject);
-
-                            // assign it the date that was reported
-                            copiedEventObject.start = date;
-                            copiedEventObject.allDay = allDay;
-
-                            // render the event on the calendar
-                            // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
-                            $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
-
-                            // is the "remove after drop" checkbox checked?
-                            if ($('#drop-remove').is(':checked')) {
-                                // if so, remove the element from the "Draggable Events" list
-                                $(this).remove();
+                            // ignore if date before now
+                            if (date < moment()) {
+                                return
                             }
+// couldn't quite get the api to work - wouldn\t return the ref
+{#                            // create a new booking for this client/date#}
+{#                            $.ajax({#}
+{#                                type:"post",#}
+{#                                url:API+"make_booking/",#}
+{#                                data: {#}
+{#                                    'client_id': this.dataset['id'],#}
+{#                                    'when': date.format("YYYY-MM-DD") + " 12:00",#}
+{#                                    'user_id': USER_ID#}
+{#                                },#}
+{#                                dataType : 'json',#}
+{#                                success:function(json){#}
+{#                                    // retrieve the dropped element's stored Event Object#}
+{#                                    var originalEventObject = client.data('eventObject');#}
+{##}
+{#                                    // we need to copy it, so that multiple events don't have a reference to the same object#}
+{#                                    var copiedEventObject = $.extend({}, originalEventObject);#}
+{##}
+{#                                    // assign it the date that was reported#}
+{#                                    copiedEventObject.start = date;#}
+{#                                    copiedEventObject.allDay = allDay;#}
+{##}
+{#                                    // render the event on the calendar#}
+{#                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)#}
+{#                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);#}
+{##}
+{##}
+{##}
+{#                                },#}
+{#                                error: function (request, status, error) {#}
+{#                                    alert(request.responseText);#}
+{#                                }#}
+{#                            });#}
+
+
+  // create a new booking for this client/date
+                            $.ajax({
+                                type:"get",
+                                url:"/booking/add/" + this.dataset['id'] + "/" + date.format("YYYYMMDD") + "1200/",
+                                dataType : 'json',
+                                success:function(json){
+                                    // retrieve the dropped element's stored Event Object
+                                    var originalEventObject = client.data('eventObject');
+
+                                    // we need to copy it, so that multiple events don't have a reference to the same object
+                                    var copiedEventObject = $.extend({}, originalEventObject);
+
+                                    // assign it the date that was reported
+                                    copiedEventObject.title = json['title'];
+                                    copiedEventObject.start = date;
+                                    copiedEventObject.allDay = allDay;
+                                    copiedEventObject.ref = json['ref'];
+                                    copiedEventObject.className = "booking_status_1";
+
+                                    // render the event on the calendar
+                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
+
+
+
+                                },
+                                error: function (request, status, error) {
+                                    alert(request.responseText);
+                                }
+                            });
+
 
                         },
                         events: data,

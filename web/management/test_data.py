@@ -121,6 +121,7 @@ def base_data(request=None):
     u.mobile = "6764523"
     u.client=tstc
     u.save()
+
     u = Tuner.objects.create_user('testerb', 'phoebebright310+testb@gmail.com', 'pass')
     u.first_name = "Tester"
     u.last_name = "B"
@@ -129,6 +130,12 @@ def base_data(request=None):
     u.save()
     u.activities.add(a1)
     u.activities.add(a2)
+    u.save()
+
+    u = User.objects.create_user('nobody', 'phoebebright310+nobody@gmail.com', 'pass')
+    u.first_name = "Nobody"
+    u.last_name = "Nothing"
+    u.mobile = "6764523"
     u.save()
 
 
