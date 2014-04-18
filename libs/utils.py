@@ -14,11 +14,18 @@ def make_time(dt, round_direction="start"):
     second arguments tells whether time should be start or end of day
     make timezone aware if necessary
     '''
+
+    # ignore blanks
+    if not dt:
+        return None
+
+    # if already a datetime, just make sure it is timezone aware
     if hasattr(dt, 'hour'):
 
         return add_tz(dt)
 
     else:
+        # add time at start or end of day
         if round_direction == "start":
             dt = datetime.combine(dt, time.min)
         else:
@@ -26,10 +33,10 @@ def make_time(dt, round_direction="start"):
 
 
 
-    # make timezone aware if required
-    dt =  add_tz(dt)
+        # make timezone aware if required
+        dt =  add_tz(dt)
 
-    return dt
+        return dt
 
 def add_tz(value):
     """

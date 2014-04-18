@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load bootstrap3 %}
 
 {% block extra_head %}
 
@@ -47,37 +46,7 @@
 
                                 {#                                <a href="#" id="sex" data-type="select" data-pk="1" data-value="" data-title="Select sex" class="editable editable-click" style="color: gray;" data-original-title="" title="">not selected</a>#}
                                 {#                                #}
-                                <a href="#" class="activities"
-                                   data-pk="{{ object.ref }}"
-                                   data-title="Activity"
-                                   data-value="{{ object.activity.id }}"
-                                   data-title="Activity">
-                                    {{ default_activity }}</a>
-                                <a href="#" class="instruments"
-                                   data-pk="{{ object.ref }}"
-                                   data-title="Instrument"
-                                   data-value="{{ object.instrument.id }}">
-                                    {{ default_instrument }}</a>
-                                at
-                                <a href="#" class="studios"
-                                   data-pk="{{ object.ref }}"
-                                   data-title="Studio"
-                                   data-value="{{ object.studio.id }}">
-                                    {{ default_studio }}</a>
-                                on
-                                <span id="when_date"
-
-                                      data-value="{{ object.deadline|date:"Y-M-D" }} }}"
-
-                                        >{{ when_date }}</span>
-                                for session ref
-                                <a href="#" class="clientref"
-                                   data-pk="{{ object.ref }}"
-                                   data-title="Reference"
-                                   data-value="{{ object.client_ref }}">
-                                    {{ client_ref }}</a>
-                                that starts at
-                                <span id="when_time" data-pk="{{ object.ref }}" >{{ when_time }}</span>
+                               {% include "web/booking_editable_template.html" %}
 
                             </div>
 
@@ -107,170 +76,10 @@
 
         });
 
+
         function init() {
-            // when page is first loaded
-
-
-
-            // get list of activity and setup editable
-            $.ajax({
-                type:"get",
-                url:API+"activities",
-                dataType : 'json',
-                success:function(data){
-
-                    var objects = data.objects;
-                    var list = [];
-                    $.each(objects, function(i,d) {
-                        list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.activities').editable({
-                        type: 'select',
-                        mode: 'inline',
-                        source: list,
-                        sourceCache: true,
-                        url: API + 'set_activity_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        }
-
-                    });
-
-
-                }
-            });
-
-            // get list of instruments and setup editable
-            $.ajax({
-                type:"get",
-                url:API+"instruments",
-                dataType : 'json',
-                data: {client_id: {{object.client.id}} },
-                success:function(data){
-
-                    var objects = data.objects;
-                    var list = [];
-                    $.each(objects, function(i,d) {
-                        list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.instruments').editable({
-                        type: 'select',
-                        mode: 'inline',
-                        source: list,
-                        sourceCache: true,
-                        url: API + 'set_instrument_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        }
-
-                    });
-
-
-                }
-            });
-
-            // get list of instruments and setup editable
-            $.ajax({
-                type:"get",
-                url:API+"studios",
-                dataType : 'json',
-                data: {client_id: {{object.client.id}} },
-                success:function(data){
-
-                    var objects = data.objects;
-                    var list = [];
-                    $.each(objects, function(i,d) {
-                        list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.studios').editable({
-                        type: 'select',
-                        mode: 'inline',
-                        source: list,
-                        sourceCache: true,
-                        url: API + 'set_studio_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        }
-                    });
-
-
-                }
-            });
-
-
-            // edit date
-
-            {#            $('.when_date').editable({#}
-            {#                type: 'combodate',#}
-            {#                mode: 'inline',#}
-            {#                url: API + 'set_deadline_booking/?format=json&limit=0',#}
-            {##}
-            {#                success: function(response, newValue) {#}
-            {#                    if(response.status == 'error') return response.msg; //msg will be shown in editable form#}
-            {#                }#}
-            {#            });#}
-
-            //TODO: not working - shows calendar before clicking
-            $("#when_date").datepicker({
-                format: "dd/mm",
-                startDate: "{{ NOW|date:"d/m/Y" }}",
-                endDate: "{{ MAX_DATE|date:"d/m/Y" }}",
-                todayHighlight: true
-            });
-            $('#when_time').clockin();
-
-
-// session ref
-            $('.clientref').editable({
-                type: 'text',
-                mode: 'inline',
-                url: API + 'set_clientref_booking/?format=json&limit=0',
-
-                success: function(response, newValue) {
-                    if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                }
-            });
-
-
-
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
-
-                    var tuners = data.objects;
-                    var tuners_list = [];
-                    $.each(tuners, function(i,d) {
-                        tuners_list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.tuners').editable({
-                        type: 'select',
-                        source: tuners_list,
-                        sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'Select Tuner'
-                    });
-
-
-                }
-            });
-
-
+            load_data({{ object.client_id }}, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
         }
-
 
     </script>
 {% endblock js %}

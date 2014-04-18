@@ -1,211 +1,362 @@
 
 {% extends "base.html" %}
-{% load bootstrap3 %}
+
 {% block extra_head %}
 
     {#    <link href="{{ STATIC_URL }}css/bootstrap-fullcalendar.css" rel="stylesheet">#}
     {#    <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/clockin.css" rel="stylesheet"/>
 
     <style>
         .fc-header-title h2 {
             font-size: 90%;
         }
+
+    #booking_edit {
+        color: white;
+    }
     </style>
 {% endblock extra_head %}
 {% block heading %}Bookings Calendar{% endblock %}
-{% block content %}
+{% block main %}
 
-    <div class="row">
-
-        <aside class="col-lg-3">
-            <h4 class="drg-event-title">Clients</h4>
-            <div id='external-events'>
-                {%  for item in clients %}
-                    <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
-                {% endfor %}
-            </div>
-        </aside>
-        <aside class="col-lg-9">
-            <div id="calendar" class="has-toolbar"></div>
-        </aside>
+    <div id="booking_row" class="row" style="display:none;">
+        <div class="col-sm-12">
+            <section class="panel">
+                <div id="booking_edit" class="panel-body booking_status_1">
+                    {%  include "web/booking_editable_template.html" %}
+                </div>
+            </section>
+        </div>
     </div>
 
-{% endblock content %}
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading">Calendar
+                        <span class="tools pull-right">
+                            <a href="javascript:;" class="fa fa-chevron-down"></a>
+
+                         </span>
+                </header>
+                <div class="panel-body">
+
+
+
+                    <aside class="col-lg-3">
+                        <h4 class="drg-event-title">Clients</h4>
+                        <div id='external-events'>
+                            {%  for item in clients %}
+                                <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
+                            {% endfor %}
+                        </div>
+                    </aside>
+                    <aside class="col-lg-9">
+                        <div id="calendar" class="has-toolbar"></div>
+                    </aside>
+                </div>
+            </section>
+        </div>
+
+    </div>
+
+
+
+
+{% endblock main %}
 
 
 {%  block js %}
+
+    {#  TODO: x-editable doesn't work in modals - put back if it does #}
+    {#    <div class="modal fade" id="booking_entry_form" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">#}
+    {#        <div class="modal-dialog">#}
+    {#            <div class="modal-content">#}
+    {#                <div class="modal-header">#}
+    {#                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
+    {#                    <h4 class="modal-title" id="modal_label">Add Booking</h4>#}
+    {#                </div>#}
+    {#                <div class="modal-body">#}
+    {#                    {%  include "web/booking_editable_template.html" %}#}
+    {#                </div>#}
+    {#                <div class="modal-footer">#}
+    {#                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
+    {#                    <button type="button" class="btn btn-primary">Save changes</button>#}
+    {#                </div>#}
+    {#            </div>#}
+    {#        </div>#}
+    {#    </div>#}
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/fullcalendar/fullcalendar.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.cookie.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+    <script src="{{ STATIC_URL }}js/clockin.js"></script>
+    <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
 
     <script type="text/javascript">
-        API = "{{ API_URL }}";
-        USER_ID = "{{ user.id }}";
+    API = "{{ API_URL }}";
+    USER_ID = "{{ user.id }}";
 
-        $(document).ready(function () {
+    $(document).ready(function () {
 
-            init();
+        init();
 
-            function init() {
-                /* initialize the external events
-                 -----------------------------------------------------------------*/
+        function init() {
+            /* initialize the external events
+             -----------------------------------------------------------------*/
 
-                $('#external-events div.external-event').each(function() {
+            $('#external-events div.external-event').each(function() {
 
-                    // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
-                    // it doesn't need to have a start or end
-                    var eventObject = {
-                        title: $.trim($(this).text()) // use the element's text as the event title
-                    };
+                // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
+                // it doesn't need to have a start or end
+                var eventObject = {
+                    title: $.trim($(this).text()) // use the element's text as the event title
+                };
 
-                    // store the Event Object in the DOM element so we can get to it later
-                    $(this).data('eventObject', eventObject);
+                // store the Event Object in the DOM element so we can get to it later
+                $(this).data('eventObject', eventObject);
 
-                    // make the event draggable using jQuery UI
-                    $(this).draggable({
-                        zIndex: 999,
-                        revert: true,      // will cause the event to go back to its
-                        revertDuration: 0  //  original position after the drag
-                    });
-
+                // make the event draggable using jQuery UI
+                $(this).draggable({
+                    zIndex: 999,
+                    revert: true,      // will cause the event to go back to its
+                    revertDuration: 0  //  original position after the drag
                 });
 
-                calendar();
+            });
+
+            calendar();
+        }
+    });
+
+    function calendar() {
+        //$.getJSON("http://127.0.0.1:8000/api/v1/bookings/?format=json",function(json) {
+        {#        var json = {"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 5}, "objects": [{"allDay": "false", "className": "asked", "end": "2014-03-19T23:59:59.999999", "requested_from": "2014-03-19T00:00:00", "requested_to": "2014-03-19T23:59:59.999999", "resource_uri": "/api/v1/bookings/1/", "start": "2014-03-19T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "asked", "end": "2014-03-20T23:59:59.999999", "requested_from": "2014-03-20T00:00:00", "requested_to": "2014-03-20T23:59:59.999999", "resource_uri": "/api/v1/bookings/2/", "start": "2014-03-20T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "booked", "end": "2014-03-23T16:30:00", "requested_from": "2014-03-23T00:00:00", "requested_to": "2014-03-23T23:59:59.999999", "resource_uri": "/api/v1/bookings/3/", "start": "2014-03-23T16:00:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "booked", "end": "2014-03-26T08:00:00", "requested_from": "2014-03-26T00:00:00", "requested_to": "2014-03-26T23:59:59.999999", "resource_uri": "/api/v1/bookings/4/", "start": "2014-03-26T07:30:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "asked", "end": "2014-03-31T23:59:59.999999", "requested_from": "2014-03-31T00:00:00", "requested_to": "2014-03-31T23:59:59.999999", "resource_uri": "/api/v1/bookings/5/", "start": "2014-03-31T00:00:00", "status": "asked", "title": "Steinway Upright in Studio Red"}]}#}
+        {#        var data = json['objects'];#}
+
+        // get last used view from cookie or defualt to month view
+        var calendarView = (!$.cookie('calendarDefaultView')) ? 'month' : $.cookie('calendarDefaultView');
+
+
+        $.ajax({
+            type:"get",
+            url:API+"bookings",
+            data: {
+                limit:0},
+            dataType : 'json',
+            success:function(json){
+
+                // convert dates to moment objects
+                data = new Array();
+                $.each(json.objects, function(i,d) {
+                    d['start'] = moment(d.start);
+                    d['end'] = moment(d.end);
+                    d['className'] = "booking_status_"+d['status'];
+
+                    data.push(d)
+                })
+
+                $('#calendar').fullCalendar({
+                    firstDay:1,
+                    defaultView: calendarView,
+                    slotDuration: "1:00",
+                    header: {
+                        left: 'prev,next ',
+                        center: 'title',
+                        right: 'month,agendaWeek,agendaDay'
+                    },
+                    columnFormat: {
+                        month: 'ddd',
+                        week: 'ddd Do',
+                        day: 'dddd Do MMMM'
+                    },
+                    viewRender: function(view, element){
+                        // save view to cookie
+                        $.cookie('calendarDefaultView', view.name, {expires:7, path: '/'});
+                    },
+
+                    dayClick:  function(date, jsEvent, view) {
+                        document.location.href="/booking/add/";
+
+                    },
+
+                    editable: false,
+                    droppable: true, // this allows things to be dropped onto the calendar !!!
+                    drop: function(date, allDay) { // this function is called when something is dropped
+
+                        var client = $(this);
+
+                        // ignore if date before now
+                        if (date < moment()) {
+                            return
+                        }
+
+                        // if view is month, the default time to DEFAULT_START_TIME
+                        var view = $('#calendar').fullCalendar('getView');
+                        var deadline = "";  // date as string - no spaces/punctuation
+                        if (view == "month") {
+                            deadline = date.format("YYYYMMDD") + "1200";
+                        } else {
+                            deadline = date.format("YYYYMMDDHHmm");
+                        }
+
+
+// couldn't quite get the api to work - wouldn\t return the ref
+                        {#                            // create a new booking for this client/date#}
+                        {#                            $.ajax({#}
+                        {#                                type:"post",#}
+                        {#                                url:API+"make_booking/",#}
+                        {#                                data: {#}
+                        {#                                    'client_id': this.dataset['id'],#}
+                        {#                                    'when': date.format("YYYY-MM-DD") + " 12:00",#}
+                        {#                                    'user_id': USER_ID#}
+                        {#                                },#}
+                        {#                                dataType : 'json',#}
+                        {#                                success:function(json){#}
+                        {#                                    // retrieve the dropped element's stored Event Object#}
+                        {#                                    var originalEventObject = client.data('eventObject');#}
+                        {##}
+                        {#                                    // we need to copy it, so that multiple events don't have a reference to the same object#}
+                        {#                                    var copiedEventObject = $.extend({}, originalEventObject);#}
+                        {##}
+                        {#                                    // assign it the date that was reported#}
+                        {#                                    copiedEventObject.start = date;#}
+                        {#                                    copiedEventObject.allDay = allDay;#}
+                        {##}
+                        {#                                    // render the event on the calendar#}
+                        {#                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)#}
+                        {#                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);#}
+                        {##}
+                        {##}
+                        {##}
+                        {#                                },#}
+                        {#                                error: function (request, status, error) {#}
+                        {#                                    alert(request.responseText);#}
+                        {#                                }#}
+                        {#                            });#}
+
+
+                        // create a new booking for this client/date
+                        $.ajax({
+                            type:"get",
+                            url:"/booking/add/" + this.dataset['id'] + "/" + deadline + "/",
+                            dataType : 'json',
+                            success:function(json){
+                                // retrieve the dropped element's stored Event Object
+                                var originalEventObject = client.data('eventObject');
+
+                                // we need to copy it, so that multiple events don't have a reference to the same object
+                                var new_event = $.extend({}, originalEventObject);
+
+                                // assign it the date that was reported
+                                new_event.title = json['title'];
+                                new_event.start = date;
+                                new_event.allDay = allDay;
+                                new_event.ref = json['ref'];
+                                new_event.className = "booking_status_1";
+
+                                populate_form(json);
+                                // display modal form
+                                $("#booking_entry_form").modal({show:true})
+
+                                // render the event on the calendar
+                                // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                                $('#calendar').fullCalendar('renderEvent', new_event, true);
+
+
+
+                            },
+                            error: function (request, status, error) {
+                                alert(request.responseText);
+                            }
+                        });
+
+
+                    },
+                    events: data,
+                    eventClick: function(event, jsEvent, view) {
+
+                        location.href = "/booking/"+event.ref+"/";
+                        return false;
+
+
+
+                        // change the border color just for fun
+                        $(this).css('border-color', 'red');
+
+                    }
+                });
+
+
             }
         });
+    }
 
-        function calendar() {
-            //$.getJSON("http://127.0.0.1:8000/api/v1/bookings/?format=json",function(json) {
-            {#        var json = {"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 5}, "objects": [{"allDay": "false", "className": "asked", "end": "2014-03-19T23:59:59.999999", "requested_from": "2014-03-19T00:00:00", "requested_to": "2014-03-19T23:59:59.999999", "resource_uri": "/api/v1/bookings/1/", "start": "2014-03-19T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "asked", "end": "2014-03-20T23:59:59.999999", "requested_from": "2014-03-20T00:00:00", "requested_to": "2014-03-20T23:59:59.999999", "resource_uri": "/api/v1/bookings/2/", "start": "2014-03-20T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "booked", "end": "2014-03-23T16:30:00", "requested_from": "2014-03-23T00:00:00", "requested_to": "2014-03-23T23:59:59.999999", "resource_uri": "/api/v1/bookings/3/", "start": "2014-03-23T16:00:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "booked", "end": "2014-03-26T08:00:00", "requested_from": "2014-03-26T00:00:00", "requested_to": "2014-03-26T23:59:59.999999", "resource_uri": "/api/v1/bookings/4/", "start": "2014-03-26T07:30:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "asked", "end": "2014-03-31T23:59:59.999999", "requested_from": "2014-03-31T00:00:00", "requested_to": "2014-03-31T23:59:59.999999", "resource_uri": "/api/v1/bookings/5/", "start": "2014-03-31T00:00:00", "status": "asked", "title": "Steinway Upright in Studio Red"}]}#}
-            {#        var data = json['objects'];#}
+    function populate_form(object) {
 
-            $.ajax({
-                type:"get",
-                url:API+"bookings",
-                data: {
-                    limit:0},
-                dataType : 'json',
-                success:function(json){
+        // add classes
+        $("#booking_edit").attr("class", 'panel-body booking_status_'+object.status);
 
-                    // convert dates to moment objects
-                    data = new Array();
-                    $.each(json.objects, function(i,d) {
-                        d['start'] = moment(d.start);
-                        d['end'] = moment(d.end);
-                        d['className'] = "booking_status_"+d['status'];
+        // and ref to all editable fields
+        $('.editable').attr('data-pk', object.ref);
 
-                        data.push(d)
-                    })
+        // now put data into "fields" or ? if no data
+        $("#modal_label").text("Add Booking for "+object.client.name);
 
-                    $('#calendar').fullCalendar({
-                        firstDay:1,
-                        header: {
-                            left: 'prev,next ',
-                            center: 'title',
-                            right: 'month,agendaWeek,agendaDay'
-                        },
+        $("#field_client_name").text(object.client.name);
+        $("#field_deadline_date").text(moment(object.deadline).format("dddd D MMM"));
 
-                        dayClick:  function(date, jsEvent, view) {
-                            document.location.href="/booking/add/";
+        $("#field_activity").text(object.activity.name_verb);
+        $("#field_activity").attr("data-value", String(object.activity.id));
 
-                        },
-
-                        editable: false,
-                        droppable: true, // this allows things to be dropped onto the calendar !!!
-                        drop: function(date, allDay) { // this function is called when something is dropped
-
-                            var client = $(this);
-
-                            // ignore if date before now
-                            if (date < moment()) {
-                                return
-                            }
-// couldn't quite get the api to work - wouldn\t return the ref
-{#                            // create a new booking for this client/date#}
-{#                            $.ajax({#}
-{#                                type:"post",#}
-{#                                url:API+"make_booking/",#}
-{#                                data: {#}
-{#                                    'client_id': this.dataset['id'],#}
-{#                                    'when': date.format("YYYY-MM-DD") + " 12:00",#}
-{#                                    'user_id': USER_ID#}
-{#                                },#}
-{#                                dataType : 'json',#}
-{#                                success:function(json){#}
-{#                                    // retrieve the dropped element's stored Event Object#}
-{#                                    var originalEventObject = client.data('eventObject');#}
-{##}
-{#                                    // we need to copy it, so that multiple events don't have a reference to the same object#}
-{#                                    var copiedEventObject = $.extend({}, originalEventObject);#}
-{##}
-{#                                    // assign it the date that was reported#}
-{#                                    copiedEventObject.start = date;#}
-{#                                    copiedEventObject.allDay = allDay;#}
-{##}
-{#                                    // render the event on the calendar#}
-{#                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)#}
-{#                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);#}
-{##}
-{##}
-{##}
-{#                                },#}
-{#                                error: function (request, status, error) {#}
-{#                                    alert(request.responseText);#}
-{#                                }#}
-{#                            });#}
-
-
-  // create a new booking for this client/date
-                            $.ajax({
-                                type:"get",
-                                url:"/booking/add/" + this.dataset['id'] + "/" + date.format("YYYYMMDD") + "1200/",
-                                dataType : 'json',
-                                success:function(json){
-                                    // retrieve the dropped element's stored Event Object
-                                    var originalEventObject = client.data('eventObject');
-
-                                    // we need to copy it, so that multiple events don't have a reference to the same object
-                                    var copiedEventObject = $.extend({}, originalEventObject);
-
-                                    // assign it the date that was reported
-                                    copiedEventObject.title = json['title'];
-                                    copiedEventObject.start = date;
-                                    copiedEventObject.allDay = allDay;
-                                    copiedEventObject.ref = json['ref'];
-                                    copiedEventObject.className = "booking_status_1";
-
-                                    // render the event on the calendar
-                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
-                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);
-
-
-
-                                },
-                                error: function (request, status, error) {
-                                    alert(request.responseText);
-                                }
-                            });
-
-
-                        },
-                        events: data,
-                        eventClick: function(event, jsEvent, view) {
-
-                            location.href = "/booking/"+event.ref+"/";
-                            return false;
-
-
-
-                            // change the border color just for fun
-                            $(this).css('border-color', 'red');
-
-                        }
-                    });
-
-
-                }
-            });
+        if (object.instrument.name != null) {
+            $("#field_instrument").text(object.instrument.name);
+            $("#field_instrument").attr("data-value", String(object.instrument.id));
+        } else {
+            $("#field_instrument").text("?");
         }
+
+        if (object.studio.name != null) {
+            $("#field_studio").text(object.studio.name);
+            $("#field_studio").attr("data-value", String(object.studio.id));
+        } else {
+            $("#field_studio").text("?");
+        }
+
+        if (object.client_ref != null) {
+            $("#field_client_ref").text(object.client_ref);
+            $("#field_client_ref").attr("data-value", String(object.client_ref));
+        } else {
+            $("#field_client_ref").text("?");
+        }
+
+        var deadline = moment(object.deadline);
+        if (deadline.isValid() && deadline.hour() > 0 && deadline.minute() > 0) {
+            $("#field_deadline_time").text(deadline.format("HH:mm"));
+            $("#field_deadline_time").attr("data-value", deadline.toISOString());
+        } else {
+            $("#field_deadline_time").text("?");
+        }
+        
+        load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
+
+        $("#booking_row").slideDown();
+
+        $("#editable_done").on("click", function() {
+            $("#booking_row").slideUp();
+        });
+
+        $("#editable_cancel").on("click", function() {
+            //TODO: delete or undo editing on calendar form when clicking cancel
+            $("#booking_row").slideUp();
+        });
+
+    }
 
     </script>
 

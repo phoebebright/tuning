@@ -116,11 +116,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django_google_maps',
     'django_cron',
-    'fluent_comments',
-    'crispy_forms',
-    'django.contrib.comments',
-    'bootstrap3',
-    'theme',  # holds themeforest template
+    'theme',  # holds themeforest template static files
     'web',
 )
 

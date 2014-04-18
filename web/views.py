@@ -2,11 +2,13 @@
 #django
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
+from django.core import serializers
 from django.forms import ModelForm, TextInput
 from django.forms.models import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
@@ -22,13 +24,17 @@ from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import ModelFormMixin
+
+
 #python
 from datetime import datetime, timedelta, date
+import json
 
 
-from django.conf import settings
-
+#App
 from web.models import *
+from web.api import BookingsFullResource
+
 
 def can_book(user):
     if user and user.is_authenticated():
@@ -90,9 +96,14 @@ def bookings_add(request, client_id=None, deadline=None):
         client_ref = "?"
 
     if request.is_ajax():
-        json = '{"ref": "%s", "title": "%s"}' % (new.ref, new.long_heading)
 
-        return HttpResponse(json, mimetype='application/json')
+        # use the api code to get a complete serialised version of object
+        resource = BookingsFullResource()
+        bundle = resource.build_bundle(request=request)
+        booking = resource.obj_get(bundle, id=new.id)
+        bundle = resource.build_bundle(obj=booking, request=request)
+
+        return HttpResponse(resource.serialize(None, resource.full_dehydrate(bundle), 'application/json'), mimetype='application/json')
     else:
         return render_to_response('web/booking_new.html',{
             "object" : new,

@@ -93,3 +93,11 @@ content: "\f056";
 .form-control {
 color: #454545;
 }
+
+.editable_title {
+    margin-top: 0px;
+}
+
+.editable_content {
+    font-size:14px;
+}

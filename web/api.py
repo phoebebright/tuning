@@ -191,11 +191,7 @@ class BookingsResource(ModelResource):
     #TODO: Only return own bookings
     ''' can pass status = current or status = archived or the numeric value of the status required
     '''
-    client = fields.ToOneField(ClientResource, "client", full=True)
-    booker = fields.ToOneField(UserResource, "booker", full=True)
-    tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
-    activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
-    # dataset = fields.CharField(attribute="dataset", blank=True, null=True)
+
 
     class Meta:
         queryset = Booking.objects.current()
@@ -203,7 +199,7 @@ class BookingsResource(ModelResource):
         resource_name = 'bookings'
         allowed_methods = ['get']
         limit = 0
-        fields = ['ref','requested_from','requested_to','studio','instrument', 'status']
+        fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client','booker_id','tuner_id','activity']
         filtering = {
             'client_id': ('exact',),
             'status': ('exact',),
@@ -219,6 +215,8 @@ class BookingsResource(ModelResource):
         # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
 
         bundle.data['title'] = bundle.obj.long_heading
+
+        bundle.data['client_id'] = bundle.obj.client_id
 
         if bundle.obj.start_time:
             bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
@@ -243,33 +241,65 @@ class BookingsResource(ModelResource):
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
-        bundle.data['activity'] = bundle.obj.activity.name
+        #bundle.data['activity'] = bundle.obj.activity.name
 
         return bundle
 
     def get_object_list(self, request):
         base = super(BookingsResource, self).get_object_list(request).mine(request.user)
-        if request._get.has_key('dataset'):
-            dataset = request._get.get('dataset')
-            if dataset.lower() == "current":
-                return base.current()
-            elif dataset.lower() == "archived":
-                return base.archived()
 
-        else:
+        try:
+            if request._get.has_key('dataset'):
+                dataset = request._get.get('dataset')
+                if dataset.lower() == "current":
+                    return base.current()
+                elif dataset.lower() == "archived":
+                    return base.archived()
+
+            else:
+                return base
+
+        except:
+            # above will fail if called from view as no _get
             return base
 
 
+class BookingsFullResource(BookingsResource):
 
+    client = fields.ToOneField(ClientResource, "client", full=True)
+    booker = fields.ToOneField(UserResource, "booker", full=True)
+    tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
+    activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
+    instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
+    studio = fields.ToOneField(StudioResource, "studio", full=True, blank=True, null=True)
 
+    class Meta:
+        queryset = Booking.objects.all()
+        resource_name = 'bookings_fat'
 
+    def get_object_list(self, request):
+        base = super(BookingsFullResource, self).get_object_list(request).mine(request.user)
+
+        try:
+            if request._get.has_key('dataset'):
+                dataset = request._get.get('dataset')
+                if dataset.lower() == "current":
+                    return base.current()
+                elif dataset.lower() == "archived":
+                    return base.archived()
+
+            else:
+                return base
+
+        except:
+            # above will fail if called from view as no _get
+            return base
 
 
 class BookingUpdateResource(Resource):
 
     class Meta:
         include_resource_uri = True
-        resource_name = 'set_instrument_booking'
         allowed_methods = ['post','put','get','options']
         include_resource_uri = False
         object_class = SimpleObject
@@ -301,14 +331,20 @@ class BookingUpdateResource(Resource):
         pass
 
     def get_resource_uri(self, bundle_or_obj):
+
+        if not bundle_or_obj:
+            return None
+
         kwargs = {
             'resource_name': self._meta.resource_name,
         }
 
+
         if isinstance(bundle_or_obj, Bundle):
-            kwargs['pk'] = bundle_or_obj.obj.id # pk is referenced in ModelResource
+            kwargs['pk'] = bundle_or_obj.obj.id
         else:
             kwargs['pk'] = bundle_or_obj.id
+
 
         if self._meta.api_name is not None:
             kwargs['api_name'] = self._meta.api_name
@@ -444,7 +480,7 @@ class BookingClientrefResource(BookingUpdateResource):
 
     class Meta(BookingUpdateResource.Meta):
         resource_name = 'set_clientref_booking'
-
+        include_resource_uri = False
 
     def update_booking(self, booking, bundle, value):
 

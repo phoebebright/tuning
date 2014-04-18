@@ -1,4 +1,171 @@
- function update_events() {
+       function load_data(client_id, start_date, end_date) {
+           // pass parameters like this:
+           //init({{ object.client_id }}, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
+
+            // when page is first loaded
+
+
+
+            // get list of activity and setup editable
+            $.ajax({
+                type:"get",
+                url:API+"activities",
+                dataType : 'json',
+                success:function(data){
+
+                    var objects = data.objects;
+                    var list = [];
+                    $.each(objects, function(i,d) {
+                        list.push({value: d.id, text: d.name});
+                    });
+
+                    $('.activities').editable({
+                        type: 'select',
+                        mode: 'inline',
+                        source: list,
+                        sourceCache: true,
+                        url: API + 'set_activity_booking/?format=json&limit=0',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        }
+
+                    });
+
+
+                }
+            });
+
+            // get list of instruments and setup editable
+            $.ajax({
+                type:"get",
+                url:API+"instruments",
+                dataType : 'json',
+                data: {client_id: client_id},
+                success:function(data){
+
+                    var objects = data.objects;
+                    var list = [];
+                    $.each(objects, function(i,d) {
+                        list.push({value: d.id, text: d.name});
+                    });
+
+                    $('.instruments').editable({
+                        type: 'select',
+                        mode: 'inline',
+                        source: list,
+                        sourceCache: true,
+                        url: API + 'set_instrument_booking/?format=json&limit=0',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        }
+
+                    });
+
+
+                }
+            });
+
+            // get list of instruments and setup editable
+            $.ajax({
+                type:"get",
+                url:API+"studios",
+                dataType : 'json',
+                data: {client_id: client_id },
+                success:function(data){
+
+                    var objects = data.objects;
+                    var list = [];
+                    $.each(objects, function(i,d) {
+                        list.push({value: d.id, text: d.name});
+                    });
+
+                    $('.studios').editable({
+                        type: 'select',
+                        mode: 'inline',
+                        source: list,
+                        sourceCache: true,
+                        url: API + 'set_studio_booking/?format=json&limit=0',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        }
+                    });
+
+
+                }
+            });
+
+
+            // edit date
+
+//            {#            $('.deadline_date').editable({#}
+//            {#                type: 'combodate',#}
+//            {#                mode: 'inline',#}
+//            {#                url: API + 'set_deadline_booking/?format=json&limit=0',#}
+//            {##}
+//            {#                success: function(response, newValue) {#}
+//            {#                    if(response.status == 'error') return response.msg; //msg will be shown in editable form#}
+//            {#                }#}
+//            {#            });#}
+
+            //TODO: not working - shows calendar before clicking
+            $("#deadline_date").datepicker({
+                format: "dd/mm",
+                startDate: start_date,
+                endDate: end_date,
+                todayHighlight: true
+            });
+            $('#deadline_time').clockin();
+
+
+// session ref
+            $('.clientref').editable({
+                type: 'text',
+                mode: 'inline',
+                url: API + 'set_clientref_booking/?format=json&limit=0',
+
+                success: function(response, newValue) {
+                    if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                }
+            });
+
+
+
+            // get list of tuners
+            $.ajax({
+                type:"get",
+                url:API+"tuners",
+                dataType : 'json',
+                success:function(data){
+
+                    var tuners = data.objects;
+                    var tuners_list = [];
+                    $.each(tuners, function(i,d) {
+                        tuners_list.push({value: d.id, text: d.name});
+                    });
+
+                    $('.tuners').editable({
+                        type: 'select',
+                        source: tuners_list,
+                        sourceCache: true,
+                        url: API + 'accept_booking/?format=json&limit=0',
+
+                        success: function(response, newValue) {
+                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
+                        },
+                        title: 'Select Tuner'
+                    });
+
+
+                }
+            });
+
+
+        }
+
+       function update_events() {
 
 
        // for marking complete

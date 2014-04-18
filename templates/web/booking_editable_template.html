@@ -1,0 +1,46 @@
+<h3 class="editable_title">Booking for <span id="field_client_name">{{ object.client }}</span> on <span id="field_deadline_date">{{ object.deadline }}</span></h3>
+<div class="editable_content">
+    <a href="#" id="field_activity" class="editable activities"
+       data-pk="{{ object.ref }}"
+       data-title="Activity"
+       data-value="{{ object.activity.id }}"
+       data-title="Activity">
+        {{ default_activity }}</a>
+    <a href="#" id="field_instrument" class="editable instruments"
+       data-pk="{{ object.ref }}"
+       data-title="Instrument"
+       data-value="{{ object.instrument.id }}">
+        {{ default_instrument }}</a>
+    at
+    <a href="#" id="field_studio" class="editable studios"
+       data-pk="{{ object.ref }}"
+       data-title="Studio"
+       data-value="{{ object.studio.id }}">
+        {{ default_studio }}</a>
+
+       that starts at
+    <a href="#" id="field_deadline_time" class="editable" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
+
+
+    with session ref
+    <a href="#" id="field_client_ref" class="editable clientref"
+       data-pk="{{ object.ref }}"
+       data-title="Reference"
+       data-value="{{ object.client_ref }}">
+        {{ client_ref }}</a>
+
+
+
+<span class="pull-right">
+    <button id="editable_done" type="button" class="btn btn-success">Done</button>
+    <button id="editable_cancel" type="button" class="btn btn-warning">Cancel</button>
+</span>
+</div>
+
+{##}
+{#on#}
+{#                                <span id="when_date"#}
+{##}
+{#                                      data-value="{{ object.deadline|date:"Y-M-D" }} }}"#}
+{##}
+{#                                        >{{ when_date }}</span>#}

@@ -1,3 +1,8 @@
+#TODO: test for num queries
+#  with self.assertNumQueries(2):
+#    Person.objects.create(name="Aaron")
+#    Person.objects.create(name="Daniel")
+
 from django.test import TestCase
 from django.db import connection
 

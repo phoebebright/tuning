@@ -51,6 +51,7 @@ v1_api.register(StudioResource())
 v1_api.register(TunerResource())
 v1_api.register(BookingDeadlineResource())
 v1_api.register(BookingClientrefResource())
+v1_api.register(BookingsFullResource())
 
 
 '''

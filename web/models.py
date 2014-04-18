@@ -57,8 +57,10 @@ def default_end():
 
 def default_start_time(deadline):
 
-    return make_time(deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
-
+    if deadline:
+        return make_time(deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
+    else:
+        return None
 
 class Activity(models.Model):
     name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
@@ -94,8 +96,8 @@ class Organisation(models.Model):
     '''
 
     name = models.CharField(_('Company Name (that appears on invoices)'), max_length=50)
-    test = models.BooleanField(default=False)
-    active = models.BooleanField(default=True)
+    test = models.BooleanField(default=False, db_index=True)
+    active = models.BooleanField(default=True, db_index=True)
 
 
     def __unicode__(self):
@@ -163,7 +165,7 @@ class Provider(Organisation):
 
 class Studio(models.Model):
     name = models.CharField(max_length=20)
-    short_code = models.CharField(max_length=3, unique=True)
+    short_code = models.CharField(max_length=3, unique=True, db_index=True)
     client = models.ForeignKey(Client, null=True, blank=True)
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
@@ -190,7 +192,7 @@ class CustomUser(AbstractUser):
 
     land_line = models.CharField(max_length=20, null=True, blank=True)
     mobile = models.CharField(max_length=20, null=True, blank=True)
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True, db_index=True)
 
 
 
@@ -325,7 +327,7 @@ class BookingsQuerySet(QuerySet):
 
 
     def requested(self):
-        return self.filter(status=BOOKING_REQUESTED).order_by('-requested_at')
+        return self.filter(status=BOOKING_REQUESTED).select_related().order_by('-requested_at')
 
     def booked(self):
         return self.filter(status=BOOKING_BOOKED).order_by('-booked_time')
@@ -374,10 +376,10 @@ class Booking(models.Model):
 
     ref = models.CharField(max_length=10, unique=True)
     booker = models.ForeignKey(CustomUser, related_name="booker_user", blank=True, null=True)
-    client = models.ForeignKey(Client, related_name="client", blank=True, null=True)
+    client = models.ForeignKey(Client, related_name="client")
     tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
-    activity = models.ForeignKey(Activity, blank=True, null=True)
-    status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1)
+    activity = models.ForeignKey(Activity, blank=True, null=True, db_index=True)
+    status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1, db_index=True)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
     completed_at = models.DateTimeField(_('when completed'), blank=True, null=True)
@@ -394,7 +396,7 @@ class Booking(models.Model):
     studio = models.ForeignKey(Studio, blank=True, null=True)
     instrument = models.ForeignKey(Instrument, blank=True, null=True)
 
-    deadline =  models.DateTimeField(_('session start'), blank=True, null=True)
+    deadline =  models.DateTimeField(_('session start'), blank=True, null=True, db_index=True)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
 
     price = models.DecimalField(_('Price for job'), max_digits=10, decimal_places=2, default=0)
