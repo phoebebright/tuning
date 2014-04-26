@@ -1,39 +1,94 @@
-<h3 class="editable_title">Booking for <span id="field_client_name">{{ object.client }}</span> on <span id="field_deadline_date">{{ object.deadline }}</span></h3>
-<div class="editable_content">
+<h3 class="editable_title">
+    <span id="field_activity_name">Booking</span>
+    for
+    <span id="field_client_name">{{ object.client }}</span>
+    on
+    <span id="field_deadline_date" data-value="{{ object.deadline|date:"Y-m-d" }}">{{ object.deadline }}</span>
+    (
+    <span id="field_ref">{{ object.ref }}</span>
+    )
+</h3>
+<div id="editform" class="editable_content" data-eventid="">
+
+    {% if object.status >= '0' and object.status <= '3' %}
+          <a href="#" id="field_tuner" class="editable tuners"
+       data-pk="{{ object.ref }}"
+       data-title="Tuner"
+       data-value="{{ object.tuner.id }}"
+       data-title="Tuner">
+        {{ default_tuner }}</a>
+        &nbsp;to&nbsp;
+    {% endif %}
+
     <a href="#" id="field_activity" class="editable activities"
        data-pk="{{ object.ref }}"
        data-title="Activity"
        data-value="{{ object.activity.id }}"
        data-title="Activity">
         {{ default_activity }}</a>
+    &nbsp;
     <a href="#" id="field_instrument" class="editable instruments"
        data-pk="{{ object.ref }}"
        data-title="Instrument"
        data-value="{{ object.instrument.id }}">
         {{ default_instrument }}</a>
-    at
+    &nbsp;at&nbsp;
     <a href="#" id="field_studio" class="editable studios"
        data-pk="{{ object.ref }}"
        data-title="Studio"
        data-value="{{ object.studio.id }}">
         {{ default_studio }}</a>
 
-       that starts at
-    <a href="#" id="field_deadline_time" class="editable" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
+       for session beginning at
+    <a href="#" id="field_deadline_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
 
 
-    with session ref
+    with reference
     <a href="#" id="field_client_ref" class="editable clientref"
        data-pk="{{ object.ref }}"
        data-title="Reference"
        data-value="{{ object.client_ref }}">
-        {{ client_ref }}</a>
+        {{ default_client_ref }}</a>
+    <br />
 
+    To start at
+   <a href="#" id="field_requested_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ requested_time }}</a>
+    duration
+        <a href="#" id="field_duration" class="editable duration"
+       data-pk="{{ object.ref }}"
+       data-title="Duration in Mins"
+       data-value="{{ object.duration }}"
+       data-title="Duration">
+        {{ default_duration }}</a>&nbsp;mins&nbsp;
 
+    {% if user.is_admin %}
+    booked by
+        <a href="#" id="field_booker" class="editable booker"
+       data-pk="{{ object.ref }}"
+       data-title="Booker"
+       data-value="{{ object.booker.id }}"
+       data-title="Booker">
+        {{ default_booker }}</a>
+    {% endif %}
 
 <span class="pull-right">
-    <button id="editable_done" type="button" class="btn btn-success">Done</button>
-    <button id="editable_cancel" type="button" class="btn btn-warning">Cancel</button>
+
+    {% if object.status == '0' %}
+        <button id="editable_save" type="button" class="btn btn-success" >Create Booking</button>
+        <button id="editable_cancel" type="button" class="btn btn-warning" >Forget</button>
+    {% endif %}
+
+    {% if object.status == '1'  %}
+        <button id="editable_done" type="button" class="btn btn-success" >Done</button>
+        <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
+    {% endif %}
+
+
+    {% if object.status == '2' %}
+        <button id="editable_complete" type="button" class="btn btn-success" >Booking Completed</button>
+        <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
+    {% endif %}
+
 </span>
 </div>
 

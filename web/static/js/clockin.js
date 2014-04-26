@@ -14,16 +14,17 @@
 
 
      */
-    $.fn.clockin = function( default_time ) {
+    $.fn.clockin = function( default_time, callback ) {
 
-        // TODO: this needs doing properly - how to pass selection to d3 below?
-        var selection_id = $(this).attr('id');
-        var selected = $(this);
+        var clock_id = $(this).attr('id');
 
         this.bind("click", function (e) {
 
+
+            var selected = $(this);
+
             // ignore clicks on the clock face or if clock face already showing
-            if (e.target.id == selection_id && !$("#clock").is(":visible")) {
+            if (e.target.id == clock_id && !$("#clock").is(":visible")) {
 
 
                 e.preventDefault();
@@ -39,6 +40,10 @@
                         $('#clock').fadeOut();
                         selected.text(get_time());  
                         $(document).unbind("click");
+
+                        if (typeof callback != "undefined") {
+                            callback(selected, get_time());
+                        }
                     }
                     e.preventDefault();
                     e.stopPropagation();
@@ -132,7 +137,7 @@
 
         function drawClock(){
 
-            var selection = d3.select("#"+selection_id);
+            var selection = d3.select("#"+clock_id);
 
             var svg = selection.append("svg")
                 .attr("id", "clock")

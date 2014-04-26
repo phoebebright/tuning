@@ -28,16 +28,26 @@ v1_api = Api(api_name='v1')
 v1_api.register(AcceptBookingResource())
 v1_api.register(AcceptedBookingsResource())
 v1_api.register(ActivityResource())
+v1_api.register(BookerResource())
 v1_api.register(BookingActivityResource())
+v1_api.register(BookingBookerResource())
 v1_api.register(BookingCancelResource())
 v1_api.register(BookingClientPaidResource())
+v1_api.register(BookingClientrefResource())
 v1_api.register(BookingCompleteResource())
+v1_api.register(BookingCreateResource())
+v1_api.register(BookingDeadlineResource())
+v1_api.register(BookingDeleteResource())
+v1_api.register(BookingDurationResource())
 v1_api.register(BookingInstrumentResource())
 v1_api.register(BookingProviderPaidResource())
+v1_api.register(BookingsCalendarResource())
+v1_api.register(BookingsFullResource())
 v1_api.register(BookingsResource())
 v1_api.register(BookingsToCompleteResource())
 v1_api.register(BookingsToPaidResource())
 v1_api.register(BookingStudioResource())
+v1_api.register(BookingTunerResource())
 v1_api.register(ClientMinResource())
 v1_api.register(ClientResource())
 v1_api.register(InstrumentResource())
@@ -49,9 +59,6 @@ v1_api.register(RequestBookingResource())
 v1_api.register(RequestedBookingsResource())
 v1_api.register(StudioResource())
 v1_api.register(TunerResource())
-v1_api.register(BookingDeadlineResource())
-v1_api.register(BookingClientrefResource())
-v1_api.register(BookingsFullResource())
 
 
 '''
@@ -126,6 +133,7 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/to_completed/$', 'to_completed', name="to_completed"),
                         url(r'^booking/to_paid/$', 'to_paid', name="to_paid"),
                         url(r'^bookings/$', 'bookings_list', name="bookings_list"),
+                        url(r'^booking/template/(?P<booking_ref>\w+)/$', 'render_booking_template', name="render_booking_template"),
 
                         )
 urlpatterns += patterns('',

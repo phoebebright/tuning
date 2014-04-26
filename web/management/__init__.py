@@ -27,6 +27,13 @@ def add_initial_data(sender, **kwargs):
         pb.last_name = "Bright"
         pb.save()
 
+        sys = User.objects.create('system','system@tunemypiano.com','system')
+        sys.first_name = "System"
+        sys.last_name = "User"
+        sys.save()
+
+
+
 post_syncdb.connect(add_initial_data)
 
 

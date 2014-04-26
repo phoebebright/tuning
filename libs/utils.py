@@ -15,6 +15,8 @@ def make_time(dt, round_direction="start"):
     make timezone aware if necessary
     '''
 
+    #TODO: use arrow instead
+
     # ignore blanks
     if not dt:
         return None

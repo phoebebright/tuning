@@ -61,3 +61,10 @@ class InvalidData(ModelException):
     '''
     txtMessage = 'This is not a valid data'
     errorCode = 107
+
+class NoSystemUser(ModelException):
+    '''
+    Couldnt find a user "system" in the user table
+    '''
+    txtMessage = 'Need to create a SYSTEM user'
+    errorCode = 108

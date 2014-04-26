@@ -15,9 +15,9 @@
             font-size: 90%;
         }
 
-    #booking_edit {
-        color: white;
-    }
+        #booking_edit {
+            color: white;
+        }
     </style>
 {% endblock extra_head %}
 {% block heading %}Bookings Calendar{% endblock %}
@@ -48,6 +48,7 @@
 
                     <aside class="col-lg-3">
                         <h4 class="drg-event-title">Clients</h4>
+                        <!--TODO: message if drag to invalid date and if click or couble click -->
                         <div id='external-events'>
                             {%  for item in clients %}
                                 <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
@@ -62,7 +63,7 @@
         </div>
 
     </div>
-
+    <!-- TODO:option to hide bookings to easier to create new booking -->
 
 
 
@@ -131,179 +132,177 @@
             });
 
             calendar();
+            do_last();
         }
     });
 
     function calendar() {
-        //$.getJSON("http://127.0.0.1:8000/api/v1/bookings/?format=json",function(json) {
-        {#        var json = {"meta": {"limit": 20, "next": null, "offset": 0, "previous": null, "total_count": 5}, "objects": [{"allDay": "false", "className": "asked", "end": "2014-03-19T23:59:59.999999", "requested_from": "2014-03-19T00:00:00", "requested_to": "2014-03-19T23:59:59.999999", "resource_uri": "/api/v1/bookings/1/", "start": "2014-03-19T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "asked", "end": "2014-03-20T23:59:59.999999", "requested_from": "2014-03-20T00:00:00", "requested_to": "2014-03-20T23:59:59.999999", "resource_uri": "/api/v1/bookings/2/", "start": "2014-03-20T00:00:00", "status": "asked", "title": "None in None"}, {"allDay": "false", "className": "booked", "end": "2014-03-23T16:30:00", "requested_from": "2014-03-23T00:00:00", "requested_to": "2014-03-23T23:59:59.999999", "resource_uri": "/api/v1/bookings/3/", "start": "2014-03-23T16:00:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "booked", "end": "2014-03-26T08:00:00", "requested_from": "2014-03-26T00:00:00", "requested_to": "2014-03-26T23:59:59.999999", "resource_uri": "/api/v1/bookings/4/", "start": "2014-03-26T07:30:00", "status": "booked", "title": "Steinway Grand in Studio Red"}, {"allDay": "false", "className": "asked", "end": "2014-03-31T23:59:59.999999", "requested_from": "2014-03-31T00:00:00", "requested_to": "2014-03-31T23:59:59.999999", "resource_uri": "/api/v1/bookings/5/", "start": "2014-03-31T00:00:00", "status": "asked", "title": "Steinway Upright in Studio Red"}]}#}
-        {#        var data = json['objects'];#}
 
         // get last used view from cookie or defualt to month view
         var calendarView = (!$.cookie('calendarDefaultView')) ? 'month' : $.cookie('calendarDefaultView');
 
 
+        $('#calendar').fullCalendar({
+            firstDay:1,
+            defaultView: calendarView,
+            slotDuration: "1:00",
+            defaultEventMinutes: 60,
+            header: {
+                left: 'prev,next ',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            columnFormat: {
+                month: 'ddd',
+                week: 'ddd Do',
+                day: 'dddd Do MMMM'
+            },
+            viewRender: function(view, element){
+                // save view to cookie
+                $.cookie('calendarDefaultView', view.name, {expires:7, path: '/'});
+            },
+
+            dayClick:  function(date, jsEvent, view) {
+
+                {% if user.is_booker %}
+                    document.location.href="/booking/add/";
+                {% endif %}
+
+            },
+
+            editable: false,
+            droppable: true, // this allows things to be dropped onto the calendar !!!
+            drop: function(date, allDay) { // this function is called when something is dropped
+
+                var client = $(this);
+
+                event_dropped(client, date, allDay, this.dataset['id']);
+
+
+            },
+            events:{
+                type:"get",
+                url:API+"bookings",
+                data: {
+                    limit:0},
+                dataType : 'json',
+                success:function(json){
+
+                    // convert dates to moment objects
+                    data = new Array();
+                    $.each(json.objects, function(i,d) {
+                        d['start'] = moment(d.start);
+                        d['end'] = moment(d.end);
+                        d['className'] = "booking_status_"+d['status'];
+
+                        data.push(d);
+
+
+                    })
+                    return data;
+                }
+            },
+            eventClick: function(event, jsEvent, view) {
+
+                // display booking details
+
+                event_clicked(event);
+
+
+                // change the border color just for fun
+                $(this).css('border-color', 'red');
+
+            }
+        });
+
+
+    }
+
+    function event_clicked(event) {
+
+        // get full details
         $.ajax({
             type:"get",
-            url:API+"bookings",
+            url:API+"bookings_fat",
             data: {
+                ref: event.ref,
                 limit:0},
             dataType : 'json',
             success:function(json){
-
-                // convert dates to moment objects
-                data = new Array();
-                $.each(json.objects, function(i,d) {
-                    d['start'] = moment(d.start);
-                    d['end'] = moment(d.end);
-                    d['className'] = "booking_status_"+d['status'];
-
-                    data.push(d)
-                })
-
-                $('#calendar').fullCalendar({
-                    firstDay:1,
-                    defaultView: calendarView,
-                    slotDuration: "1:00",
-                    header: {
-                        left: 'prev,next ',
-                        center: 'title',
-                        right: 'month,agendaWeek,agendaDay'
-                    },
-                    columnFormat: {
-                        month: 'ddd',
-                        week: 'ddd Do',
-                        day: 'dddd Do MMMM'
-                    },
-                    viewRender: function(view, element){
-                        // save view to cookie
-                        $.cookie('calendarDefaultView', view.name, {expires:7, path: '/'});
-                    },
-
-                    dayClick:  function(date, jsEvent, view) {
-                        document.location.href="/booking/add/";
-
-                    },
-
-                    editable: false,
-                    droppable: true, // this allows things to be dropped onto the calendar !!!
-                    drop: function(date, allDay) { // this function is called when something is dropped
-
-                        var client = $(this);
-
-                        // ignore if date before now
-                        if (date < moment()) {
-                            return
-                        }
-
-                        // if view is month, the default time to DEFAULT_START_TIME
-                        var view = $('#calendar').fullCalendar('getView');
-                        var deadline = "";  // date as string - no spaces/punctuation
-                        if (view == "month") {
-                            deadline = date.format("YYYYMMDD") + "1200";
-                        } else {
-                            deadline = date.format("YYYYMMDDHHmm");
-                        }
-
-
-// couldn't quite get the api to work - wouldn\t return the ref
-                        {#                            // create a new booking for this client/date#}
-                        {#                            $.ajax({#}
-                        {#                                type:"post",#}
-                        {#                                url:API+"make_booking/",#}
-                        {#                                data: {#}
-                        {#                                    'client_id': this.dataset['id'],#}
-                        {#                                    'when': date.format("YYYY-MM-DD") + " 12:00",#}
-                        {#                                    'user_id': USER_ID#}
-                        {#                                },#}
-                        {#                                dataType : 'json',#}
-                        {#                                success:function(json){#}
-                        {#                                    // retrieve the dropped element's stored Event Object#}
-                        {#                                    var originalEventObject = client.data('eventObject');#}
-                        {##}
-                        {#                                    // we need to copy it, so that multiple events don't have a reference to the same object#}
-                        {#                                    var copiedEventObject = $.extend({}, originalEventObject);#}
-                        {##}
-                        {#                                    // assign it the date that was reported#}
-                        {#                                    copiedEventObject.start = date;#}
-                        {#                                    copiedEventObject.allDay = allDay;#}
-                        {##}
-                        {#                                    // render the event on the calendar#}
-                        {#                                    // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)#}
-                        {#                                    $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);#}
-                        {##}
-                        {##}
-                        {##}
-                        {#                                },#}
-                        {#                                error: function (request, status, error) {#}
-                        {#                                    alert(request.responseText);#}
-                        {#                                }#}
-                        {#                            });#}
-
-
-                        // create a new booking for this client/date
-                        $.ajax({
-                            type:"get",
-                            url:"/booking/add/" + this.dataset['id'] + "/" + deadline + "/",
-                            dataType : 'json',
-                            success:function(json){
-                                // retrieve the dropped element's stored Event Object
-                                var originalEventObject = client.data('eventObject');
-
-                                // we need to copy it, so that multiple events don't have a reference to the same object
-                                var new_event = $.extend({}, originalEventObject);
-
-                                // assign it the date that was reported
-                                new_event.title = json['title'];
-                                new_event.start = date;
-                                new_event.allDay = allDay;
-                                new_event.ref = json['ref'];
-                                new_event.className = "booking_status_1";
-
-                                populate_form(json);
-                                // display modal form
-                                $("#booking_entry_form").modal({show:true})
-
-                                // render the event on the calendar
-                                // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
-                                $('#calendar').fullCalendar('renderEvent', new_event, true);
-
-
-
-                            },
-                            error: function (request, status, error) {
-                                alert(request.responseText);
-                            }
-                        });
-
-
-                    },
-                    events: data,
-                    eventClick: function(event, jsEvent, view) {
-
-                        location.href = "/booking/"+event.ref+"/";
-                        return false;
-
-
-
-                        // change the border color just for fun
-                        $(this).css('border-color', 'red');
-
-                    }
-                });
-
-
+                populate_form(json.objects[0], event.id);
             }
         });
     }
 
-    function populate_form(object) {
+    function event_dropped(client, date, allDay, client_id) {
+
+        // ignore if date before now
+        if (date < moment()) {
+            return
+        }
+
+        // if view is month, the default time to DEFAULT_START_TIME
+        var view = $('#calendar').fullCalendar('getView');
+        var deadline = "";  // date as string - no spaces/punctuation
+        if (view == "month") {
+            deadline = date.format("YYYYMMDD") + "1200";
+        } else {
+            deadline = date.format("YYYYMMDDHHmm");
+        }
+
+
+// couldn't quite get the api to work - wouldn\t return the ref
+
+
+        // create a new booking for this client/date
+        $.ajax({
+            type:"get",
+            url:"/booking/add/" + client_id + "/" + deadline + "/",
+            dataType : 'json',
+            success:function(json){
+                // retrieve the dropped element's stored Event Object
+                var new_event = Array();
+
+                // assign it the date that was reported
+                new_event.title = json['title'];
+                new_event.start = date;
+                new_event.allDay = allDay;
+                new_event.ref = json['ref'];
+                new_event.className = "booking_status_1";
+
+                populate_form(json);
+                // display modal form
+                //$("#booking_entry_form").modal({show:true})
+
+                // render the event on the calendar
+                // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                $('#calendar').fullCalendar('renderEvent', new_event, true);
+
+
+
+            },
+            error: function (request, status, error) {
+                alert(request.responseText);
+            }
+        });
+
+    }
+    function populate_form(object, eventid) {
+        //TODO: should pass in name of div to hold form as paramter - currently hard coded to #booking_edit
+
+        // create new form in div
+        $("#booking_edit").html(object.template);
+
+        // save event id from calendar
+        $("#editform").attr("data-eventid", eventid )
 
         // add classes
         $("#booking_edit").attr("class", 'panel-body booking_status_'+object.status);
 
         // and ref to all editable fields
         $('.editable').attr('data-pk', object.ref);
+        $('.editable_done').attr('data-pk', object.ref);
+        $('.editable_cancel').attr('data-pk', object.ref);
 
         // now put data into "fields" or ? if no data
         $("#modal_label").text("Add Booking for "+object.client.name);
@@ -312,16 +311,17 @@
         $("#field_deadline_date").text(moment(object.deadline).format("dddd D MMM"));
 
         $("#field_activity").text(object.activity.name_verb);
+        $("#field_activity_name").text(object.activity.name);
         $("#field_activity").attr("data-value", String(object.activity.id));
 
-        if (object.instrument.name != null) {
+        if (object.instrument != null) {
             $("#field_instrument").text(object.instrument.name);
             $("#field_instrument").attr("data-value", String(object.instrument.id));
         } else {
             $("#field_instrument").text("?");
         }
 
-        if (object.studio.name != null) {
+        if (object.studio != null) {
             $("#field_studio").text(object.studio.name);
             $("#field_studio").attr("data-value", String(object.studio.id));
         } else {
@@ -336,24 +336,108 @@
         }
 
         var deadline = moment(object.deadline);
-        if (deadline.isValid() && deadline.hour() > 0 && deadline.minute() > 0) {
+        if (deadline.isValid() && (deadline.hour() > 0 || deadline.minute() > 0)) {
             $("#field_deadline_time").text(deadline.format("HH:mm"));
             $("#field_deadline_time").attr("data-value", deadline.toISOString());
         } else {
             $("#field_deadline_time").text("?");
         }
-        
+
+        var requested = moment(object.requested_from);
+        if (requested.isValid() && (requested.hour() > 0 || requested.minute() > 0)) {
+            $("#field_requested_time").text(requested.format("HH:mm"));
+            $("#field_requested_time").attr("data-value", requested.toISOString());
+        } else {
+            $("#field_requested_time").text("?");
+        }
+
+        if (object.booker != null) {
+            $("#field_booker").text(object.booker.full_name);
+            $("#field_booker").attr("data-value", String(object.booker.id));
+        } else {
+            $("#field_booker").text("?");
+        }
+        if (object.tuner != null) {
+            $("#field_tuner").text(object.tuner.full_name);
+            $("#field_tuner").attr("data-value", String(object.tuner.id));
+        } else {
+            $("#field_tuner").text("?");
+        }
+
+        $("#field_duration").text(object.duration);
+        $("#field_duration").attr("data-value", String(object.duration));
+
+        // load lists of instruments, activities etc. to be used for editable fields
         load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
 
         $("#booking_row").slideDown();
 
+        $("#editable_save").on("click", function() {
+            // mark booking as created
+            $.ajax({
+                type:"post",
+                url:API+"create_booking/",
+                data: {pk: object.ref, value:"{{ request.user.id }}"},
+                dataType : 'json',
+                success:function(json){
+
+                    $("#booking_row").slideUp();
+
+
+                }
+            });
+
+        });
         $("#editable_done").on("click", function() {
+            // nothing to do as everything saved already
+
             $("#booking_row").slideUp();
+
+        });
+
+        $("#editable_complete").on("click", function() {
+            // mark booking as complete
+
+            $.ajax({
+                type:"post",
+                url:API+"bookings_to_complete/",
+                data: {ref: object.ref,  value:"{{ request.user.id }}"},
+                dataType : 'json',
+                success:function(json){
+
+                    $("#booking_row").slideUp();
+
+
+                }
+            });
+
         });
 
         $("#editable_cancel").on("click", function() {
-            //TODO: delete or undo editing on calendar form when clicking cancel
-            $("#booking_row").slideUp();
+
+            var msg = "Are you sure you want to cancel this booking?";
+
+            if (parseInt(object.status) == 0) {
+                msg = "Are you don't want to save this booking? "
+            }
+            if (window.confirm(msg)) {
+
+                $.ajax({
+                    type:"post",
+                    url:API+"delete_booking/",
+                    data: {pk: object.ref, value:"{{ request.user.id }}"},
+                    dataType : 'json',
+                    success:function(json){
+                        $("#booking_row").slideUp();
+
+                        var eventid = $("#editform").attr("data-eventid");
+                        // remove from calendar
+                        $('#calendar').fullCalendar( 'removeEvents' [ eventid ] );
+
+                    }
+                });
+            }
+
         });
 
     }

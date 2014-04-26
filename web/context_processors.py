@@ -32,8 +32,10 @@ def add_stuff(request):
     context['list_complete'] = Booking.objects.completed().select_related()[0:5]
 
     # admins need a list of clients for the new bookings menu item
-    if request.user.is_admin:
-        context['CLIENTS'] = Client.objects.active()
+    context['CLIENTS'] = []
+    if not request.user.is_anonymous():
+        if request.user.is_admin:
+            context['CLIENTS'] = Client.objects.active()
 
 
 

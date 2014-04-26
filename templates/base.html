@@ -264,7 +264,7 @@
                     </li>
                     {% if user.is_authenticated %}
 
-                         <li><a href="/calendar/">Calendar</a></li>
+                        <li><a href="/calendar/">Calendar</a></li>
 
                         {% if user.is_staff %}
 
@@ -374,46 +374,16 @@
     <!--main content end-->
     <!--right sidebar start-->
     <div class="right-sidebar">
-        <div class="search-row">
-            <input type="text" placeholder="Search" class="form-control">
-        </div>
-        <div class="right-stat-bar">
-            <ul class="right-side-accordion">
-                <li class="widget-collapsible">
-                    <a href="#" class="head widget-head red-bg active clearfix">
-                        <span class="pull-left">work progress (5)</span>
-                        <span class="pull-right widget-collapse"><i class="ico-minus"></i></span>
-                    </a>
-                    <ul class="widget-container">
-                        <li>
-                            <div class="prog-row side-mini-stat clearfix">
-                                <div class="side-graph-info">
-                                    <h4>Target sell</h4>
-                                    <p>
-                                        25%, Deadline 12 june 13
-                                    </p>
-                                </div>
-                                <div class="side-mini-graph">
-                                    <div class="target-sell">
-                                    </div>
-                                </div>
-                            </div>
 
-                            <div class="prog-row side-mini-stat">
-                                <div class="col-md-12">
-                                    <h4>total progress</h4>
-                                    <p>
-                                        50%, Deadline 12 june 13
-                                    </p>
-                                    <div class="progress progress-xs mtop10">
-                                        <div style="width: 50%" aria-valuemax="100" aria-valuemin="0" aria-valuenow="20" role="progressbar" class="progress-bar progress-bar-info">
-                                            <span class="sr-only">50% Complete</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+
+        <div class="right-stat-bar leftside-navigation">
+            <ul id="loglist" class="sidebar-menu">
+
+
+
+
+                <li>
+                    <a href="#">See more...</a>
                 </li>
             </ul>
         </div>
@@ -503,7 +473,22 @@
 
 <script id="comment_badge_template" type="x-tmpl-mustache">
 <span class="badge comment_count pull-right">{{ num }}</span>
-</script>
+    </script>
+
+<script id="log_list_template" type="x-tmpl-mustache">
+                <li>
+                    <a href="{{ booking_url }}">
+                        <span class="photo"><img alt="avatar" src="images/avatar-mini.jpg"></span>
+                                <span class="subject">
+                                <span class="booking">{{ long_heading }}</span>
+                                <span class="time">{{ time }}</span>
+                                </span>
+                                <span class="comment">
+                                    {{ text }}
+                                </span>
+                    </a>
+                </li>
+                </script>
 {% endverbatim %}
 <script>
 
@@ -511,15 +496,15 @@
 
         // make left side nav accordian
         $('#nav-accordion').dcAccordion({
-                eventType: 'click',
-                autoClose: true,
-                saveState: true,
-                disableLink: true,
-                speed: 'slow',
-                showCount: false,
-                autoExpand: true,
-                classExpand: 'dcjq-current-parent'
-            });
+            eventType: 'click',
+            autoClose: true,
+            saveState: true,
+            disableLink: true,
+            speed: 'slow',
+            showCount: false,
+            autoExpand: true,
+            classExpand: 'dcjq-current-parent'
+        });
 
         // tool tips
 
@@ -589,7 +574,35 @@
                 $(".comment_list[data-pk="+this.dataset['pk']+"]").toggle('slow');
             })
         });
+
+
+        load_recent_comments($("#loglist"));
     }
+
+    function load_recent_comments(selection) {
+
+
+        var template = $('#log_list_template').html();
+        Mustache.parse(template);
+
+        $.ajax({
+            type:"get",
+            url:API+"log",
+            data: {
+                limit:10},
+            dataType : 'json',
+            success:function(json){
+                var html = '';
+                $.each(json.objects, function(i, d) {
+                    html += comment_html(d, template);
+                });
+
+                selection.html(html);
+
+            }
+        });
+    }
+
 
     function load_comment_count(pk, selection, template) {
 
@@ -651,6 +664,9 @@
         return Mustache.render(template, {
             user: d['created_by']['full_name'],
             time: moment(d['created']).fromNow(),
+            booking_ref: d['booking_ref'],
+            booking_url: d['booking_url'],
+            long_heading: d['long_heading'],
             text: d['comment']});
     }
 

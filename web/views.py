@@ -24,7 +24,7 @@ from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import ModelFormMixin
-
+from django.template.loader import render_to_string
 
 #python
 from datetime import datetime, timedelta, date
@@ -103,6 +103,7 @@ def bookings_add(request, client_id=None, deadline=None):
         booking = resource.obj_get(bundle, id=new.id)
         bundle = resource.build_bundle(obj=booking, request=request)
 
+
         return HttpResponse(resource.serialize(None, resource.full_dehydrate(bundle), 'application/json'), mimetype='application/json')
     else:
         return render_to_response('web/booking_new.html',{
@@ -116,6 +117,12 @@ def bookings_add(request, client_id=None, deadline=None):
             },
             context_instance=RequestContext(request)
         )
+
+def render_booking_template(object):
+
+    template = "web/booking_editable_template.html"
+
+    return render_to_string(template, {"object": object})
 
 
 

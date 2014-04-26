@@ -1,5 +1,6 @@
 import urlparse
 from datetime import datetime
+import arrow
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -17,6 +18,7 @@ from tastypie.serializers import Serializer
 
 
 from web.models import *
+
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -121,13 +123,27 @@ class TunerResource(ModelResource):
 
         return bundle
 
-class StudioResource(ModelResource):
+class BookerResource(ModelResource):
+    client = fields.ToOneField(ClientResource, "client", full=False)
+
     class Meta:
-        queryset = Studio.objects.all()
+        queryset = Booker.objects.all()
         include_resource_uri = False
-        resource_name = 'studio'
+        resource_name = 'bookers'
         limit = 0
-        allowed_methods = ['get']
+        allowed_methods = ['get',]
+        filtering = {
+            'client_id': ['exact', ]
+        }
+
+
+
+    def dehydrate(self, bundle):
+        bundle.data['name'] = bundle.obj.get_full_name()
+
+        return bundle
+
+
 
 class ClientMinResource(ModelResource):
     class Meta:
@@ -154,7 +170,7 @@ class StudioResource(ModelResource):
         include_resource_uri = False
         resource_name = 'studios'
         limit = 0
-        allowed_methods = ['get']
+        allowed_methods = ['get',]
         filtering = {
             'client_id': ['exact', ]
         }
@@ -199,7 +215,8 @@ class BookingsResource(ModelResource):
         resource_name = 'bookings'
         allowed_methods = ['get']
         limit = 0
-        fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client','booker_id','tuner_id','activity']
+        fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client',
+                  'booker_id','tuner_id','activity', 'duration', 'client_ref']
         filtering = {
             'client_id': ('exact',),
             'status': ('exact',),
@@ -246,19 +263,33 @@ class BookingsResource(ModelResource):
         return bundle
 
     def get_object_list(self, request):
-        base = super(BookingsResource, self).get_object_list(request).mine(request.user)
+        base = super(BookingsResource, self).get_object_list(request)
+
+        # if empty no more filtering otherwise limit to current users bookings
+        if not base:
+            return base
+        else:
+            base = base.mine(request.user)
+
 
         try:
             if request._get.has_key('dataset'):
                 dataset = request._get.get('dataset')
                 if dataset.lower() == "current":
-                    return base.current()
+                    base =  base.current()
                 elif dataset.lower() == "archived":
-                    return base.archived()
+                    base = base.archived()
 
-            else:
-                return base
 
+            if request._get.has_key('start'):
+                start = datetime.strptime(request._get['start'], "%Y-%m-%d")
+                base = base.filter(deadline_gte = start)
+
+            if request._get.has_key('end'):
+                end = datetime.strptime(request._get['end'], "%Y-%m-%d")
+                base = base.filter(deadline_lte = end)
+
+            return base
         except:
             # above will fail if called from view as no _get
             return base
@@ -273,27 +304,36 @@ class BookingsFullResource(BookingsResource):
     instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
     studio = fields.ToOneField(StudioResource, "studio", full=True, blank=True, null=True)
 
-    class Meta:
+    class Meta(BookingsResource.Meta):
         queryset = Booking.objects.all()
         resource_name = 'bookings_fat'
 
     def get_object_list(self, request):
-        base = super(BookingsFullResource, self).get_object_list(request).mine(request.user)
+        base = super(BookingsFullResource, self).get_object_list(request)
 
-        try:
-            if request._get.has_key('dataset'):
-                dataset = request._get.get('dataset')
-                if dataset.lower() == "current":
-                    return base.current()
-                elif dataset.lower() == "archived":
-                    return base.archived()
+        return base
 
-            else:
-                return base
+    def dehydrate(self, bundle):
+        from web.views import render_booking_template
 
-        except:
-            # above will fail if called from view as no _get
-            return base
+        bundle = super(BookingsFullResource, self).dehydrate(bundle)
+
+        # return a rendered editable template for this booking
+        bundle.data['template'] = render_booking_template(bundle.obj)
+        return bundle
+
+
+class BookingsCalendarResource(BookingsResource):
+
+
+    class Meta(BookingsResource.Meta):
+        queryset = Booking.objects.all()
+        resource_name = 'bookings4calendar'
+
+    def get_object_list(self, request):
+        base = super(BookingsCalendarResource, self).get_object_list(request)
+
+        return base.values()
 
 
 class BookingUpdateResource(Resource):
@@ -303,6 +343,7 @@ class BookingUpdateResource(Resource):
         allowed_methods = ['post','put','get','options']
         include_resource_uri = False
         object_class = SimpleObject
+        always_return_data = True
         serializer = urlencodeSerializer()
         authentication = Authentication()
         authorization = Authorization()
@@ -329,6 +370,9 @@ class BookingUpdateResource(Resource):
 
     def update_booking(self, booking, bundle):
         pass
+
+    def obj_get_list(self, bundle, **kwargs):
+        raise BadRequest('You are probably calling with get and it should be post')
 
     def get_resource_uri(self, bundle_or_obj):
 
@@ -399,6 +443,27 @@ class MakeBookingResource(BookingUpdateResource):
         return bundle
 
 
+class BookingCreateResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'create_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        booking.create()
+
+class BookingDeleteResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'delete_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        booking.cancel()
+
+
 
 class BookingActivityResource(BookingUpdateResource):
 
@@ -430,6 +495,21 @@ class BookingInstrumentResource(BookingUpdateResource):
             raise BadRequest('Invalid Instrument id %s' % value)
 
 
+class BookingTunerResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_tuner_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        try:
+            booking.tuner = Tuner.objects.get(id=value)
+            booking.save()
+        except Tuner.DoesNotExist:
+            raise BadRequest('Invalid Tuner id %s' % value)
+
+
 class BookingStudioResource(BookingUpdateResource):
 
     class Meta(BookingUpdateResource.Meta):
@@ -444,7 +524,19 @@ class BookingStudioResource(BookingUpdateResource):
         except Studio.DoesNotExist:
             raise BadRequest('Invalid Studio id %s' % value)
 
+class BookingBookerResource(BookingUpdateResource):
 
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_booker_booking'
+
+
+    def update_booking(self, booking, bundle, value):
+
+        try:
+            booking.booker = Booker.objects.get(id=value)
+            booking.save()
+        except Booker.DoesNotExist:
+            raise BadRequest('Invalid Booker id %s' % value)
 
 class BookingDeadlineResource(BookingUpdateResource):
 
@@ -455,21 +547,18 @@ class BookingDeadlineResource(BookingUpdateResource):
     def obj_create(self, bundle, request=None, **kwargs):
 
         ref = bundle.data['pk']
-        [y, m, d] = bundle.data['value'].split('-')
+        #TDOD: error handling
+        deadline = arrow.get(bundle.data['value']).datetime
         me = bundle.request.user
 
+        #TODO: make a decision about where the logic if for how change to deadline effects requested date and vv. in models or javascript?
         try:
             booking = Booking.objects.get(ref=ref)
-            if booking.deadline:
-                booking.deadline.replace(year=y, month=m, date=d)
-            else:
-                booking.deadline = datetime(int(y), int(m), int(d), 12, 0)
-
-            booking.save()
-
         except Booking.DoesNotExist:
             raise BadRequest('Invalid Booking reference %s' % ref)
 
+        booking.change_deadline(deadline)
+        booking.save()
 
         #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
         #TODO: This object is not being returned, it's not getting serialised for some reason
@@ -485,6 +574,17 @@ class BookingClientrefResource(BookingUpdateResource):
     def update_booking(self, booking, bundle, value):
 
         booking.client_ref = value
+        booking.save()
+
+class BookingDurationResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_duration_booking'
+        include_resource_uri = False
+
+    def update_booking(self, booking, bundle, value):
+        #TODO: validation of duration
+        booking.duration = value
         booking.save()
 
 
@@ -760,7 +860,7 @@ class LogResource(ModelResource):
         authorization = Authorization()
         filtering = {
             'booking_id': ['exact', ],
-            'ref': ['exact']
+            'created_id': ['exact']
         }
 
     def obj_create(self, bundle, request=None, **kwargs):
@@ -788,6 +888,10 @@ class LogResource(ModelResource):
 
     def dehydrate(self, bundle):
         bundle.data['created'] = timezone.localtime(bundle.obj.created)
+        bundle.data['booking_url'] = bundle.obj.booking.get_absolute_url()
+        bundle.data['booking_ref'] = bundle.obj.booking.ref
+        bundle.data['long_heading'] = bundle.obj.booking.long_heading
+
         return bundle
 
 class RecentBookingsCount(Resource):

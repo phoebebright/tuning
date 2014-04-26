@@ -40,6 +40,7 @@ TODAY = NOW.date()
 YESTERDAY = TODAY - timedelta(days = 1)
 TOMORROW = TODAY + timedelta(days = 1)
 
+BOOKING_CREATING = "0"   # in the process of creating a booking
 BOOKING_REQUESTED = "1"   # waiting for a tuner
 BOOKING_BOOKED = "3"      # tuner has been assigned but not yet happened
 BOOKING_TOCOMPLETE = "4"      # booking has past and not marked complete
@@ -61,6 +62,13 @@ def default_start_time(deadline):
         return make_time(deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
     else:
         return None
+
+def system_user():
+
+    try:
+        return CustomUser.objects.get(username='system')
+    except CustomUser.DoesNotExist:
+        raise NoSystemUser
 
 class Activity(models.Model):
     name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
@@ -111,6 +119,7 @@ class Organisation(models.Model):
         return self.test
 
 class Client(Organisation):
+    #TODO: All clients need at least one booker
 
     objects = PassThroughManager.for_queryset_class(OrgQuerySet)()
 
@@ -379,7 +388,7 @@ class Booking(models.Model):
     client = models.ForeignKey(Client, related_name="client")
     tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
     activity = models.ForeignKey(Activity, blank=True, null=True, db_index=True)
-    status = models.CharField(choices=STATUS, default=BOOKING_REQUESTED, max_length=1, db_index=True)
+    status = models.CharField(choices=STATUS, default=BOOKING_CREATING, max_length=1, db_index=True)
     requested_at = models.DateTimeField(_('when requested'), blank=True, null=True)
     booked_at = models.DateTimeField(_('when booked'), blank=True, null=True)
     completed_at = models.DateTimeField(_('when completed'), blank=True, null=True)
@@ -536,7 +545,7 @@ class Booking(models.Model):
     @property
     def start_time(self):
 
-        if self.status == BOOKING_REQUESTED:
+        if self.status <= BOOKING_REQUESTED:
             return self.requested_from
         else:
             return self.booked_time
@@ -544,7 +553,7 @@ class Booking(models.Model):
     @property
     def end_time(self):
 
-        if self.status == BOOKING_REQUESTED:
+        if self.status <= BOOKING_REQUESTED:
             return self.requested_to
         else:
             return self.booked_time + timedelta(seconds= self.duration*60)
@@ -617,19 +626,66 @@ class Booking(models.Model):
         else:
             return 100
 
+
     def log(self, comment, user=None):
+        '''add a system generated item to the comments log
+        '''
+        if not user:
+            user = system_user()
 
-
-        item = Log.objects.create(booking=self, comment= comment, created_by=user)
+        item = Log.objects.create(booking=self, comment= comment, created_by=user, log_type='S')
         return item
 
-    def cancel(self, user):
-        #TODO: test
-        #TODO: prevent cancellation when status is complete
-        #TODO: can only be cancelled by admin or person who created
-        self.cancelled_at = NOW
-        self.status = BOOKING_CANCELLED
-        self.save()
+    def comment(self, comment, user=None):
+        '''add user generated comment to the comments log
+        '''
+        if not user:
+            user = system_user()
+
+        item = Log.objects.create(booking=self, comment= comment, created_by=user, log_type='U')
+        return item
+
+
+    def create(self, user=None):
+
+        #TODO: some validation here
+        if  int(self.status) == 0:
+            self.status = BOOKING_REQUESTED
+            self.booked_at = NOW
+            self.save()
+
+            self.log(comment="New Booking added for %s for %s with ref %s" % (self.client, self.deadline.strftime("%a %d %B"), self.ref), user=user)
+
+    def cancel(self, user=None):
+
+        # if not created then just delete
+        if self.status == 0:
+            #TODO: delete comments
+            self.delete()
+
+        else:
+
+            #TODO: test
+            #TODO: prevent cancellation when status is complete
+            #TODO: can only be cancelled by admin or person who created
+            self.cancelled_at = NOW
+            self.status = BOOKING_CANCELLED
+            self.save()
+
+    def change_deadline(self, deadline):
+        ''' if booking is not complete, then change requested date based on deadline
+        '''
+        if self.deadline != deadline:
+            self.deadline = deadline
+
+            if self.status < '2':
+                self.requested_from = self.deadline - timedelta(seconds= self.duration*60)
+                self.requested_to = self.deadline
+
+            self.save()
+
+
+
 
 
     @classmethod
@@ -762,11 +818,16 @@ class Booking(models.Model):
         self.booked_at = NOW
         self.save()
 
+        self.log(comment="Tuner %s assigned" % (self.tuner,))
+
+
     def set_complete(self):
 
         self.status = BOOKING_COMPLETE
         self.completed_at = NOW
         self.save()
+
+        self.log(comment="%s complete" % (self.activity,))
 
     def set_uncomplete(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -787,6 +848,9 @@ class Booking(models.Model):
 
         self.save()
 
+        self.log(comment="provider paid")
+
+
     def set_provider_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
         '''
@@ -805,6 +869,8 @@ class Booking(models.Model):
             self.status = BOOKING_ARCHIVED
 
         self.save()
+
+        self.log(comment="client paid")
 
     def client_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -828,6 +894,16 @@ class Booking(models.Model):
 
 
     @classmethod
+    def delete_temps(cls):
+        ''' delete bookings with status of 0 more than 24 hours old
+        RUN VIA CRON web.cron.CheckBookingStatus
+        '''
+
+        cls.objects.filter(status=BOOKING_CREATING, booked_time__lt=YESTERDAY).delete()
+
+
+
+    @classmethod
     def check_to_complete(cls):
         ''' once a booking has past the status become TOCOMPLETE
         RUN VIA CRON web.cron.CheckBookingStatus
@@ -847,10 +923,11 @@ class Log(models.Model):
     comment = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(CustomUser, blank=True, null=True)
-
+    log_type = models.CharField(max_length=1, choices=(('U','User Comment'),('S','System')), default='U')
 
     def __unicode__(self):
         return self.comment
 
     class Meta:
         ordering = ['-created',]
+

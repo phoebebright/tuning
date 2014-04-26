@@ -63,6 +63,9 @@ class StudioAdmin(admin.ModelAdmin):
                     }
 
 
+class BookerInline(admin.TabularInline):
+    model           = Booker
+    fields = ['username','email','password']
 
 class StudioInline(admin.TabularInline):
     model           = Studio
@@ -90,7 +93,7 @@ class ClientAdmin(admin.ModelAdmin):
 
     list_display = ('name',)
     search_fields =	 ('name',)
-    inlines = [StudioInline, InstrumentInline]
+    inlines = [BookerInline, StudioInline, InstrumentInline]
 
 
 class ProviderAdmin(admin.ModelAdmin):
@@ -107,10 +110,10 @@ class BookingAdmin(admin.ModelAdmin):
     class Meta:
 		model = Booking
 
-    list_display = ('client','booker', 'studio', 'instrument', 'tuner')
+    list_display = ('status','client','booker', 'deadline', 'studio', 'instrument', 'tuner')
     search_fields =	 ('client__name','studio__name', 'instrument__name', 'tuner__username', 'booker_username')
     fields = [ 'client', 'booker','tuner', 'requested_from', 'requested_to', 'duration', 'studio', 'instrument', 'deadline', 'client_ref']
-
+    list_filter = ('status','client','booker', 'deadline', 'studio', 'instrument', 'tuner')
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Booker, BookerUserAdmin)

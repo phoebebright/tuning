@@ -12,4 +12,5 @@ class CheckBookingStatus(CronJobBase):
     def do(self):
 
         Booking.check_to_complete()
+        Booking.delete_temps()
 
