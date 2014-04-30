@@ -27,7 +27,7 @@
         <div class="col-sm-12">
             <section class="panel">
                 <div id="booking_edit" class="panel-body booking_status_1">
-                    {%  include "web/booking_editable_template.html" %}
+                    {%  include "web/booking_editable_template.html" with user=user object=object %}
                 </div>
             </section>
         </div>
@@ -299,7 +299,7 @@
         // add classes
         $("#booking_edit").attr("class", 'panel-body booking_status_'+object.status);
 
-        // and ref to all editable fields
+        // add ref to all editable fields
         $('.editable').attr('data-pk', object.ref);
         $('.editable_done').attr('data-pk', object.ref);
         $('.editable_cancel').attr('data-pk', object.ref);
@@ -364,8 +364,17 @@
             $("#field_tuner").text("?");
         }
 
+
+        if (object.price != null) {
+            $("#field_price").text(object.price);
+            $("#field_price").attr("data-value", String(object.price));
+        } else {
+            $("#field_price").text("?");
+        }
+
         $("#field_duration").text(object.duration);
         $("#field_duration").attr("data-value", String(object.duration));
+
 
         // load lists of instruments, activities etc. to be used for editable fields
         load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");

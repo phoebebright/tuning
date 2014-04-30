@@ -114,6 +114,8 @@ def bookings_add(request, client_id=None, deadline=None):
             "when_date" : when_date,
             "when_time" : when_time,
             "client_ref": client_ref,
+            "price": new.price,
+            "booker": new.booker,
             },
             context_instance=RequestContext(request)
         )

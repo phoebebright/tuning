@@ -57,6 +57,7 @@ class TunerUserAdmin(UserAdmin):
 
 class StudioAdmin(admin.ModelAdmin):
 
+    ordering = ('name', )
     formfield_overrides = {
         AddressField: {'widget': GoogleMapsAddressWidget},
         GeoLocationField: {'widget': TextInput(attrs={'readonly': 'readonly'})},
@@ -94,6 +95,7 @@ class ClientAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields =	 ('name',)
     inlines = [BookerInline, StudioInline, InstrumentInline]
+    ordering = ('name', )
 
 
 class ProviderAdmin(admin.ModelAdmin):

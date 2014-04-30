@@ -36,7 +36,7 @@ function load_data(client_id, start_date, end_date) {
         }
     });
 
-        // get list of tuners and setup editable
+    // get list of tuners and setup editable
     $.ajax({
         type:"get",
         url:API+"tuners",
@@ -200,9 +200,22 @@ function load_data(client_id, start_date, end_date) {
         url: API + 'set_duration_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-           //TODO: Error checking
+            //TODO: Error checking
         }
     });
+
+
+    if ($(".price").hasClass("editable")) {
+        $('.price').editable({
+            type: 'text',
+            mode: 'inline',
+            url: API + 'set_price_booking/?format=json&limit=0',
+
+            success: function(response, newValue) {
+                //TODO: Error checking
+            }
+        });
+    }
 
 
     // get list of tuners

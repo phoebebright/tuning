@@ -1,4 +1,6 @@
 import uuid
+from decimal import *
+
 from datetime import datetime, date, timedelta, time
 
 
@@ -30,7 +32,7 @@ from libs.utils import make_time, is_list, add_tz
 from web.exceptions import *
 
 from django_google_maps import fields as map_fields
-
+from django.forms.models import model_to_dict
 
 
 # faketime allows the actual date to be set in the future past - for testing can be useful
@@ -70,13 +72,87 @@ def system_user():
     except CustomUser.DoesNotExist:
         raise NoSystemUser
 
+def base_price(price, dt = None):
+    if dt and dt.weekday() == 6:
+        return price + sunday_extra()
+    else:
+        return price
+
+def vat_rate():
+    return Decimal('.21')
+
+def short_notice_extra():
+    return Decimal('20.0')
+
+def sunday_extra():
+
+    return Decimal('15.0')
+
+def emergency_price(price):
+
+    return price * Decimal('1.5')
+
+def tuner_pay(price):
+    #TODO: tuners can be vat registered
+    # assume for the moment that tuners are not vat registered
+    return Decimal(price * Decimal('0.66'))
+
+
+
+
+
+
+class ModelDiffMixin(object):
+    """
+    A model mixin that tracks model fields' values and provide some useful api
+    to know what fields have been changed.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(ModelDiffMixin, self).__init__(*args, **kwargs)
+        self.__initial = self._dict
+
+    @property
+    def diff(self):
+        d1 = self.__initial
+        d2 = self._dict
+        diffs = [(k, (v, d2[k])) for k, v in d1.items() if v != d2[k]]
+        return dict(diffs)
+
+    @property
+    def has_changed(self):
+        return bool(self.diff)
+
+    @property
+    def changed_fields(self):
+        return self.diff.keys()
+
+    def get_field_diff(self, field_name):
+        """
+        Returns a diff for field if it's changed and None otherwise.
+        """
+        return self.diff.get(field_name, None)
+
+    def save(self, *args, **kwargs):
+        """
+        Saves model and set initial state.
+        """
+        super(ModelDiffMixin, self).save(*args, **kwargs)
+        self.__initial = self._dict
+
+    @property
+    def _dict(self):
+        return model_to_dict(self, fields=[field.name for field in
+                             self._meta.fields])
+
+
 class Activity(models.Model):
     name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
     name_plural = models.CharField(_('eg. Tunings'), max_length=15)
     name_verb = models.CharField(_('eg. Tune'), max_length=12)
     duration = models.PositiveIntegerField(_('Default time slot in minutes '), max_length=5, default=60)
     order = models.PositiveSmallIntegerField(_('Order to display in lists'), default=0)
-    price = models.DecimalField(_('Default price per hour'), max_digits=10, decimal_places=2, default=50)
+    price = models.DecimalField(_('Default price (ex vat)'), max_digits=10, decimal_places=2, default=50)
 
     def __unicode__(self):
         return self.name
@@ -90,6 +166,8 @@ class Activity(models.Model):
         '''
 
         return cls.objects.all()[0]
+
+
 
 class OrgQuerySet(QuerySet):
 
@@ -238,6 +316,12 @@ class CustomUser(AbstractUser):
     def can_book(self):
         return self.is_staff
 
+    @property
+    def can_see_price(self):
+        return self.is_staff or self.is_booker
+
+
+
 class Booker(CustomUser):
 
     client = models.ForeignKey(Client, null=True, blank=True)
@@ -285,6 +369,7 @@ class Tuner(CustomUser):
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
     activities = models.ManyToManyField(Activity, blank=True, null=True)
+    #TODO: add vat registered
 
     class Meta:
         verbose_name = _("Users - Tuner")
@@ -372,7 +457,7 @@ class BookingsQuerySet(QuerySet):
         else:
             raise InvalidQueryset(message = "user %s must be booker, tuner or admin" % user)
 
-class Booking(models.Model):
+class Booking(models.Model, ModelDiffMixin):
     #TODO: Add geodjango: http://django-model-utils.readthedocs.org/en/latest/managers.html#passthroughmanager
 
     STATUS = Choices((BOOKING_REQUESTED, _('requested')),
@@ -408,7 +493,11 @@ class Booking(models.Model):
     deadline =  models.DateTimeField(_('session start'), blank=True, null=True, db_index=True)
     client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
 
-    price = models.DecimalField(_('Price for job'), max_digits=10, decimal_places=2, default=0)
+    price = models.DecimalField(_('Price for job ex vat'), max_digits=10, decimal_places=2, default=0)
+    default_price = models.DecimalField(_('System calculated price for job ex vat'), max_digits=10, decimal_places=2, default=0)
+    tuner_payment = models.DecimalField(_('Amount due to Tuner'), max_digits=10, decimal_places=2, default=0)
+    vat = models.DecimalField(_('VAT Amount'), max_digits=10, decimal_places=2, default=vat_rate())
+
 
     objects = BookingsPassThroughManager.for_queryset_class(BookingsQuerySet)()
 
@@ -431,24 +520,33 @@ class Booking(models.Model):
                 self.ref = Booking.create_ref(self.studio, self.deadline)
 
             self.activity = Activity.default_activity()
-            self.price = self.activity.price * (settings.DEFAULT_SLOT_TIME / 60)
             self.requested_at = NOW
+            self.recalc_prices()
 
-        # # replace temporary ref with permanent one if data is available
-        # if self.has_temp_ref and self.studio and self.deadline:
-        #     self.ref = Booking.create_ref(self.studio, self.deadline)
-
+        if 'price' in self.changed_fields:
+            # recalc vat
+            self.vat = self.default_price * vat_rate()
+            self.tuner_payment = tuner_pay(self.price)
+        else:
+            if 'requested_at' in self.changed_fields:
+                self.recalc_prices()
 
 
 
         # change status to archived  when fully paid
         # TODO:test
-        if self.status == 5 and self.paid_provider_at and self.paid_client_at:
+        if self.status == BOOKING_COMPLETE and self.paid_provider_at and self.paid_client_at:
             self.status=BOOKING_ARCHIVED
             self.archived_at = NOW
 
         super(Booking, self).save(*args, **kwargs)
 
+    def recalc_prices(self):
+        #NOTE: does not save
+        self.default_price = self.get_default_price()
+        self.vat = self.default_price * vat_rate()
+        self.price = self.default_price
+        self.tuner_payment = tuner_pay(self.price)
 
     @classmethod
     def create_temp_ref(cls):
@@ -465,9 +563,6 @@ class Booking(models.Model):
 
     @classmethod
     def create_ref(cls, studio=None, deadline=None):
-        ''' create reference based on studio and time
-         if studio and dealine not available return a temporary ref
-        '''
 
         if not studio or not deadline:
             return Booking.create_temp_ref()
@@ -545,18 +640,20 @@ class Booking(models.Model):
     @property
     def start_time(self):
 
-        if self.status <= BOOKING_REQUESTED:
-            return self.requested_from
-        else:
+        if self.booked_time:
             return self.booked_time
+        else:
+            return self.requested_from
 
     @property
     def end_time(self):
 
-        if self.status <= BOOKING_REQUESTED:
-            return self.requested_to
-        else:
+        if self.booked_time:
             return self.booked_time + timedelta(seconds= self.duration*60)
+        else:
+            return self.requested_to
+
+
 
     @property
     def when(self):
@@ -626,6 +723,20 @@ class Booking(models.Model):
         else:
             return 100
 
+
+    def get_default_price(self):
+
+        price = base_price(self.activity.price, self.start_time)
+
+        # if starts within 2 hours
+        if (self.start_time - NOW).seconds < (60*60*3):
+            price = emergency_price(price)
+
+        # start within 24 hours
+        elif (self.start_time - NOW).days < 1:
+            price += short_notice_extra()
+
+        return price
 
     def log(self, comment, user=None):
         '''add a system generated item to the comments log

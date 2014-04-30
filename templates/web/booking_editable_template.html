@@ -61,7 +61,6 @@
        data-title="Duration">
         {{ default_duration }}</a>&nbsp;mins&nbsp;
 
-    {% if user.is_admin %}
     booked by
         <a href="#" id="field_booker" class="editable booker"
        data-pk="{{ object.ref }}"
@@ -69,7 +68,19 @@
        data-value="{{ object.booker.id }}"
        data-title="Booker">
         {{ default_booker }}</a>
-    {% endif %}
+
+
+    price £
+        <a href="#" id="field_price" class="editable price"
+       data-pk="{{ object.ref }}"
+       data-title="Price"
+       data-value="{{ object.price }}"
+       data-title="Price">
+        {{ default_price }}</a>
+
+
+
+
 
 <span class="pull-right">
 

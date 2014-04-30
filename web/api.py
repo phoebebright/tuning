@@ -216,7 +216,7 @@ class BookingsResource(ModelResource):
         allowed_methods = ['get']
         limit = 0
         fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client',
-                  'booker_id','tuner_id','activity', 'duration', 'client_ref']
+                  'booker_id','tuner_id','activity', 'duration', 'client_ref', 'price', 'default_price', 'tuner_payment', 'vat']
         filtering = {
             'client_id': ('exact',),
             'status': ('exact',),
@@ -585,6 +585,18 @@ class BookingDurationResource(BookingUpdateResource):
     def update_booking(self, booking, bundle, value):
         #TODO: validation of duration
         booking.duration = value
+        booking.save()
+
+class BookingPriceResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'set_price_booking'
+        include_resource_uri = False
+
+    def update_booking(self, booking, bundle, value):
+        #TODO: validation of duration
+        booking.price = value
+        booking.vat = value * vat_rate()
         booking.save()
 
 

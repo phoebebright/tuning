@@ -268,18 +268,7 @@
 
                         {% if user.is_staff %}
 
-                            <li class="sub-menu dcjq-parent-li">
-                                <a href="javascript:;" class="dcjq-parent active">
-                                    <i class="fa fa-book"></i>
-                                    <span>New Booking</span>
-                                    <span class="dcjq-icon"></span></a>
-                                <ul class="sub" style="display: block;">
-                                    {% for item in CLIENTS %}
-                                        <li><a href="/booking/add/{{ item.id }}/">{{ item.name }}</a></li>
-                                    {% endfor %}
 
-                                </ul>
-                            </li>
 
                             <li class="sub-menu">
                                 <a href="javascript:;">
