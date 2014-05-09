@@ -33,6 +33,7 @@ from web.exceptions import *
 
 from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
+from django.contrib import messages
 
 
 """
@@ -779,7 +780,10 @@ class Booking(models.Model, ModelDiffMixin):
             self.booked_at = NOW
             self.save()
 
+            # notifications
+            messages.add_message(request, messages.INFO, "New Booking added for %s with ref %s" % (self.deadline.strftime("%a %d %B"), self.ref))
             self.log(comment="New Booking added for %s for %s with ref %s" % (self.client, self.deadline.strftime("%a %d %B"), self.ref), user=user)
+
 
     def cancel(self, user=None):
 

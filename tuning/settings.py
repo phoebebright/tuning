@@ -119,6 +119,7 @@ INSTALLED_APPS = (
     'django_google_maps',
     'django_cron',
     'theme',  # holds themeforest template static files
+    'messages_extends',
     'web',
 )
 
@@ -129,6 +130,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'privateviews.middleware.LoginRequiredMiddleware',
 )
 
@@ -192,6 +194,7 @@ SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 
 API_URL = "http://tunemypiano.co.uk/api/v1/"
 
+MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
 CRON_CLASSES = [
     "web.cron.CheckBookingStatus",
