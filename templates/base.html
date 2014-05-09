@@ -25,6 +25,8 @@
     <link href="{{ STATIC_URL }}css/style.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/style-responsive.css" rel="stylesheet" />
 
+   <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+
 
 
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -394,7 +396,9 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>   <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+
 
 <script src="{{ STATIC_URL }}js/jquery.scrollTo.min.js"></script>
 <script src="{{ STATIC_URL }}js/jquery.slimscroll.min.js"></script>
@@ -411,32 +415,8 @@
 
     API = "{{ API_URL }}";
 
-    function show_comments(id) {
 
-        var html = '';
 
-        $.ajax({
-            type:"get",
-            url:API+"log",
-            data: {
-                limit:100,
-                booking_id: id},
-            dataType : 'json',
-            success:function(json){
-                var data =json.objects;
-                $.each(data, function(i, d) {
-
-                    var when = moment(d.created).format('ddd Do MMM - HH:mm')
-                    var since = moment(d.created).fromNow()
-
-                    html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + when +'</li>';
-                })
-
-                $("#comment_list").html(html);
-
-            }
-        });
-    }
 </script>
 
 <!-- templates -->
@@ -479,7 +459,11 @@
                 </li>
                 </script>
 {% endverbatim %}
+
+
+
 <script>
+
 
     function do_last() {
 
@@ -516,459 +500,35 @@
          <div class="comment_list" data-pk="XYZ"></div>
 
          */
-        $('.comment').editable({
-            type: 'textarea',
-            sourceCache: true,
-            url: API + 'log/?format=json',
-
-            success: function(response, newValue) {
-                if(response.status == 'error') return response.msg; //msg will be shown in editable form
-
-                // refresh list of comments
-                var pk = this.dataset['pk'];
-                var sel = $('.comment_list[data-pk="' + pk + '"]');
-                update_comment_list(sel, pk)
-
-                // show comment list
-                sel.show('slow');
-
-
-            },
-            title: 'add comment',
-            display: false
-        });
-
-        $(".comment_list").each(function(i,d) {
-
-            update_comment_list($(this), d.dataset['pk']);
-
-        });
-
-        var template = $('#comment_badge_template').html();
-        Mustache.parse(template);
-        var promises = [];
-
-
-        $(".comment_badge").each(function(i,d) {
-            var selection = $(this);
-            promises.push(load_comment_count(d.dataset['pk'], selection, template));
-
-        });
-
-        Q.all(promises).then(function() {
-
-            // once all comments loaded
-
-            $(".comment_badge").on("click", function(e) {
-                $(".comment_list[data-pk="+this.dataset['pk']+"]").toggle('slow');
-            })
-        });
-
-
-        load_recent_comments($("#loglist"));
-    }
-
-    function load_recent_comments(selection) {
-
-
-        var template = $('#log_list_template').html();
-        Mustache.parse(template);
-
-        $.ajax({
-            type:"get",
-            url:API+"log",
-            data: {
-                limit:10},
-            dataType : 'json',
-            success:function(json){
-                var html = '';
-                $.each(json.objects, function(i, d) {
-                    html += comment_html(d, template);
-                });
-
-                selection.html(html);
-
-            }
-        });
-    }
-
-
-    function load_comment_count(pk, selection, template) {
-
-        $.ajax({
-            type:"get",
-            url:API+"log",
-            data: {
-                limit:100,
-                ref:pk},
-            dataType : 'json',
-            success:function(json){
-                var num = json.meta['total_count'];
-                if (num > 0) {
-                    selection.html(Mustache.render(template, {num: num}));
-                }
-
-
-            }
-        });
-    }
-
-    function update_comment_list(selection, pk) {
-
-        var template = $('#comment_list_template').html();
-        Mustache.parse(template);
-
-        $.ajax({
-            type:"get",
-            url:API+"log",
-            data: {
-                limit:0,
-                ref:pk},
-            dataType : 'json',
-            success:function(json){
-                var html = '';
-                $.each(json.objects, function(i, d) {
-                    html += comment_html(d, template);
-                });
-
-                selection.html(html);
-
-                // update badge
-                var badge = $('.comment_badge[data-pk='+pk+']');
-                if (badge.length) {
-                    badge.children('span').html(json.meta['total_count']);
-                }
-
-            }
-        });
-    }
-
-    function comment_html(d, template) {
-
-        if (typeof template == "undefined") {
-            var template = $('#comment_list_template').html();
-            Mustache.parse(template);
-        }
-
-        return Mustache.render(template, {
-            user: d['created_by']['full_name'],
-            time: moment(d['created']).fromNow(),
-            booking_ref: d['booking_ref'],
-            booking_url: d['booking_url'],
-            long_heading: d['long_heading'],
-            text: d['comment']});
     }
 
 </script>
+
+<script src="{{ STATIC_URL }}js/easypiechart/jquery.easypiechart.js"></script>
+<script src="{{ STATIC_URL }}js/bootstrap-switch.js"></script>
+<script src="{{ STATIC_URL }}js/mustache.js"></script>
+<script src="{{ STATIC_URL }}js/base.js"></script>
+<script src="{{ STATIC_URL }}js/comments.js"></script>
 
 
 {%  block js %}
 {%  endblock %}
 
-<script src="{{ STATIC_URL }}js/easypiechart/jquery.easypiechart.js"></script>
-<script src="{{ STATIC_URL }}js/bootstrap-switch.js"></script>
-<script src="{{ STATIC_URL }}js/mustache.js"></script>
+
 
 <script>
 
-
-$('.notification-pie-chart').easyPieChart({
-    onStep: function (from, to, percent) {
-        //TODO: harding coding sla as 60 mins here, should refer back to settings.SLA
-        $(this.el).find('.percent').text(Math.round(percent));
-    },
-    barColor: "#39b6ac",
-    lineWidth: 3,
-    size: 50,
-    trackColor: "#efefef",
-    scaleColor: "#cccccc"
-
-});
-
-(function ($) {
-    "use strict";
-    $(document).ready(function () {
+    (function ($) {
+        "use strict";
+        $(document).ready(function () {
 
 
-        /*==Left Navigation Accordion ==*/
-        if ($.fn.dcAccordion) {
-            $('#nav-accordion').dcAccordion({
-                eventType: 'click',
-                autoClose: true,
-                saveState: true,
-                disableLink: true,
-                speed: 'slow',
-                showCount: false,
-                autoExpand: true,
-                classExpand: 'dcjq-current-parent'
-            });
-        }
-        /*==Slim Scroll ==*/
-        if ($.fn.slimScroll) {
-            $('.event-list').slimscroll({
-                height: '305px',
-                wheelStep: 20
-            });
-            $('.conversation-list').slimscroll({
-                height: '360px',
-                wheelStep: 35
-            });
-            $('.to-do-list').slimscroll({
-                height: '300px',
-                wheelStep: 35
-            });
-        }
-        /*==Nice Scroll ==*/
-        if ($.fn.niceScroll) {
+            load_recent_comments($("#loglist"));
 
-
-            $(".leftside-navigation").niceScroll({
-                cursorcolor: "#1FB5AD",
-                cursorborder: "0px solid #fff",
-                cursorborderradius: "0px",
-                cursorwidth: "3px"
-            });
-
-            $(".leftside-navigation").getNiceScroll().resize();
-            if ($('#sidebar').hasClass('hide-left-bar')) {
-                $(".leftside-navigation").getNiceScroll().hide();
-            }
-            $(".leftside-navigation").getNiceScroll().show();
-
-            $(".right-stat-bar").niceScroll({
-                cursorcolor: "#1FB5AD",
-                cursorborder: "0px solid #fff",
-                cursorborderradius: "0px",
-                cursorwidth: "3px"
-            });
-
-        }
-
-
-
-        {#        /*== SPARKLINE==*/#}
-        {#        if ($.fn.sparkline) {#}
-        {##}
-        {#            $(".d-pending").sparkline([3, 1], {#}
-        {#                type: 'pie',#}
-        {#                width: '40',#}
-        {#                height: '40',#}
-        {#                sliceColors: ['#e1e1e1', '#8175c9']#}
-        {#            });#}
-        {##}
-        {##}
-        {##}
-        {#            var sparkLine = function () {#}
-        {#                $(".sparkline").each(function () {#}
-        {#                    var $data = $(this).data();#}
-        {#                    ($data.type == 'pie') && $data.sliceColors && ($data.sliceColors = eval($data.sliceColors));#}
-        {#                    ($data.type == 'bar') && $data.stackedBarColor && ($data.stackedBarColor = eval($data.stackedBarColor));#}
-        {##}
-        {#                    $data.valueSpots = {#}
-        {#                        '0:': $data.spotColor#}
-        {#                    };#}
-        {#                    $(this).sparkline($data.data || "html", $data);#}
-        {##}
-        {##}
-        {#                    if ($(this).data("compositeData")) {#}
-        {#                        $spdata.composite = true;#}
-        {#                        $spdata.minSpotColor = false;#}
-        {#                        $spdata.maxSpotColor = false;#}
-        {#                        $spdata.valueSpots = {#}
-        {#                            '0:': $spdata.spotColor#}
-        {#                        };#}
-        {#                        $(this).sparkline($(this).data("compositeData"), $spdata);#}
-        {#                    };#}
-        {#                });#}
-        {#            };#}
-        {##}
-        {#            var sparkResize;#}
-        {#            $(window).resize(function (e) {#}
-        {#                clearTimeout(sparkResize);#}
-        {#                sparkResize = setTimeout(function () {#}
-        {#                    sparkLine(true)#}
-        {#                }, 500);#}
-        {#            });#}
-        {#            sparkLine(false);#}
-        {##}
-        {##}
-        {##}
-        {#        }#}
-        {##}
-        {##}
-        {##}
-        {#        if ($.fn.plot) {#}
-        {#            var datatPie = [30, 50];#}
-        {#            // DONUT#}
-        {#            $.plot($(".target-sell"), datatPie, {#}
-        {#                series: {#}
-        {#                    pie: {#}
-        {#                        innerRadius: 0.6,#}
-        {#                        show: true,#}
-        {#                        label: {#}
-        {#                            show: false#}
-        {##}
-        {#                        },#}
-        {#                        stroke: {#}
-        {#                            width: .01,#}
-        {#                            color: '#fff'#}
-        {##}
-        {#                        }#}
-        {#                    }#}
-        {##}
-        {##}
-        {##}
-        {##}
-        {#                },#}
-        {##}
-        {#                legend: {#}
-        {#                    show: true#}
-        {#                },#}
-        {#                grid: {#}
-        {#                    hoverable: true,#}
-        {#                    clickable: true#}
-        {#                },#}
-        {##}
-        {#                colors: ["#ff6d60", "#cbcdd9"]#}
-        {#            });#}
-        {#        }#}
-
-
-
-        /*==Collapsible==*/
-        $('.widget-head').click(function (e) {
-            var widgetElem = $(this).children('.widget-collapse').children('i');
-
-            $(this)
-                    .next('.widget-container')
-                    .slideToggle('slow');
-            if ($(widgetElem).hasClass('ico-minus')) {
-                $(widgetElem).removeClass('ico-minus');
-                $(widgetElem).addClass('ico-plus');
-            } else {
-                $(widgetElem).removeClass('ico-plus');
-                $(widgetElem).addClass('ico-minus');
-            }
-            e.preventDefault();
-        });
-
-
-
-
-        /*==Sidebar Toggle==*/
-
-        $(".leftside-navigation .sub-menu > a").click(function () {
-            var o = ($(this).offset());
-            var diff = 80 - o.top;
-            if (diff > 0)
-                $(".leftside-navigation").scrollTo("-=" + Math.abs(diff), 500);
-            else
-                $(".leftside-navigation").scrollTo("+=" + Math.abs(diff), 500);
-        });
-
-
-
-        $('.sidebar-toggle-box .fa-bars').click(function (e) {
-
-            $(".leftside-navigation").niceScroll({
-                cursorcolor: "#1FB5AD",
-                cursorborder: "0px solid #fff",
-                cursorborderradius: "0px",
-                cursorwidth: "3px"
-            });
-
-            $('#sidebar').toggleClass('hide-left-bar');
-            if ($('#sidebar').hasClass('hide-left-bar')) {
-                $(".leftside-navigation").getNiceScroll().hide();
-            }
-            $(".leftside-navigation").getNiceScroll().show();
-            $('#main-content').toggleClass('merge-left');
-            e.stopPropagation();
-            if ($('#container').hasClass('open-right-panel')) {
-                $('#container').removeClass('open-right-panel')
-            }
-            if ($('.right-sidebar').hasClass('open-right-bar')) {
-                $('.right-sidebar').removeClass('open-right-bar')
-            }
-
-            if ($('.header').hasClass('merge-header')) {
-                $('.header').removeClass('merge-header')
-            }
-
+            base();
 
         });
-        $('.toggle-right-box .fa-bars').click(function (e) {
-            $('#container').toggleClass('open-right-panel');
-            $('.right-sidebar').toggleClass('open-right-bar');
-            $('.header').toggleClass('merge-header');
-
-            e.stopPropagation();
-        });
-
-        $('.header,#main-content,#sidebar').click(function () {
-            if ($('#container').hasClass('open-right-panel')) {
-                $('#container').removeClass('open-right-panel')
-            }
-            if ($('.right-sidebar').hasClass('open-right-bar')) {
-                $('.right-sidebar').removeClass('open-right-bar')
-            }
-
-            if ($('.header').hasClass('merge-header')) {
-                $('.header').removeClass('merge-header')
-            }
-
-
-        });
-
-
-        $('.panel .tools .fa').click(function () {
-            var el = $(this).parents(".panel").children(".panel-body");
-            if ($(this).hasClass("fa-chevron-down")) {
-                $(this).removeClass("fa-chevron-down").addClass("fa-chevron-up");
-                el.slideUp(200);
-            } else {
-                $(this).removeClass("fa-chevron-up").addClass("fa-chevron-down");
-                el.slideDown(200); }
-        });
-
-
-
-        $('.panel .tools .fa-times').click(function () {
-            $(this).parents(".panel").parent().remove();
-        });
-
-
-
-        $('.search').on("change", function(e) {
-            // search for booking ref
-
-            var ref = this.value;
-
-            $.ajax({
-                type:"get",
-                url:API+"bookings",
-                data: {
-                    limit:2,
-                    ref:ref},
-                dataType : 'json',
-                success:function(json){
-
-                    if (json.meta['total_count'] == 1) {
-                        document.location.href = "/booking/" + ref;
-
-                    }
-
-                }
-            });
-
-
-        });
-
-    });
-
-
-
-})(jQuery);
+    })(jQuery);
 
 
 </script>

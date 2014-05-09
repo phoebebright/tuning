@@ -7,7 +7,6 @@
     {#    <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">#}
     <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">
-    <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
     <link href="{{ STATIC_URL }}css/clockin.css" rel="stylesheet"/>
 
     <style>
@@ -47,13 +46,25 @@
 
 
                     <aside class="col-lg-3">
-                        <h4 class="drg-event-title">Clients</h4>
-                        <!--TODO: message if drag to invalid date and if click or couble click -->
-                        <div id='external-events'>
-                            {%  for item in clients %}
-                                <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
-                            {% endfor %}
-                        </div>
+
+                        {%  if user.is_admin %}
+
+                            <h4 class="drg-event-title">Clients</h4>
+                            <!--TODO: message if drag to invalid date and if click or couble click -->
+                            <div id='external-events'>
+                                {%  for item in clients %}
+                                    <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {% if user.is_booker %}
+                                Booker stuff here
+                            {% else %}
+                                {% if user.is_tuner %}
+                                    Tuner stuff here
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
                     </aside>
                     <aside class="col-lg-9">
                         <div id="calendar" class="has-toolbar"></div>
@@ -95,13 +106,20 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.cookie.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script src="{{ STATIC_URL }}js/clockin.js"></script>
+    <script src="{{ STATIC_URL }}js/booking_template.js"></script>
     <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
 
     <script type="text/javascript">
     API = "{{ API_URL }}";
     USER_ID = "{{ user.id }}";
+
+    {% if user.is_booker %}
+        CLIENT_ID = {{ user.client.id }};
+    {% else %}
+        CLIENT_ID = 0;
+    {% endif %}
+
 
     $(document).ready(function () {
 
@@ -163,20 +181,30 @@
             },
 
             dayClick:  function(date, jsEvent, view) {
+                //TODO: make double click to create entry and single click to bring up day view
+                var that = $(this);
 
-                {% if user.is_booker %}
-                    document.location.href="/booking/add/";
-                {% endif %}
+                if (!that.hasClass('selected')) {
+                    that.addClass('selected');
+                    {% if user.is_booker %}
+                        client_dropped(date, true, CLIENT_ID);
+                    {% endif %}
+                    {% if user.is_admin %}
+                        alert("Drag Client button onto this date to create a new booking")
+                    {% endif %}
+                }
+
+                setTimeout(function () {
+                    that.removeClass('selected');
+                }, 2000);
 
             },
 
             editable: false,
-            droppable: true, // this allows things to be dropped onto the calendar !!!
-            drop: function(date, allDay) { // this function is called when something is dropped
+            droppable: true,
+            drop: function(date, allDay) {
 
-                var client = $(this);
-
-                event_dropped(client, date, allDay, this.dataset['id']);
+                client_dropped(date, allDay, this.dataset['id']);
 
 
             },
@@ -204,13 +232,18 @@
             },
             eventClick: function(event, jsEvent, view) {
 
-                // display booking details
+                var that = $(this);
 
-                event_clicked(event);
+                // add a class to highlight and also prevent double click
+                if (!that.hasClass('selected')) {
 
+                    that.addClass('selected');
+                    // display booking details
 
-                // change the border color just for fun
-                $(this).css('border-color', 'red');
+                    load_booking(event);
+
+                }
+                that.removeClass('selected');
 
             }
         });
@@ -218,7 +251,7 @@
 
     }
 
-    function event_clicked(event) {
+    function load_booking(event) {
 
         // get full details
         $.ajax({
@@ -234,7 +267,7 @@
         });
     }
 
-    function event_dropped(client, date, allDay, client_id) {
+    function client_dropped(date, allDay, client_id) {
 
         // ignore if date before now
         if (date < moment()) {
@@ -244,7 +277,7 @@
         // if view is month, the default time to DEFAULT_START_TIME
         var view = $('#calendar').fullCalendar('getView');
         var deadline = "";  // date as string - no spaces/punctuation
-        if (view == "month") {
+        if (view.name == "month") {
             deadline = date.format("YYYYMMDD") + "1200";
         } else {
             deadline = date.format("YYYYMMDDHHmm");
@@ -372,12 +405,13 @@
             $("#field_price").text("?");
         }
 
-        $("#field_duration").text(object.duration);
+        $("#field_duration").text(object.duration.toFixed(2));
         $("#field_duration").attr("data-value", String(object.duration));
 
 
         // load lists of instruments, activities etc. to be used for editable fields
         load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
+
 
         $("#booking_row").slideDown();
 

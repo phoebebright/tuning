@@ -25,6 +25,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import ModelFormMixin
 from django.template.loader import render_to_string
+from django.core.exceptions import PermissionDenied
 
 #python
 from datetime import datetime, timedelta, date
@@ -49,8 +50,8 @@ def can_view_bookings(user):
 @user_passes_test(can_book)
 def bookings_add(request, client_id=None, deadline=None):
 
-    # try to get client from user
-    if not client_id:
+    # try to get client from user or raise error
+    if not client_id or int(client_id) == 0:
         if request.user.is_booker:
             client = request.user.client
         else:
@@ -58,11 +59,11 @@ def bookings_add(request, client_id=None, deadline=None):
                 raise InvalidID(message="Client ID must be supplied if admin user is creating new booking")
             else:
                 raise InvalidActivity(message="User %s does not have permission to create a new booking" % request.user)
-
-    try:
-        client = Client.objects.get(id = client_id)
-    except Client.DoesNotExist:
-        raise InvalidID
+    else:
+        try:
+            client = Client.objects.get(id = client_id)
+        except Client.DoesNotExist:
+            raise InvalidID
 
     if deadline:
         try:
@@ -120,9 +121,17 @@ def bookings_add(request, client_id=None, deadline=None):
             context_instance=RequestContext(request)
         )
 
-def render_booking_template(object):
+def render_booking_template(request, object, user=None):
 
-    template = "web/booking_editable_template.html"
+    if not user:
+        user = request.user
+    if not user:
+        raise PermissionDenied()
+
+    if user.is_admin:
+        template = "web/booking_editable_template.html"
+    elif user.is_booker:
+         template = "web/booking_editable_template_booker.html"
 
     return render_to_string(template, {"object": object})
 

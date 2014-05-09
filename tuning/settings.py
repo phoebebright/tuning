@@ -174,7 +174,13 @@ FLUENT_COMMENTS_EXCLUDE_FIELDS = ('name', 'email', 'url')
 COMMENTS_APP = 'fluent_comments'
 
 
+AUTHENTICATION_BACKENDS = (
+    'web.models.CustomAuth',
+    'django.contrib.auth.backends.ModelBackend',)
+
+
 AUTH_USER_MODEL = "web.CustomUser"
+
 
 FAKEDATE_FILE = "fakedate.txt"
 USE_FAKEDATES = False

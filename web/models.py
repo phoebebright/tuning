@@ -20,7 +20,7 @@ from django.http import  Http404
 from django.template import Context, Template
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
-
+from django.contrib.auth.backends import ModelBackend
 
 
 from model_utils import Choices
@@ -34,6 +34,15 @@ from web.exceptions import *
 from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
 
+
+"""
+notifications:
+https://github.com/tomchristie/django-ajax-messages - auto refreshing
+https://github.com/AliLozano/django-messages-extends
+https://github.com/scdoshi/django-notifier - build different backends for sms etc.
+http://www.twilio.com/sms/pricing/gb - sending sms
+
+"""
 
 # faketime allows the actual date to be set in the future past - for testing can be useful
 from libs.faketime import now
@@ -441,7 +450,7 @@ class BookingsQuerySet(QuerySet):
         return self.filter(status=BOOKING_TOCOMPLETE).order_by('-requested_to')
 
     def current(self):
-        return self.filter(status__lt=BOOKING_CANCELLED).order_by('-deadline')
+        return self.filter(status__lt=BOOKING_CANCELLED, status__gt=0).order_by('-deadline')
 
     def mine(self, user):
 
@@ -543,10 +552,15 @@ class Booking(models.Model, ModelDiffMixin):
 
     def recalc_prices(self):
         #NOTE: does not save
-        self.default_price = self.get_default_price()
+        self.default_price = self.get_default_price() * Decimal(str(self.duration)) / Decimal('60.00')
         self.vat = self.default_price * vat_rate()
         self.price = self.default_price
         self.tuner_payment = tuner_pay(self.price)
+
+        return {'default_price': self.default_price,
+                'vat': self.vat,
+                'price': self.price,
+                'tuner_payment': self.tuner_payment}
 
     @classmethod
     def create_temp_ref(cls):
@@ -1042,3 +1056,18 @@ class Log(models.Model):
     class Meta:
         ordering = ['-created',]
 
+
+
+class CustomAuth(ModelBackend):
+
+    def get_user(self, user_id):
+
+        try:
+            return Booker._default_manager.get(pk=user_id)
+        except Booker.DoesNotExist:
+            return Tuner._default_manager.get(pk=user_id)
+        except Tuner.DoesNotExist:
+            return CustomUser._default_manager.get(pk=user_id)
+        except CustomUser.DoesNotExist:
+            return None
+        return None

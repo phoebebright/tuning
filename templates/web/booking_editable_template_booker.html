@@ -10,15 +10,10 @@
 </h3>
 <div id="editform" class="editable_content" data-eventid="">
 
-    {% if object.status >= '0' and object.status <= '3' %}
-          <a href="#" id="field_tuner" class="editable tuners"
-       data-pk="{{ object.ref }}"
-       data-title="Tuner"
-       data-value="{{ object.tuner.id }}"
-       data-title="Tuner">
-        {{ default_tuner }}</a>
-        &nbsp;to&nbsp;
+    {% if object.tuner %}
+          {{ object.tuner }}&nbsp;to&nbsp;
     {% endif %}
+
 
     <a href="#" id="field_activity" class="editable activities"
        data-pk="{{ object.ref }}"
@@ -61,22 +56,8 @@
        data-title="Duration">
         {{ default_duration }}</a>&nbsp;mins&nbsp;
 
-    booked by
-        <a href="#" id="field_booker" class="editable booker"
-       data-pk="{{ object.ref }}"
-       data-title="Booker"
-       data-value="{{ object.booker.id }}"
-       data-title="Booker">
-        {{ default_booker }}</a>
 
-
-    price £
-        <a href="#" id="field_price" class="editable price"
-       data-pk="{{ object.ref }}"
-       data-title="Price"
-       data-value="{{ object.price }}"
-       data-title="Price">
-        {{ default_price }}</a>
+    price £{{ object.price }} inc VAT
 
 
 

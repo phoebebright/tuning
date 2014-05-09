@@ -201,6 +201,8 @@ function load_data(client_id, start_date, end_date) {
 
         success: function(response, newValue) {
             //TODO: Error checking
+            // reload as other values may have changed
+            load_booking({ref: this.dataset['pk'], id: this.parentElement.dataset['event_id']});
         }
     });
 
@@ -364,8 +366,9 @@ function time_update(selection, time) {
             dataType : 'json',
             success:function(json){
 
-                // update requested time
-                $("#field_requested_time").text(requested.format("H:mm"));
+                 // reload as other values may have changed
+                load_booking({ref: ref, id: ""});
+
             }
 
         });

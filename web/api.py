@@ -314,12 +314,25 @@ class BookingsFullResource(BookingsResource):
         return base
 
     def dehydrate(self, bundle):
+
+        # price goes up as time passes, so recalc prices if booking still not made
+        if bundle.obj.status <= BOOKING_REQUESTED:
+            upd = bundle.obj.recalc_prices()
+            bundle.obj.save()
+
+        bundle.data['default_price'] = upd['default_price']
+        bundle.data['vat'] = upd['vat']
+        bundle.data['price'] = upd['price']
+        bundle.data['tuner_payment'] = upd['tuner_payment']
+
+
+
         from web.views import render_booking_template
 
         bundle = super(BookingsFullResource, self).dehydrate(bundle)
 
         # return a rendered editable template for this booking
-        bundle.data['template'] = render_booking_template(bundle.obj)
+        bundle.data['template'] = render_booking_template(bundle.request, bundle.obj)
         return bundle
 
 
@@ -585,6 +598,7 @@ class BookingDurationResource(BookingUpdateResource):
     def update_booking(self, booking, bundle, value):
         #TODO: validation of duration
         booking.duration = value
+        booking.recalc_prices()
         booking.save()
 
 class BookingPriceResource(BookingUpdateResource):
