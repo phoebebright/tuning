@@ -1,3 +1,4 @@
+{% load gravatar %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -247,13 +248,14 @@
 
                     <li class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <img alt="" src="{{ STATIC_URL }}images/avatar1_small.jpg">
+                            <img alt="" src="{{ user.gravatar }}">
                             <span class="username">{{ user.get_full_name }}</span>
                             <b class="caret"></b>
                         </a>
                         <ul class="dropdown-menu extended logout">
                             <li><a href="#"><i class=" fa fa-suitcase"></i>Profile</a></li>
                             <li><a href="#"><i class="fa fa-cog"></i> Settings</a></li>
+                            <li><a href="http://en.gravatar.com"><i class="fa fa-cog"></i> Get a Gravatar</a></li>
                             <li><a href="/logout/"><i class="fa fa-key"></i> Log Out</a></li>
                         </ul>
                     </li>
@@ -468,7 +470,7 @@
 <script id="log_list_template" type="x-tmpl-mustache">
                 <li>
                     <a href="{{ booking_url }}">
-                        <span class="photo"><img alt="avatar" src=""></span>
+                        <span class="photo"><img alt="avatar" src="{{ gravatar }}"></span>
                                 <span class="subject">
                                 <span class="booking">{{ long_heading }}</span>
                                 <span class="time">{{ time }}</span>

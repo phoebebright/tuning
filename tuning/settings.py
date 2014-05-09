@@ -119,6 +119,7 @@ INSTALLED_APPS = (
     'django_google_maps',
     'django_cron',
     'theme',  # holds themeforest template static files
+    'django_gravatar',
     'web',
 )
 
