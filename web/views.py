@@ -152,44 +152,15 @@ def dashboard(request):
     Booking.check_to_complete()
     #TODO: Write management command to clean up unused booking records
 
+    if request.user.is_admin:
+        template = "index_admin.html"
+    elif request.user.is_booker:
+        template = "index_client.html"
+    elif request.user.is_tuner:
+        template = "index_tuner.html"
 
-    # TODO: Only admins
-    today_start = make_time(date.today(), "start")
-    today_end = make_time(date.today(), "end")
-
-    # admins can view everything, tuners and bookers only their own
-
-    recent = Booking.objects.requested().filter(requested_at__range=( today_start, today_end))
-    matched = Booking.objects.booked().filter(booked_at__range=( today_start, today_end))
-    tuned = Booking.objects.completed().filter(completed_at__range=( today_start, today_end))
-    paid = Booking.objects.archived().filter(archived_at__range=( today_start, today_end))
-    requested = Booking.objects.requested()
-    current = Booking.objects.current()
-
-    if not request.user.is_admin:
-        if recent:
-            recent = recent.mine(request.user)
-        if matched:
-            matched = matched.mine(request.user)
-        if tuned:
-            tuned = tuned.mine(request.user)
-        if paid:
-            paid = paid.mine(request.user)
-        if requested:
-            requested = requested.mine(request.user)
-        if current:
-            current = current.mine(request.user)
-
-
-    return render_to_response('index.html',{
-        'new_bookings_today': recent,
-        'matched_today': matched,
-        'tunings_today': tuned,
-        'paid_today': paid,
-        'requested': requested,
-        'bookings':current,
-        },
-                              context_instance=RequestContext(request)
+    return render_to_response(template,{},
+        context_instance=RequestContext(request)
     )
 
 @login_required()

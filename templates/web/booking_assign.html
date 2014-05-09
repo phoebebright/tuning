@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% load comments %}
-
 
 
 {% block extra_head %}
@@ -56,7 +54,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
     <script type="text/javascript">
-        API = "{{ API_URL }}"
+
 
         $(document).ready(function () {
 
@@ -69,21 +67,25 @@
         function init() {
             // when page is first loaded
 
+            var tuners = [];
+
+            if (USER_TYPE == "admin") {
+                // get list of tuners
+                $.ajax({
+                    type: "get",
+                    url: API + "tuners",
+                    dataType: 'json',
+                    success: function (data) {
+
+                        tuners = data.objects;
 
 
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
+                    }
+                });
 
-                    var tuners = data.objects;
-                    requested_bookings(tuners);
+            }
 
-                }
-            });
-
+            requested_bookings(tuners);
 
         }
 
@@ -111,32 +113,52 @@
                                 '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
                                 '<div class="comment_list" data-pk="' + d.ref + '"></div>';
                         data.push(d)
-                    })
-                    build_table(data,
-                            ["when", "tuner","comment", "where", "what", "togo"],
-                            "#requested_bookings");
-
-                    var tuners_list = [];
-                    $.each(tuners, function(i,d) {
-                        tuners_list.push({value: d.id, text: d.name});
                     });
 
-                    $('.tuners').editable({
-                        type: 'select',
-                        source: tuners_list,
-                        sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
+                    // build table of bookings
 
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-                        },
-                        title: 'Select Tuner'
-                    });
+                    if (USER_TYPE == "admin") {
+                        build_table(data,
+                                ["when", "tuner", "comment", "where", "what", "togo"],
+                                "#requested_bookings");
+                    } else {
+                        build_table(data,
+                                ["when", "comment", "where", "what", "togo"],
+                                "#requested_bookings");
+                    }
+                    // if admin, then can assign tuners here
+                    if (USER_TYPE == "admin") {
+                        var tuners_list = [];
+                        $.each(tuners, function (i, d) {
+                            tuners_list.push({value: d.id, text: d.name});
+                        });
 
+                        $('.tuners').editable({
+                            type: 'select',
+                            source: tuners_list,
+                            sourceCache: true,
+                            url: API + 'accept_booking/?format=json&limit=0',
+
+                            success: function (response, newValue) {
+                                if (response.status == 'error') return response.msg; //msg will be shown in editable form
+                            },
+                            title: 'Select Tuner'
+                        });
+                    }
+
+                    // get comments and add box to add comments
+
+                    add_comment_editable();
+                    add_comment_list();
+
+
+                    // double click on table row to go to booking detail screen
                     $(".datarow").on("dblclick", function(e) {
 
                         document.location.href = "/booking/"+this.dataset['id'];
                     });
+
+                    // do_last in base template
                     do_last();
 
                 }

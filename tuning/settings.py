@@ -69,6 +69,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.contrib.messages.context_processors.messages',
     'web.context_processors.add_stuff',
+    'ajaxmessages.context_processors.ajaxmessages',
 
 )
 
@@ -119,6 +120,7 @@ INSTALLED_APPS = (
     'django_google_maps',
     'django_cron',
     'theme',  # holds themeforest template static files
+    'ajaxmessages',
     'web',
 )
 

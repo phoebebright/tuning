@@ -5,7 +5,10 @@ a.logo {
     margin:20px 0 0 25px;
 }
 
-
+.mini-stat-info .togo {
+    font-size: 12px important;
+    font-weight: bold important;
+}
 .booking_status_0 {
     background-color: #f5f5f5;
     color: black !important ;
@@ -106,4 +109,9 @@ color: #454545;
 
 .editable_content {
     font-size:18px;
+}
+
+.center-block{
+    float: none;
+    margin: 0 auto;
 }

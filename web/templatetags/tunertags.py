@@ -43,3 +43,7 @@ def json_dumps(data):
 
 
 
+@register.simple_tag(takes_context=True)
+def booking_description(context, object):
+    user = context['user']
+    return object.description_for_user(user)

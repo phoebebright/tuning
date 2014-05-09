@@ -419,6 +419,13 @@ ul.top-menu>li>a:hover,ul.top-menu>li>a:focus {
     padding-top:6px;
     color:#414147;
 }
+
+.tasks-bar li {
+    list-style:none;
+}
+.mini-stat-info .time span {
+    font-size: 12px;
+}
 .dropdown-menu.extended .alert {
     margin-bottom:10px;
 }

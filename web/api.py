@@ -318,7 +318,7 @@ class BookingsFullResource(BookingsResource):
         # price goes up as time passes, so recalc prices if booking still not made
         if bundle.obj.status <= BOOKING_REQUESTED:
             upd = bundle.obj.recalc_prices()
-            bundle.obj.save()
+            bundle.obj.save(user=bundle.request.user)
 
         bundle.data['default_price'] = upd['default_price']
         bundle.data['vat'] = upd['vat']
@@ -464,7 +464,7 @@ class BookingCreateResource(BookingUpdateResource):
 
     def update_booking(self, booking, bundle, value):
 
-        booking.create()
+        booking.create(bundle.request.user)
 
 class BookingDeleteResource(BookingUpdateResource):
 
@@ -474,7 +474,7 @@ class BookingDeleteResource(BookingUpdateResource):
 
     def update_booking(self, booking, bundle, value):
 
-        booking.cancel()
+        booking.cancel(bundle.request.user)
 
 
 
@@ -488,7 +488,7 @@ class BookingActivityResource(BookingUpdateResource):
 
         try:
             booking.activity = Activity.objects.get(id=value)
-            booking.save()
+            booking.save(user=bundle.request.user)
         except Activity.DoesNotExist:
             raise BadRequest('Invalid Activity id %s' % value)
 
@@ -503,7 +503,7 @@ class BookingInstrumentResource(BookingUpdateResource):
 
         try:
             booking.instrument = Instrument.objects.get(id=value)
-            booking.save()
+            booking.save(user=bundle.request.user)
         except Instrument.DoesNotExist:
             raise BadRequest('Invalid Instrument id %s' % value)
 
@@ -518,7 +518,7 @@ class BookingTunerResource(BookingUpdateResource):
 
         try:
             booking.tuner = Tuner.objects.get(id=value)
-            booking.save()
+            booking.save(user=bundle.request.user)
         except Tuner.DoesNotExist:
             raise BadRequest('Invalid Tuner id %s' % value)
 
@@ -533,7 +533,7 @@ class BookingStudioResource(BookingUpdateResource):
 
         try:
             booking.studio = Studio.objects.get(id=value)
-            booking.save()
+            booking.save(user=bundle.request.user)
         except Studio.DoesNotExist:
             raise BadRequest('Invalid Studio id %s' % value)
 
@@ -547,7 +547,7 @@ class BookingBookerResource(BookingUpdateResource):
 
         try:
             booking.booker = Booker.objects.get(id=value)
-            booking.save()
+            booking.save(user=bundle.request.user)
         except Booker.DoesNotExist:
             raise BadRequest('Invalid Booker id %s' % value)
 
@@ -571,7 +571,7 @@ class BookingDeadlineResource(BookingUpdateResource):
             raise BadRequest('Invalid Booking reference %s' % ref)
 
         booking.change_deadline(deadline)
-        booking.save()
+        booking.save(user=bundle.request.user)
 
         #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
         #TODO: This object is not being returned, it's not getting serialised for some reason
@@ -587,7 +587,7 @@ class BookingClientrefResource(BookingUpdateResource):
     def update_booking(self, booking, bundle, value):
 
         booking.client_ref = value
-        booking.save()
+        booking.save(user=bundle.request.user)
 
 class BookingDurationResource(BookingUpdateResource):
 
@@ -599,7 +599,7 @@ class BookingDurationResource(BookingUpdateResource):
         #TODO: validation of duration
         booking.duration = value
         booking.recalc_prices()
-        booking.save()
+        booking.save(user=bundle.request.user)
 
 class BookingPriceResource(BookingUpdateResource):
 
@@ -611,7 +611,7 @@ class BookingPriceResource(BookingUpdateResource):
         #TODO: validation of duration
         booking.price = value
         booking.vat = value * vat_rate()
-        booking.save()
+        booking.save(user=bundle.request.user)
 
 
 
@@ -871,8 +871,11 @@ class BookingCancelResource(Resource):
         return  None
 
 class LogResource(ModelResource):
-
-    created_by = fields.ToOneField(UserResource, "created_by", full=True)
+    """ calls to related
+    /log/?format=json&booking__ref=ca9359
+    """
+    #booking = fields.ToOneField(BookingsResource, "booking", full=True)
+    #created_by = fields.ToOneField(UserResource, "created_by", full=True)
 
     #TODO: Only return comments on booking where involved
     class Meta:
@@ -885,8 +888,11 @@ class LogResource(ModelResource):
         authentication = Authentication()
         authorization = Authorization()
         filtering = {
-            'booking_id': ['exact', ],
-            'created_id': ['exact']
+            'booking': ALL_WITH_RELATIONS,
+            'created': ALL,
+            'created_by': ALL_WITH_RELATIONS,
+            'log_type': ALL,
+
         }
 
     def obj_create(self, bundle, request=None, **kwargs):
@@ -905,11 +911,24 @@ class LogResource(ModelResource):
 
 
     def get_object_list(self, request):
+        '''could do this via tastypie but it would got and do calls for each foreign key
+        '''
         base = super(LogResource, self).get_object_list(request)
+
+
+        if request._get.has_key('client_id'):
+            base =  base.filter(booking__client_id = request._get['client_id'])
+
+        if request._get.has_key('user_id'):
+            base =  base.filter(created_by_id = request._get['user_id'])
+
+
         if request._get.has_key('ref'):
-            return base.filter(booking__ref = request._get['ref'])
-        else:
-            return base
+            base = base.filter(booking__ref = request._get['ref'])
+
+
+
+        return base
 
 
     def dehydrate(self, bundle):
@@ -917,6 +936,7 @@ class LogResource(ModelResource):
         bundle.data['booking_url'] = bundle.obj.booking.get_absolute_url()
         bundle.data['booking_ref'] = bundle.obj.booking.ref
         bundle.data['long_heading'] = bundle.obj.booking.long_heading
+        bundle.data['user_id'] = bundle.obj.created_by_id
 
         return bundle
 

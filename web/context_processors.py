@@ -22,20 +22,47 @@ def add_stuff(request):
 
     #TODO: optimise these calls they are calling custmuser for every record
     #TODO: try specifying values requred
-    context['num_requested'] = Booking.objects.requested().count()
-    context['list_requested'] = Booking.objects.requested().select_related()[0:5]
-    context['num_current'] = Booking.objects.current().count()
-    context['list_current'] = Booking.objects.current().select_related()[0:5]
-    context['num_to_complete'] = Booking.objects.to_complete().count()
-    context['list_to_complete'] = Booking.objects.to_complete().select_related()[0:5]
-    context['num_complete'] = Booking.objects.completed().count()
-    context['list_complete'] = Booking.objects.completed().select_related()[0:5]
 
-    # admins need a list of clients for the new bookings menu item
-    context['CLIENTS'] = []
     if not request.user.is_anonymous():
         if request.user.is_admin:
+
+            context['num_requested'] = Booking.objects.requested().count()
+            context['list_requested'] = Booking.objects.requested().select_related()[0:5]
+            context['num_current'] = Booking.objects.booked().count()
+            context['list_current'] = Booking.objects.booked().select_related()[0:5]
+            context['num_to_complete'] = Booking.objects.to_complete().count()
+            context['list_to_complete'] = Booking.objects.to_complete().select_related()[0:5]
+            context['num_complete'] = Booking.objects.completed().count()
+            context['list_complete'] = Booking.objects.completed().select_related()[0:5]
+
+            # admins need a list of clients for the new bookings menu item
             context['CLIENTS'] = Client.objects.active()
+
+
+        elif request.user.is_booker:
+            context['num_requested'] = Booking.objects.ours(request.user.client).requested().count()
+            context['list_requested'] = Booking.objects.ours(request.user.client).requested().select_related()[0:5]
+            context['num_current'] = Booking.objects.ours(request.user.client).booked().count()
+            context['list_current'] = Booking.objects.ours(request.user.client).booked().select_related()[0:5]
+            context['num_to_complete'] = Booking.objects.ours(request.user.client).to_complete().count()
+            context['list_to_complete'] = Booking.objects.ours(request.user.client).to_complete().select_related()[0:5]
+            context['num_complete'] = Booking.objects.ours(request.user.client).unpaid(request.user).count()
+            context['list_complete'] = Booking.objects.ours(request.user.client).unpaid(request.user).select_related()[0:5]
+
+            context['CLIENTS'] = []
+
+
+        elif request.user.is_tuner:
+            context['num_requested'] = Booking.objects.requested().count()
+            context['list_requested'] = Booking.objects.requested().select_related()[0:5]
+            context['num_current'] = Booking.objects.mine(request.user).booked().count()
+            context['list_current'] = Booking.objects.mine(request.user).booked().select_related()[0:5]
+            context['num_to_complete'] = Booking.objects.mine(request.user).to_complete().count()
+            context['list_to_complete'] = Booking.objects.mine(request.user).to_complete().select_related()[0:5]
+            context['num_complete'] = Booking.objects.mine(request.user).unpaid(request.user).count()
+            context['list_complete'] = Booking.objects.mine(request.user).unpaid(request.user).select_related()[0:5]
+
+            context['CLIENTS'] = []
 
 
 

@@ -243,16 +243,7 @@ DID SOME EDITING AND WENT DOWN A WAYS USING BOOKING_EDITABLE_TEMPLATE LOOKING LI
     <script src="{{ STATIC_URL }}js/booking_template.js"></script>
 
     <script type="text/javascript">
-        API = "{{ API_URL }}";
 
-
-        {% if user.is_admin %}
-            var USER_TYPE = "admin";
-        {% elif user.is_booker %}
-            var USER_TYPE = "booker";
-        {% elif user.is_tuner %}
-            var USER_TYPE = "tuner";
-        {% endif %}
 
         $(document).ready(function () {
 

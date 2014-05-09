@@ -111,6 +111,7 @@ urlpatterns = patterns('',
                        url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/(?P<uidb36>[0-9A-Za-z]+)-(?P<token>.+)/$', 'django.contrib.auth.views.password_reset_confirm'),
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
+                       url(r'^messages/$', 'ajaxmessages.views.messages', name='ajaxmessages'),
                        #                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
                        url(r'^admin/', include(admin.site.urls)),
 

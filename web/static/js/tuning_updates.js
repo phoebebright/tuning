@@ -344,6 +344,75 @@ function update_events() {
             });
         }
     });
+
+    $(".accept_booking").on("click", function(e) {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to accept this booking?")) {
+
+
+            var ref = this.dataset['pk'];
+
+            $.ajax({
+                type:"post",
+                url:API+"accept_booking/",
+                data: {
+                    value: USER_ID,
+                    pk: ref,
+                    ref:ref},
+                dataType : 'json',
+                success:function(json){
+                    alert("updated")
+                    location.reload();
+                }
+
+            });
+        }
+    });
+
+    $(".complete_booking").on("click", function(e) {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to mark this booking as complete?")) {
+
+            var ref = this.dataset['pk'];
+
+            $.ajax({
+                type:"post",
+                url:API+"booking_complete/",
+                data: {
+                    value: USER_ID,
+                    state: "true",
+                    ref:ref},
+                dataType : 'json',
+                success:function(json){
+                    location.reload();
+                }
+
+            });
+        }
+    });
+
+    $(".booking_provider_paid").on("click", function(e) {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to mark this booking as paid?")) {
+
+            var ref = this.dataset['pk'];
+
+            $.ajax({
+                type:"post",
+                url:API+"booking_provider_paid/",
+                data: {
+                    value: USER_ID,
+                    state: "true",
+                    ref:ref},
+                dataType : 'json',
+                success:function(json){
+                    location.reload();
+                }
+
+            });
+        }
+    });
+
 }
 
 function time_update(selection, time) {
@@ -366,7 +435,7 @@ function time_update(selection, time) {
             dataType : 'json',
             success:function(json){
 
-                 // reload as other values may have changed
+                // reload as other values may have changed
                 load_booking({ref: ref, id: ""});
 
             }

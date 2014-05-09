@@ -57,6 +57,12 @@
                                 {% endfor %}
                             </div>
                         {% else %}
+
+<div class='message-log' data-items="10" >
+
+</div>
+
+
                             {% if user.is_booker %}
                                 Booker stuff here
                             {% else %}
@@ -111,14 +117,7 @@
     <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
 
     <script type="text/javascript">
-    API = "{{ API_URL }}";
-    USER_ID = "{{ user.id }}";
 
-    {% if user.is_booker %}
-        CLIENT_ID = {{ user.client.id }};
-    {% else %}
-        CLIENT_ID = 0;
-    {% endif %}
 
 
     $(document).ready(function () {
@@ -153,6 +152,7 @@
             do_last();
         }
     });
+
 
     function calendar() {
 
