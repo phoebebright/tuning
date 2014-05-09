@@ -30,11 +30,14 @@
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
                                             <h5>{{ item.ref }}</h5>
-                                            <p>{{ item.description|safe }}</p>
-                                        </div>
-                                    <span class="notification-pie-chart pull-right" data-percent="{{ item.sla_assign_tuner_pct }}">
+
+                                            <span class="notification-pie-chart pull-right" data-percent="{{ item.sla_assign_tuner_pct }}">
                             <span class="percent"></span>
                             </span>
+                                            <p>{{ item.when|timeuntil }}<br />
+                                                {{ item.description|safe }}</p>
+                                        </div>
+
                                     </div>
                                 </a>
                             </li>
@@ -61,11 +64,10 @@
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
                                             <h5>{{ item.ref }}</h5>
-                                            <p>{{ item.description|safe }}</p>
+                                            <p>{{ item.when|timeuntil }}<br />
+                                                {{ item.description|safe }}</p>
                                         </div>
-                                <span class="togo pull-right">
-                                    {{ item.when|timeuntil }}
-                                </span>
+
                                     </div>
                                 </a>
                             </li>
@@ -93,12 +95,11 @@
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
-                                            <p>{{ description }}</p>
+                                            <h5>{{ item.ref }}</h5>
+                                            <p>{{ item.when|timesince }}<br />
+                                                {{ item.description|safe }}</p>
                                         </div>
-                                <span class="togo pull-right">
-                                    {{ item.when|timesince }}
-                                </span>
+
                                     </div>
                                 </a>
                             </li>
@@ -116,26 +117,21 @@
         </div>
         <div class="col-md-3">
             <div class="mini-stat clearfix">
-                <span class="mini-stat-icon booking_status_9"><i class="fa booking_status_9_icon"></i></span>
+                <span class="mini-stat-icon booking_status_5"><i class="fa booking_status_5_icon"></i></span>
                 <div class="mini-stat-info">
-                    <span>{{ paid_today|length }}</span>
-                    Paid Tunings
-                    <ul class="dropdown-menu extended inbox">
-                        <li>
-                            <p class="">You have <span>{{ num_complete }}</span> pending payment</p>
-                        </li>
+                    <span>{{ num_complete }}</span>
+                    Unpaid Tunings
+                    <ul class="tasks-bar">
+
                         {%  for item in list_complete %}
-                            <li >
+                           <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
-                                            <p>{{ item.when }}</p>
-                                            <p>Tuner: {{ item.tuner }}</p>
+                                            <h5>{{ item.ref }}</h5>
+                                            <p>{{ item.description|safe }}</p>
                                         </div>
-                                <span class="togo pull-right">
-                                    {{ item.when|timesince }}
-                                </span>
+
                                     </div>
                                 </a>
                             </li>

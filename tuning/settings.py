@@ -171,9 +171,7 @@ USE_TZ = True
 
 SITE_ID = 1
 
-FLUENT_COMMENTS_EXCLUDE_FIELDS = ('name', 'email', 'url')
-COMMENTS_APP = 'fluent_comments'
-
+DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 
 AUTHENTICATION_BACKENDS = (
     'web.models.CustomAuth',

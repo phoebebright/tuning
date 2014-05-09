@@ -323,6 +323,17 @@ class CustomUser(AbstractUser, ModelDiffMixin):
             return None
 
     @property
+    def user_type(self):
+        if self.is_admin:
+            return "admin"
+        elif self.is_booker:
+            return "booker"
+        elif self.is_tuner:
+            return "tuner"
+        else:
+            return "?"
+
+    @property
     def is_tuner(self):
         return False
 
@@ -368,6 +379,10 @@ class CustomUser(AbstractUser, ModelDiffMixin):
         if self.is_tuner:
             return "{user_id:%s}" % self.id
 
+    @classmethod
+    def admin_emails(cls):
+
+        return cls.objects.filter(is_staff=True).values_list('email')
 
 class Booker(CustomUser):
 
@@ -621,8 +636,8 @@ class Booking(models.Model, ModelDiffMixin):
         self.price = self.default_price
         self.tuner_payment = tuner_pay(self.price)
 
-        if user and old_price != self.price:
-            add_message(user, "Price has changed!")
+        # if user and old_price != self.price:
+        #     add_message(user, "Price has changed!")
 
         return {'default_price': self.default_price,
                 'vat': self.vat,
@@ -672,19 +687,28 @@ class Booking(models.Model, ModelDiffMixin):
 
     def description_for_user(self, user):
         '''
+        :param: user can be a user object or one of the following strings "admin", "booker", "tuner"
         :return:includes money
         '''
 
         base = self.description
 
-        if user.is_admin:
+        if type(user)  == type("duck"):
+            user_type = user
+        else:
+            # assume it's a user object
+            user_type = user.user_type
+
+
+        if user_type == "admin":
             return "%s charging %s%s paying %s%s" % (base, "&pound", self.price, "&pound", self.tuner_payment)
 
-        if user.is_booker:
+        if user_type == "booker":
             return "%s%s ex VAT" % (base, "&pound", self.price)
 
-        if user.is_tuner:
+        if user_type == "tuner":
             return "%s  paying %s%s" % (base,  "&pound", self.tuner_payment)
+
 
     @property
     def description(self):
@@ -856,6 +880,9 @@ class Booking(models.Model, ModelDiffMixin):
             msg = "New %s added for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
 
             self.log(comment=msg, user=user, type='CREATE')
+
+
+
 
     def cancel(self, user=None):
 
@@ -1141,7 +1168,36 @@ class Log(models.Model):
     class Meta:
         ordering = ['-created',]
 
+    def save(self, *args, **kwargs):
 
+        send_notifications = False
+        if not self.id:
+            send_notifications = True
+
+
+        super(Log, self).save(*args, **kwargs)
+
+        if send_notifications:
+            from_email = settings.DEFAULT_FROM_EMAIL
+            emails = []
+
+            if self.log_type == "CREATE":
+
+                #notify admins
+                subject = "New Booking Requested"
+                message = self.booking.description_for_user('admin')
+                to_emails = CustomUser.admin_emails()
+                emails.append([subject, message, to_emails, from_email])
+
+
+            for (subject, message, to_emails, from_email) in emails:
+                # notify admins
+                Log.objects.create(booking=self.booking,
+                                   comment = "Emailing %s to notify of creation of booking" % to_emails)
+                if not settings.DEBUG:
+                    send_mail(subject, message, from_email, to_emails, fail_silently=True)
+
+                
 
 class CustomAuth(ModelBackend):
 

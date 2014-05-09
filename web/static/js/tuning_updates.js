@@ -361,7 +361,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                    alert("updated")
+
                     location.reload();
                 }
 

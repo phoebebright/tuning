@@ -937,6 +937,7 @@ class LogResource(ModelResource):
         bundle.data['booking_ref'] = bundle.obj.booking.ref
         bundle.data['long_heading'] = bundle.obj.booking.long_heading
         bundle.data['user_id'] = bundle.obj.created_by_id
+        bundle.data['gravatar'] = bundle.obj.created_by.gravatar
 
         return bundle
 

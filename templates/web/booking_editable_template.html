@@ -100,5 +100,10 @@
         <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
     {% endif %}
 
+    {% if object.status > '0'  %}
+       <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success" >Details...</a>
+
+    {% endif %}
+
 </span>
 </div>
