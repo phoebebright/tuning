@@ -33,7 +33,6 @@ from web.exceptions import *
 
 from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
-from ajaxmessages import add_message
 
 
 """
@@ -159,8 +158,7 @@ class ModelDiffMixin(object):
 class Activity(models.Model):
     name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
     name_plural = models.CharField(_('eg. Tunings'), max_length=15)
-    name_verb = models.CharField(_('eg. Tune'), max_length=20)
-    name_verb_past =   models.CharField(_('eg. Tuned'), max_length=20)
+    name_verb = models.CharField(_('eg. Tune'), max_length=12)
     duration = models.PositiveIntegerField(_('Default time slot in minutes '), max_length=5, default=60)
     order = models.PositiveSmallIntegerField(_('Order to display in lists'), default=0)
     price = models.DecimalField(_('Default price (ex vat)'), max_digits=10, decimal_places=2, default=50)
@@ -275,14 +273,6 @@ class Studio(models.Model):
         verbose_name = _("Studio Location")
         unique_together = ("name", "client")
 
-    @property
-    def lat(self):
-        return self.geolocation._split_geo_point.im_self.lat
-
-    @property
-    def lon(self):
-        return self.geolocation._split_geo_point.im_self.lon
-
 class Instrument(models.Model):
     name = models.CharField(max_length=20)
     client = models.ForeignKey(Client, null=True, blank=True)
@@ -339,31 +329,6 @@ class CustomUser(AbstractUser):
     def can_see_price(self):
         return self.is_staff or self.is_booker
 
-    def can_cancel(self, booking):
-
-        if self.is_admin:
-            return True
-        elif self.is_booker and self.client == booking.client:
-            return True
-
-        return False
-
-    @property
-    def logfilter(self):
-        ''' used in ajax call to get log messages
-        '''
-
-        # admin sees all
-        if self.is_admin:
-            return ""
-
-        # booker sees all for this client
-        if self.is_booker:
-            return "{client_id:%s}" % self.client_id
-
-        # booker sees all for this client
-        if self.is_tuner:
-            return "{user_id:%s}" % self.id
 
 
 class Booker(CustomUser):
@@ -473,20 +438,6 @@ class BookingsQuerySet(QuerySet):
     def completed(self):
         return self.filter(status=BOOKING_COMPLETE).order_by('-completed_at')
 
-    def unpaid(self, user):
-        # from admins perspective, unpaid is both client and provider
-        if user.is_admin:
-            return self.completed()
-
-        # from bookers perspective, means they havn't paid
-        if user.is_booker:
-            return self.filter(status=BOOKING_COMPLETE, paid_client_at__isnull=True).order_by('-completed_at')
-
-        # from tuners perspective, means they havn't been paid
-        if user.is_tuner:
-            return self.filter(status=BOOKING_COMPLETE, paid_provider_at__isnull=True).order_by('-completed_at')
-
-
     def cancelled(self):
         return self.filter(status=BOOKING_CANCELLED).order_by('-cancelled_at')
 
@@ -500,10 +451,6 @@ class BookingsQuerySet(QuerySet):
 
     def current(self):
         return self.filter(status__lt=BOOKING_CANCELLED, status__gt=0).order_by('-deadline')
-
-    def ours(self, client):
-
-        return self.filter(client=client)
 
     def mine(self, user):
 
@@ -565,7 +512,7 @@ class Booking(models.Model, ModelDiffMixin):
 
 
     def __unicode__(self):
-        return "%s %s on %s %s " % (self.ref, self.studio, self.when.strftime('%b'), self.when.strftime('%d'))
+        return "%s on %s " % (self.who, self.when)
 
     def get_absolute_url(self):
         return reverse('booking-detail', kwargs={'pk': self.pk})
@@ -576,12 +523,6 @@ class Booking(models.Model, ModelDiffMixin):
 
     def save(self, *args, **kwargs):
 
-        if kwargs.has_key('user'):
-            user = kwargs['user']
-            kwargs.pop('user')
-        else:
-            user = None
-
         # generate unique booking ref
         if not self.id:
             if not self.ref:
@@ -589,7 +530,7 @@ class Booking(models.Model, ModelDiffMixin):
 
             self.activity = Activity.default_activity()
             self.requested_at = NOW
-            self.recalc_prices(user)
+            self.recalc_prices()
 
         if 'price' in self.changed_fields:
             # recalc vat
@@ -597,7 +538,7 @@ class Booking(models.Model, ModelDiffMixin):
             self.tuner_payment = tuner_pay(self.price)
         else:
             if 'requested_at' in self.changed_fields:
-                self.recalc_prices(user)
+                self.recalc_prices()
 
 
 
@@ -609,17 +550,12 @@ class Booking(models.Model, ModelDiffMixin):
 
         super(Booking, self).save(*args, **kwargs)
 
-    def recalc_prices(self, user=None):
+    def recalc_prices(self):
         #NOTE: does not save
-        old_price = self.price
-
         self.default_price = self.get_default_price() * Decimal(str(self.duration)) / Decimal('60.00')
         self.vat = self.default_price * vat_rate()
         self.price = self.default_price
         self.tuner_payment = tuner_pay(self.price)
-
-        if user and old_price != self.price:
-            add_message(user, "Price has changed!")
 
         return {'default_price': self.default_price,
                 'vat': self.vat,
@@ -667,55 +603,49 @@ class Booking(models.Model, ModelDiffMixin):
         return "%s (%s)" % (self.client, self.ref)
 
 
-    def description_for_user(self, user):
-        '''
-        :return:includes money
-        '''
-
-        base = self.description
-
-        if user.is_admin:
-            return "%s charging %s%s paying %s%s" % (base, "&pound", self.price, "&pound", self.tuner_payment)
-
-        if user.is_booker:
-            return "%s%s ex VAT" % (base, "&pound", self.price)
-
-        if user.is_tuner:
-            return "%s  paying %s%s" % (base,  "&pound", self.tuner_payment)
-
     @property
     def description(self):
-        '''
-        text description of this booking
-        :return:
-        '''
-        txt = ''
 
-        if self.status <= BOOKING_REQUESTED:
-            txt = 'Request to %s ' % self.activity.name_verb
-        elif self.tuner:
-            if self.status < BOOKING_COMPLETE:
-                txt = "%s to %s " % (self.tuner, self.activity.name_verb)
-            else:
-                txt = "%s %s " % (self.tuner, self.activity.name_verb_past)
+        txt = ''
+        if self.tuner:
+            tuner = self.tuner
         else:
-            txt = ""
+            tuner = "?"
 
         if self.instrument:
-            txt += "%s " % self.instrument
-
+            instrument = self.instrument
+        else:
+            instrument = "?"
 
         if self.studio:
-            txt += "at %s " % self.studio
-
+            studio = self.studio
+        else:
+            studio = "?"
 
         if self.deadline:
-            txt  += "for session starting at %s " % (formats.date_format(self.deadline, "DATETIME_FORMAT"), )
+            deadline = formats.date_format(self.deadline, "DATETIME_FORMAT")
+        else:
+            deadline = "?"
 
-        if self.client_ref:
-            txt += "with ref %s " % self.client_ref
+        if self.status < 3:
+            txt = "Tune "
+        elif self.status < 4:
+            txt = '<span id="tuner">%s</span> to tune ' % tuner
+        else:
+            txt = '<span id="tuner">%s</span> tuned ' % tuner
 
-        return txt
+        if self.instrument:
+            txt += '<span id="instrument">%s</span> ' % instrument
+
+        if self.studio:
+            txt += 'at <span id="studio">%s</span> ' % studio
+
+        txt += 'for session that starts at <span id="deadline">%s</span> (<span id="ref">%s</span>)' % (deadline, self.ref)
+
+        if self.status == 4:
+            txt += "?"
+
+        return txt.capitalize()
 
     @property
     def comments(self):
@@ -822,13 +752,13 @@ class Booking(models.Model, ModelDiffMixin):
 
         return price
 
-    def log(self, comment,  type, user=None):
+    def log(self, comment, user=None):
         '''add a system generated item to the comments log
         '''
         if not user:
             user = system_user()
 
-        item = Log.objects.create(booking=self, comment= comment, created_by=user, log_type=type)
+        item = Log.objects.create(booking=self, comment= comment, created_by=user, log_type='S')
         return item
 
     def comment(self, comment, user=None):
@@ -849,10 +779,7 @@ class Booking(models.Model, ModelDiffMixin):
             self.booked_at = NOW
             self.save()
 
-            # notifications
-            msg = "New %s added for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
-
-            self.log(comment=msg, user=user, type='CREATE')
+            self.log(comment="New Booking added for %s for %s with ref %s" % (self.client, self.deadline.strftime("%a %d %B"), self.ref), user=user)
 
     def cancel(self, user=None):
 
@@ -869,11 +796,6 @@ class Booking(models.Model, ModelDiffMixin):
             self.cancelled_at = NOW
             self.status = BOOKING_CANCELLED
             self.save()
-
-            # notifications
-            msg = "Booking CANCELLED to %s for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
-            self.log(comment=msg, user=user, type='CANCEL')
-
 
     def change_deadline(self, deadline):
         ''' if booking is not complete, then change requested date based on deadline
@@ -1021,7 +943,7 @@ class Booking(models.Model, ModelDiffMixin):
         self.booked_at = NOW
         self.save()
 
-        self.log(comment="Tuner %s assigned" % (self.tuner,), type="BOOK")
+        self.log(comment="Tuner %s assigned" % (self.tuner,))
 
 
     def set_complete(self):
@@ -1030,7 +952,7 @@ class Booking(models.Model, ModelDiffMixin):
         self.completed_at = NOW
         self.save()
 
-        self.log(comment="%s complete" % (self.activity,), type="COMPLETE")
+        self.log(comment="%s complete" % (self.activity,))
 
     def set_uncomplete(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -1042,8 +964,6 @@ class Booking(models.Model, ModelDiffMixin):
             self.completed_at = None
             self.save()
 
-            self.log(comment="%s unmarked as complete" % (self.activity,), type="UNCOMPLETE")
-
     def set_provider_paid(self):
 
         self.paid_provider_at = NOW
@@ -1053,7 +973,7 @@ class Booking(models.Model, ModelDiffMixin):
 
         self.save()
 
-        self.log(comment="provider paid", type="PROVIDER_PAID")
+        self.log(comment="provider paid")
 
 
     def set_provider_unpaid(self):
@@ -1065,7 +985,6 @@ class Booking(models.Model, ModelDiffMixin):
             self.status = BOOKING_COMPLETE
             self.paid_provider_at = None
             self.save()
-            self.log(comment="provider unmarked as paid", type="UNPROVIDER_PAID")
 
     def set_client_paid(self):
 
@@ -1075,8 +994,8 @@ class Booking(models.Model, ModelDiffMixin):
             self.status = BOOKING_ARCHIVED
 
         self.save()
-        self.log(comment="client paid", type="CLIENT_PAID")
 
+        self.log(comment="client paid")
 
     def client_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -1087,7 +1006,6 @@ class Booking(models.Model, ModelDiffMixin):
             self.status = BOOKING_COMPLETE
             self.paid_client_at = None
             self.save()
-            self.log(comment="client unmakred as paid", type="UNCLIENT_PAID")
 
     def send_request(self):
         # schedule email http://www.cucumbertown.com/craft/scheduling-morning-emails-with-django-and-celery/
@@ -1130,7 +1048,7 @@ class Log(models.Model):
     comment = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(CustomUser, blank=True, null=True)
-    log_type = models.CharField(max_length=20, default='')
+    log_type = models.CharField(max_length=1, choices=(('U','User Comment'),('S','System')), default='U')
 
     def __unicode__(self):
         return self.comment
@@ -1147,11 +1065,9 @@ class CustomAuth(ModelBackend):
         try:
             return Booker._default_manager.get(pk=user_id)
         except Booker.DoesNotExist:
-            try:
-                return Tuner._default_manager.get(pk=user_id)
-            except Tuner.DoesNotExist:
-                try:
-                    return CustomUser._default_manager.get(pk=user_id)
-                except CustomUser.DoesNotExist:
-                    return None
+            return Tuner._default_manager.get(pk=user_id)
+        except Tuner.DoesNotExist:
+            return CustomUser._default_manager.get(pk=user_id)
+        except CustomUser.DoesNotExist:
+            return None
         return None
