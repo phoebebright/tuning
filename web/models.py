@@ -172,6 +172,7 @@ class Activity(models.Model):
 
     class Meta:
         ordering = ['order', 'name']
+        verbose_name_plural = "activities"
 
     @classmethod
     def default_activity(cls):
@@ -204,6 +205,7 @@ class Organisation(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['name',]
 
     @property
     def is_test(self):
