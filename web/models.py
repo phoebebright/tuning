@@ -107,7 +107,7 @@ def emergency_price(price):
 def tuner_pay(price):
     #TODO: tuners can be vat registered
     # assume for the moment that tuners are not vat registered
-    return Decimal(price * Decimal('0.66'))
+    return Decimal(price) * Decimal('0.66')
 
 
 

@@ -270,7 +270,7 @@
     function client_dropped(date, allDay, client_id) {
 
         // ignore if date before now
-        if (date < moment()) {
+        if (date < moment() && USER_TYPE != "admin") {
             return
         }
 
