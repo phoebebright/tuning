@@ -46,7 +46,12 @@ def list_orgs():
 
     return txt
 
+def list_bookings():
+    txt = "Bookings\n"
+    for item in Booking.objects.all():
+            txt +=  "%30s | %s | %s | %s | %s\n" % (item.client.name,item.ref, item.when, item.status, item.tuner)
 
+    return txt
 '''
 
 NOTE - not all tests pass when checking for bookings in the past

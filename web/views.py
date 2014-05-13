@@ -214,6 +214,11 @@ def to_paid(request):
     )
 
 
+def request_another_tuner(request, booking_ref):
+    #TODO: pass a code to ensure this is a valid request
+
+    booking = get_object_or_404(Booking, ref=booking_ref)
+    TunerCall.request(booking)
 
 ''' JSONise
 

@@ -68,3 +68,18 @@ class NoSystemUser(ModelException):
     '''
     txtMessage = 'Need to create a SYSTEM user'
     errorCode = 108
+
+class RequestTunerFailed(ModelException):
+    '''
+    For a number of reasons the system has not been able to find a tuner for a booking
+    '''
+    txtMessage = 'Failed to request tuner - will have to request manually'
+    errorCode = 109
+
+
+class InvalidBookingForCall(ModelException):
+    '''
+    Couldnt find a user "system" in the user table
+    '''
+    txtMessage = 'Expecting booking to have Requested status but it does not '
+    errorCode = 110

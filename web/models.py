@@ -8,11 +8,13 @@ from django.conf import settings
 from django.contrib.auth.models import  AbstractUser, UserManager
 from django.contrib.contenttypes.models import ContentType
 
+from django.contrib.auth.backends import ModelBackend
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.core.validators import  MinValueValidator
 from django.db import models
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
@@ -20,7 +22,7 @@ from django.http import  Http404
 from django.template import Context, Template
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.backends import ModelBackend
+
 
 
 from model_utils import Choices
@@ -35,8 +37,8 @@ from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
 from django_gravatar.helpers import get_gravatar_url
 
-
-
+from twilio.twiml import Response
+from django_twilio.decorators import twilio_view
 
 """
 notifications:
@@ -61,6 +63,13 @@ BOOKING_TOCOMPLETE = "4"      # booking has past and not marked complete
 BOOKING_COMPLETE = "5"    # tuning has been done but not yet paid
 BOOKING_CANCELLED = "8"    # tuning has been done but not yet paid
 BOOKING_ARCHIVED = "9"    # paid and finished
+
+CALL_INITIALISING = 'I'
+CALL_WAITING = 'W'
+CALL_REJECTED = 'R'
+CALL_ACCEPTED = 'A'
+CALL_EXPIRED = 'E'
+CALL_FAILED = 'F'
 
 # default booking request times
 
@@ -431,7 +440,10 @@ class Tuner(CustomUser):
     address = map_fields.AddressField(max_length=200, blank=True, null=True)
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
     activities = models.ManyToManyField(Activity, blank=True, null=True)
+    score = models.PositiveSmallIntegerField(default=1)
     #TODO: add vat registered
+    #TODO: add availability schedule
+
 
     class Meta:
         verbose_name = _("Users - Tuner")
@@ -471,6 +483,15 @@ class Tuner(CustomUser):
         booking.book(self, start_time, duration)
 
         return booking
+
+    def is_available(self, booking):
+        ''' check availability and ability to do a booking
+        :param booking:
+        :return: true/false
+        '''
+
+        #TODO: check activity
+        return True
 
 class BookingsPassThroughManager(PassThroughManager):
 
@@ -578,6 +599,7 @@ class Booking(models.Model, ModelDiffMixin):
     tuner_payment = models.DecimalField(_('Amount due to Tuner'), max_digits=10, decimal_places=2, default=0)
     vat = models.DecimalField(_('VAT Amount'), max_digits=10, decimal_places=2, default=vat_rate())
 
+    request_count = models.PositiveSmallIntegerField(default=0)
 
     objects = BookingsPassThroughManager.for_queryset_class(BookingsQuerySet)()
 
@@ -684,6 +706,9 @@ class Booking(models.Model, ModelDiffMixin):
     def long_heading(self):
         return "%s (%s)" % (self.client, self.ref)
 
+    @property
+    def short_description(self):
+        return "%s at %s on %s at %s" % (self.activity, self.studio, formats.date_format(self.when, "SHORT_DATE_FORMAT"), formats.date_format(self.when, "TIME_FORMAT"))
 
     def description_for_user(self, user):
         '''
@@ -834,6 +859,9 @@ class Booking(models.Model, ModelDiffMixin):
         else:
             return 100
 
+    @property
+    def calls(self):
+        return TunerCall.objects.filter(booking=self).order_by('called')
 
     def get_default_price(self):
 
@@ -869,12 +897,16 @@ class Booking(models.Model, ModelDiffMixin):
 
 
     def create(self, user=None):
-
+        ''' save booking and change status 1 so it becomes a real booking.  Bookings are created with cls.booking_create
+        with a status of 0 so that they can be edit from javascript.  Don't become real until the user clicks on
+        save and this method is called
+        '''
         #TODO: some validation here
         if  int(self.status) == 0:
             self.status = BOOKING_REQUESTED
             self.booked_at = NOW
             self.save()
+            self.send_request()
 
             # notifications
             msg = "New %s added for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
@@ -882,6 +914,16 @@ class Booking(models.Model, ModelDiffMixin):
             self.log(comment=msg, user=user, type='CREATE')
 
 
+
+    def request_tuner(self, call):
+
+        if TunerCall.request(self):
+            self.request_count += 1
+            self.save()
+            self.log("Message sent to %s" % call.tuner, type = "GET TUNER")
+        else:
+            #TODO: handle request failed exception
+            raise RequestTunerFailed
 
 
     def cancel(self, user=None):
@@ -922,7 +964,11 @@ class Booking(models.Model, ModelDiffMixin):
 
 
     @classmethod
-    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None, client=None, ):
+    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None, client=None, commit=False):
+        ''' create a new booking record with status = 0 that can be edited.  Doesn't become a "real" booking until
+        it is saved and the status goes to 1 (self.create)
+        However, if commit = True, then saved with status of 1
+        '''
 
         # if activity not specified, get default
         if not how:
@@ -1028,9 +1074,10 @@ class Booking(models.Model, ModelDiffMixin):
         if client_ref:
             booking.client_ref = client_ref
 
+        if commit:
+            status = BOOKING_REQUESTED
 
         booking.save()
-        booking.send_request()
 
         return booking
 
@@ -1127,7 +1174,9 @@ class Booking(models.Model, ModelDiffMixin):
         from_email = "tuning@trialflight.com"
 
 
+
         send_mail(subject, message, from_email, [to_email,], fail_silently=True)
+
 
 
     @classmethod
@@ -1151,6 +1200,179 @@ class Booking(models.Model, ModelDiffMixin):
             item.save()
 
 
+    def send_msgs(self, msgs):
+
+      for (subject, message, to_emails) in msgs:
+
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, to_emails, fail_silently=True)
+
+class TunerCall(models.Model):
+
+
+    CALL_STATUS = ((CALL_INITIALISING, 'Initialising'),
+                   (CALL_WAITING, 'Pending'),
+                   (CALL_REJECTED, 'Rejected'),
+                   (CALL_ACCEPTED, "Accepted"),
+                   (CALL_EXPIRED, 'Expired'),
+                   (CALL_FAILED, 'Call Failed'),
+    )
+
+    booking = models.ForeignKey(Booking)
+    tuner = models.ForeignKey(Tuner, blank=True, null=True)
+    initiated = models.DateTimeField(auto_now_add=True, editable=False)
+    called = models.DateTimeField(blank=True, null=True)
+    expire_in =  models.PositiveSmallIntegerField(_('Expire in mins after call'), default=5)
+    status = models.CharField(max_length=1, choices=CALL_STATUS, default='P')
+    answered = models.DateTimeField(blank=True, null=True)
+
+    def __unicode__(self):
+        return "%s re %s" % (self.tuner, self.booking)
+
+
+    class Meta:
+        ordering = ['-id',]
+        unique_together = ['booking','tuner']
+
+
+    @transaction.atomic()
+    def save(self, *args, **kwargs):
+
+        if self.booking.status != BOOKING_REQUESTED:
+            raise InvalidBookingForCall
+
+        #if not self.id:
+            #expire any (should only be 1!) calls
+            # for item in TunerCall.objects.filter(booking = self.booking, status=CALL_WAITING):
+            #     item.status = CALL_EXPIRED
+            #     item.save()
+
+        super(TunerCall, self).save(*args, **kwargs)
+
+
+
+    @classmethod
+    def request(self, booking):
+
+
+        call = TunerCall.objects.create(booking = booking)
+        tuner = call.get_next_tuner()
+        if tuner:
+            call.tuner = tuner
+
+            if call.send_request():
+                call.status = CALL_WAITING
+        else:
+            call.status = CALL_FAILED
+            call.msg_no_tuners()
+            print "Failed to send request for booking %s" % self.booking
+            raise RequestTunerFailed
+
+
+        call.save()
+        return call
+
+    def get_next_tuner(self):
+
+        already_called = self.already_called()
+        remaining = Tuner.objects.exclude(id__in = already_called).order_by('-score',)
+
+        # nobody left
+        if remaining.count() < 1:
+            return None
+
+        for tuner in remaining:
+            if tuner.is_available(self.booking):
+                return tuner
+                break
+
+        # nobody left who is available
+        return None
+
+    def already_called(self):
+        '''
+        :return:list of tuner ids that have already been called for this booking
+        '''
+        return TunerCall.objects.filter(booking=self.booking).values_list('tuner',).exclude(tuner__isnull=True)
+
+    def send_request(self):
+
+        self.msg_tuner_request()
+        self.called = NOW
+        self.save()
+        return True
+
+
+    @transaction.atomic()
+    def tuner_accepted(self):
+
+        self.status = CALL_ACCEPTED
+        self.answered = NOW
+        self.save()
+        self.booking.book(tuner=self.tuner)
+
+        # expire rest of calls
+        for item in TunerCall.objects.filter(booking = self.booking, status=CALL_WAITING):
+            item.status = CALL_EXPIRED
+            item.save()
+        self.msg_call_expired()
+
+
+
+
+    def tuner_rejected(self):
+
+        self.status = CALL_REJECTED
+        self.answered = NOW
+        self.save()
+
+    def msg_tuner_request(self):
+
+            msg = []
+
+            subject = "Are you available for %s?" % (self.booking.short_description)
+            body = """See full details: %s
+
+            Reply with Yes or No in the subject line.""" % (self.booking.get_absolute_url())
+
+            to = [self.tuner.email,]
+
+            msg.append([subject, body, to])
+            self.booking.send_msgs(msg)
+
+            Log.objects.create(booking=self.booking,
+                                   comment = "Tuner %s requested" % self.tuner)
+
+
+    def msg_no_tuners(self):
+
+            msg = []
+
+            subject = "NOT TUNERS AVAILABLE FOR %s?" % (self.booking.short_description)
+            body = """See full details: %s
+
+            """ % (self.booking.get_absolute_url())
+
+            # extract list of emails
+            to = map((lambda  d:  d[1]), settings.ADMINS)
+
+            msg.append([subject, body, to])
+            self.booking.send_msgs(msg)
+
+    def msg_call_expired(self):
+
+            msg = []
+
+            subject = "Tuner no longer required for " % (self.booking.short_description)
+            body = """See full details: %s
+
+            """ % (self.booking.get_absolute_url())
+
+            # extract list of emails
+            to = TunerCall.objects.filter(booking=self.booking, status=CALL_EXPIRED).values_list('tuner__email')
+
+            msg.append([subject, body, to])
+            self.booking.send_msgs(msg)
+
 class Log(models.Model):
     """
     Record interesting activity
@@ -1170,34 +1392,11 @@ class Log(models.Model):
 
     def save(self, *args, **kwargs):
 
-        send_notifications = False
-        if not self.id:
-            send_notifications = True
-
 
         super(Log, self).save(*args, **kwargs)
 
-        if send_notifications:
-            from_email = settings.DEFAULT_FROM_EMAIL
-            emails = []
-
-            if self.log_type == "CREATE":
-
-                #notify admins
-                subject = "New Booking Requested"
-                message = self.booking.description_for_user('admin')
-                to_emails = CustomUser.admin_emails()
-                emails.append([subject, message, to_emails, from_email])
 
 
-            for (subject, message, to_emails, from_email) in emails:
-                # notify admins
-                Log.objects.create(booking=self.booking,
-                                   comment = "Emailing %s to notify of creation of booking" % to_emails)
-                if not settings.DEBUG:
-                    send_mail(subject, message, from_email, to_emails, fail_silently=True)
-
-                
 
 class CustomAuth(ModelBackend):
 
@@ -1214,3 +1413,4 @@ class CustomAuth(ModelBackend):
                 except CustomUser.DoesNotExist:
                     return None
         return None
+

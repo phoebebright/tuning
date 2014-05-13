@@ -11,12 +11,12 @@
 <div id="editform" class="editable_content" data-eventid="">
 
     {% if object.status >= '0' and object.status <= '3' %}
-          <a href="#" id="field_tuner" class="editable tuners"
-       data-pk="{{ object.ref }}"
-       data-title="Tuner"
-       data-value="{{ object.tuner.id }}"
-       data-title="Tuner">
-        {{ default_tuner }}</a>
+        <a href="#" id="field_tuner" class="editable tuners"
+           data-pk="{{ object.ref }}"
+           data-title="Tuner"
+           data-value="{{ object.tuner.id }}"
+           data-title="Tuner">
+            {{ default_tuner }}</a>
         &nbsp;to&nbsp;
     {% endif %}
 
@@ -39,9 +39,12 @@
        data-value="{{ object.studio.id }}">
         {{ default_studio }}</a>
 
-       for session beginning at
-    <a href="#" id="field_deadline_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
-
+    for session beginning at
+    {% if object.status < '2' %}
+        <a href="#" id="field_deadline_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
+    {% else %}
+       <span id="field_deadline_time" >{ deadline_time }}</span>
+    {% endif %}
 
     with reference
     <a href="#" id="field_client_ref" class="editable clientref"
@@ -52,9 +55,9 @@
     <br />
 
     To start at
-   <a href="#" id="field_requested_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ requested_time }}</a>
+    <a href="#" id="field_requested_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ requested_time }}</a>
     duration
-        <a href="#" id="field_duration" class="editable duration"
+    <a href="#" id="field_duration" class="editable duration"
        data-pk="{{ object.ref }}"
        data-title="Duration in Mins"
        data-value="{{ object.duration }}"
@@ -62,7 +65,7 @@
         {{ default_duration }}</a>&nbsp;mins&nbsp;
 
     booked by
-        <a href="#" id="field_booker" class="editable booker"
+    <a href="#" id="field_booker" class="editable booker"
        data-pk="{{ object.ref }}"
        data-title="Booker"
        data-value="{{ object.booker.id }}"
@@ -71,7 +74,7 @@
 
 
     price £
-        <a href="#" id="field_price" class="editable price"
+    <a href="#" id="field_price" class="editable price"
        data-pk="{{ object.ref }}"
        data-title="Price"
        data-value="{{ object.price }}"
@@ -101,7 +104,7 @@
     {% endif %}
 
     {% if object.status > '0'  %}
-       <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success" >Details...</a>
+        <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success" >Details...</a>
 
     {% endif %}
 

@@ -14,6 +14,20 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+#http://iambusychangingtheworld.blogspot.ie/2013/04/asynchronously-sending-email-using.html
+''' starting instructions
+rabbitmq-server
+rabbitmqctl status
+
+
+python manage.py celeryd --loglevel=info
+http://micewww.pp.rl.ac.uk/projects/maus/wiki/MAUSCelery
+
+'''
+import djcelery
+djcelery.setup_loader()
+BROKER_URL = "amqp://guest:guest@localhost:5672/"
+EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -30,7 +44,9 @@ ALLOWED_HOSTS = []
 
 SITE_ID = 1
 
-
+ADMINS = (
+     ('Phoebe', 'phoebebright310+tune@gmail.com'),
+)
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'site_media')
 MEDIA_URL = '/site_media/'
@@ -120,6 +136,9 @@ INSTALLED_APPS = (
     'django_cron',
     'theme',  # holds themeforest template static files
     'django_gravatar',
+    'djcelery',
+    'djcelery_email',
+    'django_twilio',
     'web',
 )
 
@@ -199,7 +218,14 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
+TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
+TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
+
 DATETIME_FORMAT = "D N j, P"
+SHORT_DATE_FORMAT = "a d b"
+TIME_FORMAT = "H:M"
+
+
 try:
     from tuning.settings_local import *
 except ImportError:

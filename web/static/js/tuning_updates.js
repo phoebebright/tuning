@@ -426,12 +426,12 @@ function time_update(selection, time) {
 
         // combine deadline date with new time
         var deadline = moment($("#field_deadline_date").attr("data-value") + " " + time);
-        var requested = deadline.subtract('minutes', duration);
+
         $.ajax({
             type:"post",
             url:API+"set_deadline_booking/",
             data: {
-                pk:ref, value:deadline.toISOString()},
+                pk:ref, value:deadline.format()},
             dataType : 'json',
             success:function(json){
 

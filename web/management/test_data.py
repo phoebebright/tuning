@@ -82,19 +82,11 @@ def base_data(request=None):
     u.last_name = "Apostle"
     u.mobile = "434534534"
     u.provider=t1
+    u.score = 10
     u.save()
     u.activities.add(a1)
     u.activities.add(a2)
-    u.save()
 
-    u = Tuner.objects.create_user('mark', 'phoebebright310+mark@gmail.com', 'pass')
-    u.first_name = "Mark"
-    u.last_name = "Apostle"
-    u.mobile = "789876756"
-    u.provider=t2
-    u.save()
-    u.activities.add(a1)
-    u.activities.add(a2)
     u.save()
 
     u = Tuner.objects.create_user('luke', 'phoebebright310+luke@gmail.com', 'pass')
@@ -102,6 +94,7 @@ def base_data(request=None):
     u.last_name = "Apostle"
     u.mobile = "56756445"
     u.provider=t3
+    u.score = 6
     u.save()
     u.activities.add(a1)
     u.save()
@@ -111,9 +104,23 @@ def base_data(request=None):
     u.last_name = "Apostle"
     u.mobile = "6764523"
     u.provider=t4
+    u.score = 4
     u.save()
     u.activities.add(a2)
     u.save()
+
+    u = Tuner.objects.create_user('mark', 'phoebebright310+mark@gmail.com', 'pass')
+    u.first_name = "Mark"
+    u.last_name = "Apostle"
+    u.mobile = "789876756"
+    u.provider=t2
+    u.score = 8
+    u.save()
+    u.activities.add(a1)
+    u.activities.add(a2)
+    u.save()
+
+
 
     u = Booker.objects.create_user('testera', 'phoebebright310+testa@gmail.com', 'pass')
     u.first_name = "Tester"
@@ -127,6 +134,7 @@ def base_data(request=None):
     u.last_name = "B"
     u.mobile = "6764523"
     u.provider=tstp
+    u.score = 2
     u.save()
     u.activities.add(a1)
     u.activities.add(a2)

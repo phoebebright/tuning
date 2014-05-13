@@ -320,12 +320,10 @@ class BookingsFullResource(BookingsResource):
             upd = bundle.obj.recalc_prices()
             bundle.obj.save(user=bundle.request.user)
 
-        bundle.data['default_price'] = upd['default_price']
-        bundle.data['vat'] = upd['vat']
-        bundle.data['price'] = upd['price']
-        bundle.data['tuner_payment'] = upd['tuner_payment']
-
-
+            bundle.data['default_price'] = upd['default_price']
+            bundle.data['vat'] = upd['vat']
+            bundle.data['price'] = upd['price']
+            bundle.data['tuner_payment'] = upd['tuner_payment']
 
         from web.views import render_booking_template
 
@@ -937,7 +935,10 @@ class LogResource(ModelResource):
         bundle.data['booking_ref'] = bundle.obj.booking.ref
         bundle.data['long_heading'] = bundle.obj.booking.long_heading
         bundle.data['user_id'] = bundle.obj.created_by_id
-        bundle.data['gravatar'] = bundle.obj.created_by.gravatar
+        if hasattr(bundle.obj.created_by, 'gravatar'):
+            bundle.data['gravatar'] = bundle.obj.created_by.gravatar
+        else:
+            bundle.data['gravatar'] = ""
 
         return bundle
 
