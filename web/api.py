@@ -608,7 +608,7 @@ class BookingPriceResource(BookingUpdateResource):
     def update_booking(self, booking, bundle, value):
         #TODO: validation of duration
         booking.price = value
-        booking.vat = value * vat_rate()
+        booking.vat = Decimal(str(value)) * vat_rate()
         booking.save(user=bundle.request.user)
 
 
