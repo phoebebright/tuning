@@ -124,7 +124,7 @@
 
 
                         <li class="external">
-                            <a href="{%  url "assign_tuner" %}">See All Unassigned Tunings</a>
+                            <a href="{%  url "assign_tuner" %}">Browse All Unassigned Tunings</a>
                         </li>
                     </ul>
                 </li>
@@ -158,7 +158,7 @@
                         {%  endfor %}
 
                         <li>
-                            <a href="{%  url "to_completed" %}">See All Pending Bookings</a>
+                            <a href="{%  url "to_completed" %}">Browse All Pending Bookings</a>
                         </li>
                     </ul>
                 </li>
@@ -192,7 +192,7 @@
                         {%  endfor %}
 
                         <li>
-                            <a href="{%  url "to_completed" %}">See All Incomplete Tunings</a>
+                            <a href="{%  url "to_completed" %}">Browse All Incomplete Tunings</a>
                         </li>
                     </ul>
                 </li>
@@ -226,7 +226,7 @@
                         {%  endfor %}
 
                         <li>
-                            <a href="{%  url "to_paid" %}">See All Unpaid Tunings</a>
+                            <a href="{%  url "to_paid" %}">Browse All Unpaid Tunings</a>
                         </li>
                     </ul>
                 </li>
@@ -490,17 +490,17 @@
 
     function do_last() {
 
-        // make left side nav accordian
-        $('#nav-accordion').dcAccordion({
-            eventType: 'click',
-            autoClose: true,
-            saveState: true,
-            disableLink: true,
-            speed: 'slow',
-            showCount: false,
-            autoExpand: true,
-            classExpand: 'dcjq-current-parent'
-        });
+{#        // make left side nav accordian#}
+{#        $('#nav-accordion').dcAccordion({#}
+{#            eventType: 'click',#}
+{#            autoClose: true,#}
+{#            saveState: true,#}
+{#            disableLink: true,#}
+{#            speed: 'slow',#}
+{#            showCount: true,#}
+{#            autoExpand: true,#}
+{#            classExpand: 'dcjq-current-parent'#}
+{#        });#}
 
         // tool tips
 

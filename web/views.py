@@ -31,6 +31,7 @@ from django.core.exceptions import PermissionDenied
 from datetime import datetime, timedelta, date
 import json
 
+from web.tasks import *
 
 #App
 from web.models import *
@@ -148,9 +149,6 @@ def bookings_list(request):
 
 @login_required()
 def dashboard(request):
-
-    Booking.check_to_complete()
-    #TODO: Write management command to clean up unused booking records
 
     if request.user.is_admin:
         template = "index_admin.html"

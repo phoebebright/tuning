@@ -7,6 +7,7 @@ https://docs.djangoproject.com/en/1.6/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.6/ref/settings/
 """
+from __future__ import absolute_import
 
 #TODO: Assess data models for speed - need to remove null=true I think
 
@@ -19,13 +20,40 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 rabbitmq-server
 rabbitmqctl status
 
+monitor: http://127.0.0.1:15672/#/connections
 
-python manage.py celeryd --loglevel=info
+start:
+    celery -A tuning worker -B -l info
+
 http://micewww.pp.rl.ac.uk/projects/maus/wiki/MAUSCelery
 
+monitor:
+    pip install flower  - install
+    celery flower -- run
+    http://localhost:5555  --view
+
+to setup as daemons
+http://docs.celeryproject.org/en/latest/tutorials/daemonizing.html#daemonizing
+
 '''
-import djcelery
-djcelery.setup_loader()
+# settings up celery periodic tasks http://stackoverflow.com/questions/20116573/in-celery-3-1-making-django-periodic-task
+
+
+from celery.schedules import crontab
+
+
+CELERYBEAT_SCHEDULE = {
+    # crontab(hour=0, minute=0, day_of_week='saturday')
+    'check-bookings-to-complete': {
+        'task': 'web.tasks.check_bookings',
+        'schedule': crontab(),    # every n minutes crontab(minute='*/15')
+        'args': (1,2),
+    },
+}
+
+
+# import djcelery
+# djcelery.setup_loader()
 BROKER_URL = "amqp://guest:guest@localhost:5672/"
 EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 
@@ -136,7 +164,7 @@ INSTALLED_APPS = (
     'django_cron',
     'theme',  # holds themeforest template static files
     'django_gravatar',
-    'djcelery',
+    # 'djcelery',
     'djcelery_email',
     'django_twilio',
     'web',
@@ -224,6 +252,41 @@ TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
 DATETIME_FORMAT = "D N j, P"
 SHORT_DATE_FORMAT = "a d b"
 TIME_FORMAT = "H:M"
+TASTYPIE_DATETIME_FORMATTING = 'rfc-2822'  # eg.  Fri, 09 Sep 2005 13:51:39 -0700
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s %(message)s',
+             'datefmt': '%y %b %d, %H:%M:%S',
+            },
+        },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'celery': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/celery.log'),
+            'formatter': 'simple',
+            'maxBytes': 1024 * 1024 * 100,  # 100 mb
+        },
+    },
+    'loggers': {
+        'celery': {
+            'handlers': ['celery', 'console'],
+            'level': 'DEBUG',
+            },
+    }
+}
+
+from logging.config import dictConfig
+dictConfig(LOGGING)
 
 
 try:

@@ -1,5 +1,5 @@
 import urlparse
-from datetime import datetime
+from django.utils.timezone import is_aware
 import arrow
 
 from django.db import IntegrityError
@@ -26,7 +26,7 @@ User = get_user_model()
 
 '''
 NOTE: TIMEZONE handling = model.py deals in timezone aware dates, the tempalates will automatically display local
-datetimes.  In the API all times need to be converted to local.
+datetimes.  In the API all times need to be converted to local or passed as timezone aware
 '''
 class urlencodeSerializer(Serializer):
     #http://stackoverflow.com/questions/14074149/tastypie-with-application-x-www-form-urlencoded
@@ -48,6 +48,17 @@ class urlencodeSerializer(Serializer):
 
     def to_urlencode(self,content):
         pass
+
+from tastypie.serializers import Serializer
+
+
+class CustomSerializer(Serializer):
+    """
+    Output TZ aware string
+    """
+    def format_datetime(self, data):
+        # If naive or rfc-2822, default behavior...
+        return arrow.get(data).naive
 
 class SimpleObject(object):
     def __init__(self, id=None, name=None, value=None):
@@ -213,6 +224,7 @@ class BookingsResource(ModelResource):
         queryset = Booking.objects.current()
         include_resource_uri = True
         resource_name = 'bookings'
+        serializer = CustomSerializer()
         allowed_methods = ['get']
         limit = 0
         fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client',
