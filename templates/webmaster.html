@@ -13,6 +13,7 @@
 
     <div class="row">
         <div class="col-md-6">
+        
             <!--notification start-->
             <section class="panel">
                 <header class="panel-heading">
@@ -41,7 +42,8 @@
             </section>
             <!--notification end-->
         </div>
-        <div class="col-md-6">
+       
+ <div class="col-md-6">
             <!--todolist start-->
             <section class="panel">
                 <header class="panel-heading">
@@ -52,13 +54,14 @@
                 <div class="panel-body">
                     <a href="/ping/" class="btn">Ping Celery</a>
 
-                    <a href="{{ settings.CELERY_MONITOR_URL }}" class="btn">Celery Monitor</a>
-                    <a href="{{ settings.RABBITMQ_MONITOR_URL }}" class="btn">RabbitMq Monitor</a>
+                    <a href="{{ CELERY_MONITOR_URL }}" class="btn">Celery Monitor</a>
+                    <a href="{{ RABBITMQ_MONITOR_URL }}" class="btn">RabbitMq Monitor</a>
 
                 </div>
             </section>
-            <!--todolist end-->
         </div>
+        
+        
     </div>
 
 {% endblock %}

@@ -24,6 +24,12 @@ def add_stuff(request):
     #TODO: try specifying values requred
 
     if not request.user.is_anonymous():
+    
+        if request.user.is_superuser:
+            context['CELERY_MONITOR_URL'] = settings.CELERY_MONITOR_URL
+            context['RABBITMQ_MONITOR_URL'] = settings.RABBITMQ_MONITOR_URL
+            
+            
         if request.user.is_admin:
 
             context['num_requested'] = Booking.objects.requested().count()
