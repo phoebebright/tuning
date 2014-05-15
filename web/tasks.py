@@ -10,8 +10,12 @@ logger = get_task_logger(__name__)
 
 @task
 def check_bookings(a,b):
-    print a,b
     logger.info('Checking for tunings that should be complete')
     print 'Checking'
     Booking.check_to_complete()
     logger.info('Checking')
+
+@task
+def celery_ping(a,b):
+    print "Pinged"
+    logger.info("pinged")

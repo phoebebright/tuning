@@ -27,6 +27,9 @@ from django.views.generic.edit import ModelFormMixin
 from django.template.loader import render_to_string
 from django.core.exceptions import PermissionDenied
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 #python
 from datetime import datetime, timedelta, date
 import json
@@ -46,6 +49,11 @@ def can_view_bookings(user):
 
     if user and user.is_authenticated():
         return  user.is_booker or user.is_admin or user.is_tuner
+
+def is_webmaster(user):
+
+    if user and user.is_authenticated():
+        return  user.is_superuser
 
 @login_required
 @user_passes_test(can_book)
@@ -158,6 +166,18 @@ def dashboard(request):
         template = "index_tuner.html"
 
     return render_to_response(template,{},
+        context_instance=RequestContext(request)
+    )
+
+@user_passes_test(is_webmaster)
+def webmaster(request):
+
+    users = User.objects.filter(is_active=True).order_by('-last_login')
+
+
+    return render_to_response("webmaster.html",{
+        'users': users,
+    },
         context_instance=RequestContext(request)
     )
 
@@ -348,3 +368,14 @@ class BookingDetailView(DetailView):
 class BookingCompleteView(DetailView):
     model = Booking
     template_name = "web/booking_complete.html"
+
+
+def ping(request):
+    ''' trigger a celery task and return OK
+    used to test if all is well
+    :param request:
+    :return:
+    '''
+
+    celery_ping.delay()
+    return HttpResponse('OK')

@@ -14,7 +14,7 @@ from __future__ import absolute_import
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
+#TODO: https://github.com/frankwiles/django-app-metrics
 #http://iambusychangingtheworld.blogspot.ie/2013/04/asynchronously-sending-email-using.html
 ''' starting instructions
 rabbitmq-server
@@ -51,6 +51,8 @@ CELERYBEAT_SCHEDULE = {
     },
 }
 
+CELERY_MONITOR_URL = "http://217.115.117.19:5555"
+RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 
 # import djcelery
 # djcelery.setup_loader()
@@ -167,6 +169,7 @@ INSTALLED_APPS = (
     # 'djcelery',
     'djcelery_email',
     'django_twilio',
+    'django_logtail',
     'web',
 )
 
@@ -253,6 +256,11 @@ DATETIME_FORMAT = "D N j, P"
 SHORT_DATE_FORMAT = "a d b"
 TIME_FORMAT = "H:M"
 TASTYPIE_DATETIME_FORMATTING = 'rfc-2822'  # eg.  Fri, 09 Sep 2005 13:51:39 -0700
+
+LOGTAIL_FILES = {
+    'apache': '/var/log/apache2/error.log',
+    'celery': os.path.join(BASE_DIR, 'logs/celery.log'),
+}
 
 LOGGING = {
     'version': 1,

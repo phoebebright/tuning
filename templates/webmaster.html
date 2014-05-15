@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+
+
+    <style>
+        .fc-header-title h2 {
+            font-size: 90%;
+        }
+    </style>
+{% endblock extra_head %}
+{% block main %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <!--notification start-->
+            <section class="panel">
+                <header class="panel-heading">
+                    Last Logins <span class="tools pull-right">
+            <a href="javascript:;" class="fa fa-chevron-down"></a>
+            </span>
+                </header>
+                <div class="panel-body">
+                    <table class="table  table-hover general-table">
+                        <thead>
+                        <tr>
+                            <th> username</th>
+                            <th>Last Login</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        {%  for item in users %}
+                            <tr>
+                                <td>{{ item.username }}</td>
+                                <td>{{ item.last_login|timesince }}</td>
+                            </tr>
+
+                        {% endfor %}
+                </div>
+            </section>
+            <!--notification end-->
+        </div>
+        <div class="col-md-6">
+            <!--todolist start-->
+            <section class="panel">
+                <header class="panel-heading">
+                    Celery/RabbitMQ <span class="tools pull-right">
+            <a href="javascript:;" class="fa fa-chevron-down"></a>
+            </span>
+                </header>
+                <div class="panel-body">
+                    <a href="/ping/" class="btn">Ping Celery</a>
+
+                    <a href="{{ settings.CELERY_MONITOR_URL }}" class="btn">Celery Monitor</a>
+                    <a href="{{ settings.RABBITMQ_MONITOR_URL }}" class="btn">RabbitMq Monitor</a>
+
+                </div>
+            </section>
+            <!--todolist end-->
+        </div>
+    </div>
+
+{% endblock %}

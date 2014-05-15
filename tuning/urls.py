@@ -137,7 +137,8 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/to_paid/$', 'to_paid', name="to_paid"),
                         url(r'^bookings/$', 'bookings_list', name="bookings_list"),
                         url(r'^booking/template/(?P<booking_ref>\w+)/$', 'render_booking_template', name="render_booking_template"),
-
+                        url(r'^webmaster/$', 'webmaster', name='webmaster'),
+                        url(r'^ping/$', 'ping', name='ping'),
                         )
 urlpatterns += patterns('',
                        #login required
@@ -147,6 +148,7 @@ urlpatterns += patterns('',
                        url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
                        url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
+
 
 )
 
