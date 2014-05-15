@@ -390,6 +390,15 @@ class CustomUser(AbstractUser, ModelDiffMixin):
         if self.is_tuner:
             return "{user_id:%s}" % self.id
 
+    @property
+    def last_activity(self):
+
+        items = Log.objects.filter(created_by = self).order_by('-created')
+        if items:
+            return items[0].created
+        else:
+            return None
+
     @classmethod
     def admin_emails(cls):
 
