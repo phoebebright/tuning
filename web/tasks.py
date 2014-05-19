@@ -1,6 +1,7 @@
 from web.models import Booking
 
 from datetime import timedelta
+import imaplib
 
 from celery import task
 
@@ -19,3 +20,4 @@ def check_bookings(a=None,b=None):
 def celery_ping(a=None,b=None):
     print "Pinged"
     logger.info("pinged")
+

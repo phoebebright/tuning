@@ -98,8 +98,9 @@
     {% endif %}
 
 
-    {% if object.status == '2' %}
-        <button id="editable_complete" type="button" class="btn btn-success" >Booking Completed</button>
+    {% if object.status == '3' %}
+        <button id="editable_done" type="button" class="btn btn-success" >Done</button>
+        <button id="editable_complete" type="button" class="btn btn-success" >Completed</button>
         <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
     {% endif %}
 

@@ -504,6 +504,7 @@ class Tuner(CustomUser):
         #TODO: check activity
         return True
 
+
 class BookingsPassThroughManager(PassThroughManager):
 
     def get_queryset(self):
@@ -511,7 +512,6 @@ class BookingsPassThroughManager(PassThroughManager):
 
 
 class BookingsQuerySet(QuerySet):
-
 
 
     def requested(self):
@@ -917,7 +917,9 @@ class Booking(models.Model, ModelDiffMixin):
             self.status = BOOKING_REQUESTED
             self.booked_at = NOW
             self.save()
-            self.send_request()
+
+            # initiate calls to tuners
+            TunerCall.request(self)
 
             # notifications
             msg = "New %s added for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
@@ -1088,7 +1090,9 @@ class Booking(models.Model, ModelDiffMixin):
         if commit:
             status = BOOKING_REQUESTED
 
+
         booking.save()
+
 
         return booking
 
@@ -1211,11 +1215,22 @@ class Booking(models.Model, ModelDiffMixin):
             item.save()
 
 
-    def send_msgs(self, msgs):
 
-      for (subject, message, to_emails) in msgs:
 
-                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, to_emails, fail_silently=True)
+class TunerCallPassThroughManager(PassThroughManager):
+
+    def get_queryset(self):
+        return super(TunerCallPassThroughManager, self).get_queryset()
+
+
+class TunerCallQuerySet(QuerySet):
+
+    def unsent(self):
+        return self.filter(status=CALL_INITIALISING)
+
+    def overdue(self):
+        return self.filter(booking__deadline__gt = NOW).select_related()
+
 
 class TunerCall(models.Model):
 
@@ -1233,8 +1248,11 @@ class TunerCall(models.Model):
     initiated = models.DateTimeField(auto_now_add=True, editable=False)
     called = models.DateTimeField(blank=True, null=True)
     expire_in =  models.PositiveSmallIntegerField(_('Expire in mins after call'), default=5)
-    status = models.CharField(max_length=1, choices=CALL_STATUS, default='P')
+    status = models.CharField(max_length=1, choices=CALL_STATUS, default=CALL_INITIALISING)
     answered = models.DateTimeField(blank=True, null=True)
+
+    objects = TunerCallPassThroughManager.for_queryset_class(TunerCallQuerySet)()
+
 
     def __unicode__(self):
         return "%s re %s" % (self.tuner, self.booking)
@@ -1259,6 +1277,11 @@ class TunerCall(models.Model):
 
         super(TunerCall, self).save(*args, **kwargs)
 
+    @classmethod
+    def request_all(self, booking):
+
+        for tuner in Tuner.objects.filter(active=True):
+            call = TunerCall.objects.create(booking = booking, tuner=tuner)
 
 
     @classmethod
@@ -1269,11 +1292,7 @@ class TunerCall(models.Model):
         tuner = call.get_next_tuner()
         if tuner:
             call.tuner = tuner
-
-            if call.send_request():
-                call.status = CALL_WAITING
         else:
-            call.status = CALL_FAILED
             call.msg_no_tuners()
             print "Failed to send request for booking %s" % self.booking
             raise RequestTunerFailed
@@ -1336,22 +1355,7 @@ class TunerCall(models.Model):
         self.answered = NOW
         self.save()
 
-    def msg_tuner_request(self):
 
-            msg = []
-
-            subject = "Are you available for %s?" % (self.booking.short_description)
-            body = """See full details: %s
-
-            Reply with Yes or No in the subject line.""" % (self.booking.get_absolute_url())
-
-            to = [self.tuner.email,]
-
-            msg.append([subject, body, to])
-            self.booking.send_msgs(msg)
-
-            Log.objects.create(booking=self.booking,
-                                   comment = "Tuner %s requested" % self.tuner)
 
 
     def msg_no_tuners(self):
@@ -1383,6 +1387,13 @@ class TunerCall(models.Model):
 
             msg.append([subject, body, to])
             self.booking.send_msgs(msg)
+
+    def expire(self):
+        self.status = CALL_EXPIRED
+        self.save()
+
+
+
 
 class Log(models.Model):
     """

@@ -248,12 +248,14 @@ class BookingsResource(ModelResource):
         bundle.data['client_id'] = bundle.obj.client_id
 
         if bundle.obj.start_time:
-            bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
+            # bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
+            bundle.data['start'] = bundle.obj.start_time.strftime("%Y-%m-%dT%H:%M")
         else:
             bundle.data['start'] = ''
 
         if bundle.obj.end_time:
-            bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
+            # bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
+            bundle.data['end'] = bundle.obj.end_time.strftime("%Y-%m-%dT%H:%M")
         else:
             bundle.data['end'] = ''
 
@@ -262,7 +264,8 @@ class BookingsResource(ModelResource):
         bundle.data['who'] = bundle.obj.who
 
         if bundle.obj.when:
-            bundle.data['when'] = timezone.localtime(bundle.obj.when)
+            # bundle.data['when'] = timezone.localtime(bundle.obj.when)
+            bundle.data['when'] = bundle.obj.when.strftime("%Y-%m-%dT%H:%M")
         else:
             bundle.data['when'] = ''
 

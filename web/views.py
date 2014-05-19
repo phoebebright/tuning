@@ -379,3 +379,14 @@ def ping(request):
 
     celery_ping.delay()
     return HttpResponse('OK')
+
+
+def check_bookings(request):
+    ''' trigger a celery task and return OK
+    used to test if all is well
+    :param request:
+    :return:
+    '''
+
+    check_bookings.delay()
+    return HttpResponse('OK')

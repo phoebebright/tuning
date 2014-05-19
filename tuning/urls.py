@@ -80,6 +80,13 @@ class DirectTemplateView(TemplateView):
 
 admin.autodiscover()
 
+def is_superuser(user):
+
+    if user and user.username=='pbright':
+        return True
+    else:
+        return False
+
 def is_admin(user):
     if user and user.is_admin:
         return user.is_staff
@@ -119,12 +126,7 @@ urlpatterns = patterns('',
 
                        ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# urlpatterns += required(
-#     is_admin,
-#     patterns('',
-#         (r'^private/', include('admin.urls'))
-#     )
-# )
+
 
 urlpatterns += patterns('web.views',
                         url(r'^$','dashboard' ,name="dashboard"),
@@ -139,7 +141,16 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/template/(?P<booking_ref>\w+)/$', 'render_booking_template', name="render_booking_template"),
                         url(r'^webmaster/$', 'webmaster', name='webmaster'),
                         url(r'^ping/$', 'ping', name='ping'),
+                        url(r'^check_bookings/$', user_passes_test(is_superuser)('check_bookings'), name='check_bookings'),
                         )
+
+
+
+urlpatterns += patterns('web.mail_utils',
+                        url(r'^check_mail/$','read_system_email' ,name="read_system_email"),
+                        url(r'^send_requests/$','send_requests' ,name="send_requests"),
+                        )
+
 urlpatterns += patterns('',
                        #login required
                        #url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),

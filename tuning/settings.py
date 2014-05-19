@@ -1,11 +1,9 @@
 """
-Django settings for tuning project.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/1.6/topics/settings/
-
-For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.6/ref/settings/
+Development decisions:
+1. As far as possible use the api rather than views/django template tags so that it is more
+portable, however, in the interests of getting it done, some template tags are used.
+2. On the django side dates are timezone aware but are always passed to javascript as niave dates
+and it is assumed that dates from javascript are niave.
 """
 from __future__ import absolute_import
 
@@ -170,6 +168,7 @@ INSTALLED_APPS = (
     'djcelery_email',
     'django_twilio',
     'django_logtail',
+    'email_log',
     'web',
 )
 
@@ -222,6 +221,9 @@ USE_TZ = True
 SITE_ID = 1
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
+EMAIL_LOG_BACKEND = 'yourapp.backends.YourCustomEmailBackend'
+CELERY_EMAIL_BACKEND = 'email_log.backends.EmailBackend'
+
 
 AUTHENTICATION_BACKENDS = (
     'web.models.CustomAuth',
@@ -235,6 +237,7 @@ FAKEDATE_FILE = "fakedate.txt"
 USE_FAKEDATES = False
 
 # time in minutes to make each appointment unless specified
+DEFAULT_DEADLINE_TIME = "09:00"
 DEFAULT_SLOT_TIME = 60
 MAX_BOOK_DAYS_IN_ADVANCE = 380
 SLA_ASSIGN_TUNER = 60   # minutes to assign tuner

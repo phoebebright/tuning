@@ -118,6 +118,15 @@ class BookingTest(TestCase):
         self.a2 = Activity.objects.get(name="Repair")
 
 
+    def test_dates(self):
+        """
+        check that dates/times remain correct as they are created, saved and updated
+        """
+        settings.DEFAULT_DEADLINE_TIME = "09:00"
+        settings.TIME_ZONE = 'US/Eastern'
+
+        # a new booking is created
+
     def test_refs(self):
         """
         a temporary ref is created when a new bookings is being added from a form in order to be able

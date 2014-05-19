@@ -83,3 +83,16 @@ class InvalidBookingForCall(ModelException):
     '''
     txtMessage = 'Expecting booking to have Requested status but it does not '
     errorCode = 110
+
+
+
+
+
+
+
+class GettingMailError(ModelException):
+    '''
+    Couldnt find a user "system" in the user table
+    '''
+    txtMessage = 'Error getting data from mailbox '
+    errorCode = 201

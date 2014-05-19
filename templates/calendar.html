@@ -18,6 +18,9 @@
             color: white;
         }
 
+        .selected {
+            background-color: black;
+        }
     #clock {
         width: 300px;
         height: 300px;
@@ -256,6 +259,42 @@
 
     }
 
+    function refresh_event(eventid, eventref) {
+        // reget data and redisplay on calendar
+        // generally called after an update
+
+
+        $.ajax({
+            type: "get",
+            url: API + "bookings",
+            data: {
+                ref: eventref,
+                limit: 1},
+            dataType: 'json',
+            success: function (json) {
+                var d = json.objects[0];
+
+                $('#calendar').fullCalendar('renderEvent', {
+                    id: eventid,
+                    start: moment(d.start),
+                    end: moment(d.end),
+                    className: "booking_status_" + d['status']
+                }, true);
+
+            }
+        });
+    }
+
+    function close_form() {
+        // hide form
+        $("#booking_row").slideUp();
+
+        //refresh event on calendar
+        var eventid = $("#editform").data('eventid');
+        var eventref = $("#editform").data('eventref');
+        refresh_event(eventid, eventref);
+    }
+
     function load_booking(event) {
 
         // get full details
@@ -267,7 +306,7 @@
                 limit:0},
             dataType : 'json',
             success:function(json){
-                populate_form(json.objects[0], event.id);
+                populate_form(json.objects[0], event._id);
             }
         });
     }
@@ -331,8 +370,10 @@
         // create new form in div
         $("#booking_edit").html(object.template);
 
-        // save event id from calendar
-        $("#editform").attr("data-eventid", eventid )
+        // save event id from calendar and ref of object
+        $("#editform")
+                .attr("data-eventid", eventid )
+                .attr("data-eventref", object.ref );
 
         // add classes
         $("#booking_edit").attr("class", 'panel-body booking_status_'+object.status);
@@ -429,7 +470,7 @@
                 dataType : 'json',
                 success:function(json){
 
-                    $("#booking_row").slideUp();
+                    close_form();
 
 
                 }
@@ -439,7 +480,7 @@
         $("#editable_done").on("click", function() {
             // nothing to do as everything saved already
 
-            $("#booking_row").slideUp();
+            close_form();
 
         });
 
@@ -452,8 +493,8 @@
                 data: {ref: object.ref,  value:"{{ request.user.id }}"},
                 dataType : 'json',
                 success:function(json){
-
-                    $("#booking_row").slideUp();
+                    //TOOD: work out how to return updated object so can pass into close_form
+                    close_form();
 
 
                 }
@@ -476,7 +517,7 @@
                     data: {pk: object.ref, value:"{{ request.user.id }}"},
                     dataType : 'json',
                     success:function(json){
-                        $("#booking_row").slideUp();
+                        close_form();
 
                         var eventid = $("#editform").attr("data-eventid");
                         // remove from calendar
