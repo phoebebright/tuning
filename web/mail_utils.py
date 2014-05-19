@@ -151,7 +151,9 @@ def send_requests(request=None):
             name, domain = settings.DEFAULT_FROM_EMAIL.split('@')
             from_email = "%s+%s@%s" % (name, item.booking.ref, domain)
 
-            send_mail(subject, body, from_email, [item.tuner.email,], fail_silently=True)
+            to_email = "phoebebright310+%s@gmail.com" % ( item.booking.ref)
+
+            send_mail(subject, body, from_email, [to_email,], fail_silently=True)
 
 
 def expire_overdue_calls(request=None):
