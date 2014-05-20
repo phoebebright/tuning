@@ -35,6 +35,7 @@ from datetime import datetime, timedelta, date
 import json
 
 from web.tasks import *
+from web.mail_utils import check_mail, send_requests
 
 #App
 from web.models import *
@@ -157,6 +158,9 @@ def bookings_list(request):
 
 @login_required()
 def dashboard(request):
+
+    check_mail()
+    send_requests()
 
     if request.user.is_admin:
         template = "index_admin.html"

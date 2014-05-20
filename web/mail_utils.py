@@ -119,7 +119,7 @@ class MailBox(object):
         self.imap.expunge()
 
 
-def read_system_email(request):
+def check_mail(request):
 
    with MailBox("system@tunemypiano.co.uk", "Hg76bbqq") as mbox:
         print mbox.get_count()
@@ -151,7 +151,7 @@ def send_requests(request=None):
             name, domain = settings.DEFAULT_FROM_EMAIL.split('@')
             from_email = "%s+%s@%s" % (name, item.booking.ref, domain)
 
-            to_email = "phoebebright310+%s@gmail.com" % ( item.booking.ref)
+            to_email = "phoebebright310@gmail.com"
 
             send_mail(subject, body, from_email, [to_email,], fail_silently=True)
 

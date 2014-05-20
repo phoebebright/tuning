@@ -147,7 +147,7 @@ urlpatterns += patterns('web.views',
 
 
 urlpatterns += patterns('web.mail_utils',
-                        url(r'^check_mail/$','read_system_email' ,name="read_system_email"),
+                        url(r'^check_mail/$','check_mail' ,name="check_mail"),
                         url(r'^send_requests/$','send_requests' ,name="send_requests"),
                         )
 
