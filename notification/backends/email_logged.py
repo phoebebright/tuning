@@ -20,6 +20,12 @@ class EmailLoggedBackend(backends.BaseBackend):
         # TODO: require this to be passed in extra_context
         from notification.models import EmailLog
 
+
+        if sender == None:
+            from web.models import system_user
+            sender = system_user()
+
+
         context = self.default_context()
         context.update({
             "recipient": recipient,
@@ -42,13 +48,11 @@ class EmailLoggedBackend(backends.BaseBackend):
         }, context)
 
 
-        if sender == None:
-            sender = settings.DEFAULT_FROM_EMAIL
 
 
         # add to log file
         email = EmailLog.objects.create(
-               from_email = sender,
+               from_email = sender.email,
                recipient = recipient,
                subject = subject,
                body = body,

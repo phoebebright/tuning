@@ -144,6 +144,9 @@ class EmailLog(models.Model):
         if self.recipient and not self.to_email:
             self.to_email = self.recipient.email
 
+        if not self.from_email:
+            self.from_email = settings.DEFAULT_FROM_EMAIL
+
         super(EmailLog, self).save(*args, **kwargs)
 
 
