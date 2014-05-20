@@ -719,7 +719,8 @@ class Booking(models.Model, ModelDiffMixin):
 
     @property
     def short_description(self):
-        return "%s at %s on %s at %s" % (self.activity, self.studio, formats.date_format(self.when, "SHORT_DATE_FORMAT"), formats.date_format(self.when, "TIME_FORMAT"))
+
+        return "%s at %s on %s at %s" % (self.activity, self.studio, formats.date_format(self.when, "SHORT_DATE_FORMAT"), formats.time_format(self.when, "TIME_FORMAT"))
 
     def description_for_user(self, user):
         '''
@@ -918,13 +919,14 @@ class Booking(models.Model, ModelDiffMixin):
             self.booked_at = NOW
             self.save()
 
-            # initiate calls to tuners
-            TunerCall.request(self)
+            # initiate calls to tuners if there is time
+            if not self.tuner and self.deadline > NOW:
+                TunerCall.request(self)
 
 
-            # notifications
-
-            notification.send([self.booker,], "booking_requested", {"booking": self,
+            # notifications - don't send if booking is past
+            if self.deadline > NOW:
+                notification.send([self.booker,], "booking_requested", {"booking": self,
                    "description": self.description_for_user(self.booker)
             })
 

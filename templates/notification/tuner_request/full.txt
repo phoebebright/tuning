@@ -1,4 +1,4 @@
-See full details: {{ booking.get_absolute_url }}
+See full details: {{ current_site.domain }}{{ booking.get_absolute_url }}
 
 Reply with Yes or No as the first line in the email body.
 
