@@ -29,7 +29,7 @@ from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
 from model_utils.managers import QueryManager, PassThroughManager
 
-
+from notification import models as notification
 from libs.utils import make_time, is_list, add_tz
 from web.exceptions import *
 
@@ -921,10 +921,14 @@ class Booking(models.Model, ModelDiffMixin):
             # initiate calls to tuners
             TunerCall.request(self)
 
-            # notifications
-            msg = "New %s added for %s for %s with ref %s" % (self.activity.name, self.client, self.deadline.strftime("%a %d %B at %H:%m"), self.ref)
 
-            self.log(comment=msg, user=user, type='CREATE')
+            # notifications
+            to_emails = set(settings.NOTIFY_BOOKINGS)
+            to_emails.add(self.booker.email)
+
+            notification.send(list(to_emails), "booking_requested", {"booking": self})
+
+
 
 
 

@@ -119,7 +119,7 @@ class MailBox(object):
         self.imap.expunge()
 
 
-def check_mail(request):
+def check_mail(request=None):
 
    with MailBox("system@tunemypiano.co.uk", "Hg76bbqq") as mbox:
         print mbox.get_count()

@@ -78,6 +78,7 @@ SITE_ID = 1
 ADMINS = (
      ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
+NOTIFY_BOOKINGS = ['phoebebright310+notifybook@gmail.com',]
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'site_media')
 MEDIA_URL = '/site_media/'
@@ -167,6 +168,7 @@ INSTALLED_APPS = (
     'django_cron',
     'theme',  # holds themeforest template static files
     'django_gravatar',
+    'notification',
     # 'djcelery',
     #'djcelery_email',
     'django_twilio',
