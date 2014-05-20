@@ -925,7 +925,7 @@ class Booking(models.Model, ModelDiffMixin):
             # notifications
             to_emails = set(settings.NOTIFY_BOOKINGS)
             to_emails.add(self.booker.email)
-
+            print to_emails
             notification.send(list(to_emails), "booking_requested", {"booking": self})
 
 
