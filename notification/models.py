@@ -2,15 +2,19 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import base64
+import datetime
 
 from django.db import models
 from django.db.models.query import QuerySet
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import send_mail
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import get_language, activate
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.six.moves import cPickle as pickle  # pylint: disable-msg=F
+
+
 
 from .compat import AUTH_USER_MODEL
 
@@ -97,7 +101,6 @@ class NoticeSetting(models.Model):
 
     @classmethod
     def for_user(cls, user, notice_type, medium):
-        print user
         try:
             return cls._default_manager.get(user=user, notice_type=notice_type, medium=medium)
         except cls.DoesNotExist:
@@ -114,6 +117,47 @@ class NoticeQueueBatch(models.Model):
     """
     pickled_data = models.TextField()
 
+
+class EmailLog(models.Model):
+
+
+    from_email = models.EmailField(_("From"))
+    to_email =  models.EmailField(_("To"))
+    recipient = models.ForeignKey(AUTH_USER_MODEL, blank=True,  null=True)
+
+    subject = models.TextField(_("subject"))
+    body = models.TextField(_("body"))
+    attempts = models.PositiveSmallIntegerField(default=0)
+    date_sent = models.DateTimeField(_("date sent"), auto_now_add=True,
+                                     db_index=True)
+
+    def __str__(self):
+        return "{s.recipients}: {s.subject}".format(s=self)
+
+    class Meta:
+        ordering = ('-id',)
+
+
+    def save(self, *args, **kwargs):
+
+        # auto populate to_email form user if not already specified
+        if self.recipient and not self.to_email:
+            self.to_email = self.recipient.email
+
+        super(EmailLog, self).save(*args, **kwargs)
+
+
+
+    def send(self):
+
+        try:
+            self.attempts += 1
+            self.save()
+            send_mail(self.subject, self.body, self.from_email, [self.recipient, ])
+            self.date_sent=datetime.now()
+            self.save()
+        except:
+            pass
 
 def get_notification_language(user):
     """

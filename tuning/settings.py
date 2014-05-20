@@ -57,7 +57,11 @@ RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 BROKER_URL = "amqp://guest:guest@localhost:5672/"
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
-EMAIL_BACKEND = 'email_log.backends.EmailBackend'
+
+NOTIFICATION_BACKENDS = [
+    ("email", "notification.backends.email_logged.EmailLoggedBackend"),
+]
+
 #CELERY_EMAIL_BACKEND = 'email_log.backends.EmailBackend'
 
 # Quick-start development settings - unsuitable for production
@@ -172,7 +176,7 @@ INSTALLED_APPS = (
     #'djcelery_email',
     'django_twilio',
     'django_logtail',
-    'email_log',
+
     'web',
 )
 
