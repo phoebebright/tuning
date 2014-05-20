@@ -153,6 +153,7 @@ def send_requests(request=None):
 
             to_email = "phoebebright310@gmail.com"
 
+            print "sending email to "+to_email
             send_mail(subject, body, from_email, [to_email,], fail_silently=True)
 
 
