@@ -151,8 +151,9 @@ def send_requests(request=None):
             name, domain = settings.DEFAULT_FROM_EMAIL.split('@')
             from_email = "%s+%s@%s" % (name, item.booking.ref, domain)
 
-            to_email = "phoebebright310+%s@gmail.com" % ( item.booking.ref)
+            to_email = "phoebebright310+b_%s@gmail.com" % ( item.booking.ref)
 
+            print "sending email to "+to_email
             send_mail(subject, body, from_email, [to_email,], fail_silently=True)
 
 

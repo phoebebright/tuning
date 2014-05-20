@@ -1266,10 +1266,10 @@ class TunerCall(models.Model):
     @transaction.atomic()
     def save(self, *args, **kwargs):
 
-        if self.booking.status != BOOKING_REQUESTED:
-            raise InvalidBookingForCall
+    
 
         #if not self.id:
+        #TODO: if creating this call and booking is not requested, the don't create it.
             #expire any (should only be 1!) calls
             # for item in TunerCall.objects.filter(booking = self.booking, status=CALL_WAITING):
             #     item.status = CALL_EXPIRED

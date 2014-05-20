@@ -165,7 +165,7 @@ INSTALLED_APPS = (
     'theme',  # holds themeforest template static files
     'django_gravatar',
     # 'djcelery',
-    'djcelery_email',
+    #'djcelery_email',
     'django_twilio',
     'django_logtail',
     'email_log',
@@ -221,8 +221,8 @@ USE_TZ = True
 SITE_ID = 1
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
-EMAIL_LOG_BACKEND = 'yourapp.backends.YourCustomEmailBackend'
-CELERY_EMAIL_BACKEND = 'email_log.backends.EmailBackend'
+EMAIL_BACKEND = 'email_log.backends.EmailBackend'
+#CELERY_EMAIL_BACKEND = 'email_log.backends.EmailBackend'
 
 
 AUTHENTICATION_BACKENDS = (
