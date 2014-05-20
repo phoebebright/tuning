@@ -10,6 +10,7 @@ if "notification" in settings.INSTALLED_APPS:
 
     def create_notice_types(app, created_models, verbosity, **kwargs):
         notification.create_notice_type("booking_requested", _("New Booking Requested"), _("New Booking Requested"))
+        notification.create_notice_type("tuner_request", _("Can you tune?"), _("Can you tune?"))
 
     signals.post_syncdb.connect(create_notice_types, sender=notification)
 else:

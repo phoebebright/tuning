@@ -925,7 +925,7 @@ class Booking(models.Model, ModelDiffMixin):
             # notifications
 
             notification.send([self.booker,], "booking_requested", {"booking": self,
-                                                                    "description": self.description_for_user(self.booker)
+                   "description": self.description_for_user(self.booker)
             })
 
 
@@ -1185,16 +1185,7 @@ class Booking(models.Model, ModelDiffMixin):
             self.save()
             self.log(comment="client unmakred as paid", type="UNCLIENT_PAID")
 
-    def send_request(self):
-        # schedule email http://www.cucumbertown.com/craft/scheduling-morning-emails-with-django-and-celery/
-        subject = "Can you tune for %s between %s and %s" % (self.client.name, self.start_time, self.end_time)
-        message = "To Tune %s in %s for session %s starting at %s" % (self.instrument, self.studio, self.client_id, self.deadline)
-        to_email = "phoebebright310@gmail.com"
-        from_email = "tuning@trialflight.com"
 
-
-
-        send_mail(subject, message, from_email, [to_email,], fail_silently=True)
 
 
 
@@ -1270,16 +1261,14 @@ class TunerCall(models.Model):
     @transaction.atomic()
     def save(self, *args, **kwargs):
 
-    
-
-        #if not self.id:
-        #TODO: if creating this call and booking is not requested, the don't create it.
-            #expire any (should only be 1!) calls
-            # for item in TunerCall.objects.filter(booking = self.booking, status=CALL_WAITING):
-            #     item.status = CALL_EXPIRED
-            #     item.save()
+        if  self.tuner and not self.called:
+            notification.send([self.tuner,], "tuner_request", {"booking": self.booking,
+               "description": self.booking.description_for_user(self.tuner)
+            })
+            self.called = NOW
 
         super(TunerCall, self).save(*args, **kwargs)
+
 
     @classmethod
     def request_all(self, booking):
@@ -1327,13 +1316,6 @@ class TunerCall(models.Model):
         :return:list of tuner ids that have already been called for this booking
         '''
         return TunerCall.objects.filter(booking=self.booking).values_list('tuner',).exclude(tuner__isnull=True)
-
-    def send_request(self):
-
-        self.msg_tuner_request()
-        self.called = NOW
-        self.save()
-        return True
 
 
     @transaction.atomic()

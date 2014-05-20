@@ -1,0 +1,1 @@
+New booking {{ booking.short_description }} created

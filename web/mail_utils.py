@@ -142,19 +142,10 @@ def send_requests(request=None):
         elif not item.tuner:
             item.expire()
         else:
+            #TODO: just trying to get basic notifications working for now
+            pass
 
-            subject = "Are you available for %s?" % (item.booking.short_description)
-            body = """See full details: %s
 
-            Reply with Yes or No in the subject line.""" % (item.booking.get_absolute_url())
-
-            name, domain = settings.DEFAULT_FROM_EMAIL.split('@')
-            from_email = "%s+%s@%s" % (name, item.booking.ref, domain)
-
-            to_email = "phoebebright310@gmail.com"
-
-            print "sending email to "+to_email
-            send_mail(subject, body, from_email, [to_email,], fail_silently=True)
 
 
 def expire_overdue_calls(request=None):
