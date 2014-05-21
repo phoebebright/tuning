@@ -20,6 +20,8 @@ def add_stuff(request):
     context['YESTERDAY'] = context['TODAY'] - timedelta(days = 1)
     context['TOMORROW'] = context['TODAY'] + timedelta(days = 1)
 
+    context['DEFAULT_DEADLINE_TIME'] = settings.DEFAULT_DEADLINE_TIME.replace(':','')
+
     #TODO: optimise these calls they are calling custmuser for every record
     #TODO: try specifying values requred
 

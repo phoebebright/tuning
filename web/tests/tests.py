@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 
 from web.models import *
+from web.views import bookings_add
 from web.exceptions import *
 from web.management.test_data import *
 
@@ -410,6 +411,20 @@ class BookingTest(TestCase):
         self.assertTrue(book.status, "9")
         self.assertTrue(book.has_provider_paid)
         self.assertTrue(book.has_client_paid)
+
+
+    # def test_time(self):
+    #
+    #     # a naive datetime is passed to add booking
+    #     # check that this is correctly converted to tz aware
+    #
+    #     self.client.login(username=self.freda, password='pass')
+    #     deadline = '201401011200'
+    #     deadline_tz = timezone.localtime(datetime(2014,1,1,12,0).replace(tzinfo=timezone.utc))
+    #     booking = bookings_add('', self.t1.id, deadline)
+    #
+    #     self.assertEqual(booking.deadline, deadline_tz)
+
 
 
 def roundTime(dt=None, roundTo=60):

@@ -25,8 +25,7 @@ User = get_user_model()
 
 
 '''
-NOTE: TIMEZONE handling = model.py deals in timezone aware dates, the tempalates will automatically display local
-datetimes.  In the API all times need to be converted to local or passed as timezone aware
+NOTE: TIMEZONE handling = None!
 '''
 class urlencodeSerializer(Serializer):
     #http://stackoverflow.com/questions/14074149/tastypie-with-application-x-www-form-urlencoded
@@ -57,8 +56,9 @@ class CustomSerializer(Serializer):
     Output TZ aware string
     """
     def format_datetime(self, data):
-        # If naive or rfc-2822, default behavior...
-        return arrow.get(data).naive
+        dt = timezone.localtime(data)
+        return super(CustomSerializer, self).format_datetime(dt)
+
 
 class SimpleObject(object):
     def __init__(self, id=None, name=None, value=None):
@@ -224,7 +224,6 @@ class BookingsResource(ModelResource):
         queryset = Booking.objects.current()
         include_resource_uri = True
         resource_name = 'bookings'
-        serializer = CustomSerializer()
         allowed_methods = ['get']
         limit = 0
         fields = ['ref','requested_from','requested_to','studio','instrument', 'status', 'deadline','client',
@@ -248,14 +247,12 @@ class BookingsResource(ModelResource):
         bundle.data['client_id'] = bundle.obj.client_id
 
         if bundle.obj.start_time:
-            # bundle.data['start'] = timezone.localtime(bundle.obj.start_time)
-            bundle.data['start'] = bundle.obj.start_time.strftime("%Y-%m-%dT%H:%M")
+            bundle.data['start'] = bundle.obj.start_time
         else:
             bundle.data['start'] = ''
 
         if bundle.obj.end_time:
-            # bundle.data['end'] = timezone.localtime(bundle.obj.end_time)
-            bundle.data['end'] = bundle.obj.end_time.strftime("%Y-%m-%dT%H:%M")
+            bundle.data['end'] = bundle.obj.end_time
         else:
             bundle.data['end'] = ''
 
@@ -264,8 +261,8 @@ class BookingsResource(ModelResource):
         bundle.data['who'] = bundle.obj.who
 
         if bundle.obj.when:
-            # bundle.data['when'] = timezone.localtime(bundle.obj.when)
-            bundle.data['when'] = bundle.obj.when.strftime("%Y-%m-%dT%H:%M")
+
+            bundle.data['when'] = bundle.obj.when
         else:
             bundle.data['when'] = ''
 
@@ -680,7 +677,7 @@ class RecentBookingsResource(ModelResource):
     def dehydrate(self, bundle):
         bundle.data['status_display'] = bundle.obj.get_status_display()
         bundle.data['who'] = bundle.obj.who
-        bundle.data['when'] = timezone.localtime(bundle.obj.when)
+        bundle.data['when'] = bundle.obj.when
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
@@ -702,7 +699,7 @@ class RequestedBookingsResource(ModelResource):
     def dehydrate(self, bundle):
         bundle.data['status_display'] = bundle.obj.get_status_display()
         bundle.data['who'] = ''
-        bundle.data['when'] = timezone.localtime(bundle.obj.when)
+        bundle.data['when'] = bundle.obj.when
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
         bundle.data['activity'] = bundle.obj.activity.name
@@ -726,9 +723,9 @@ class AcceptedBookingsResource(ModelResource):
 
     def dehydrate(self, bundle):
 
-        bundle.data['booked_time'] = timezone.localtime(bundle.obj.booked_time)
+        bundle.data['booked_time'] = bundle.obj.booked_time
         bundle.data['who'] = ''
-        bundle.data['when'] = timezone.localtime(bundle.obj.when)
+        bundle.data['when'] = bundle.obj.when
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
         bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
@@ -945,7 +942,6 @@ class LogResource(ModelResource):
 
 
     def dehydrate(self, bundle):
-        bundle.data['created'] = timezone.localtime(bundle.obj.created)
         bundle.data['booking_url'] = bundle.obj.booking.get_absolute_url()
         bundle.data['booking_ref'] = bundle.obj.booking.ref
         bundle.data['long_heading'] = bundle.obj.booking.long_heading

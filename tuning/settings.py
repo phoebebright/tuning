@@ -231,13 +231,13 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-uk'
 
-TIME_ZONE = 'Europe/London'
+TIME_ZONE = 'UTC'
 
 USE_I18N = False
 
 USE_L10N = False
 
-USE_TZ = True
+USE_TZ = False
 
 SITE_ID = 1
 
@@ -276,7 +276,7 @@ TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
 DATETIME_FORMAT = "D j N at P"
 SHORT_DATE_FORMAT = "D j N"
 TIME_FORMAT = "P"
-TASTYPIE_DATETIME_FORMATTING = 'rfc-2822'  # eg.  Fri, 09 Sep 2005 13:51:39 -0700
+TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',

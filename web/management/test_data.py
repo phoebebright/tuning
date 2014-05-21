@@ -49,7 +49,7 @@ def base_data(request=None):
     tstp=Provider.objects.create(name="Test Provider", test=True)
 
     # Users
-    su=User.objects.create_superuser('system','system@gmail.com','pass')
+    #su=User.objects.create_superuser('system','system@gmail.com','pass')
     su=User.objects.create_superuser('ajs','phoebebright310+asj@gmail.com','pass')
 
     u = Booker.objects.create_user('fredA', 'phoebebright310+freda@gmail.com', 'pass')

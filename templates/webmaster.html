@@ -28,7 +28,13 @@
                     <a href="{{ CELERY_MONITOR_URL }}" class="btn">Celery Monitor</a>
                     <a href="{{ RABBITMQ_MONITOR_URL }}" class="btn">RabbitMq Monitor</a>
                     <a href="/admin/django_logtail/log/" class="btn">Log Files</a>
-
+                    <hr />
+                    <h5>Starting Celery Manually</h5>
+                    <code>
+sh -x /etc/init.d/celeryd start
+sh -x /etc/init.d/celerybeat start
+celery flower
+                    </code>
                 </div>
             </section>
         </div>

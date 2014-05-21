@@ -13,7 +13,10 @@ def now():
     if settings.USE_FAKEDATES:
         return getnow()
     else:
-        return datetime.utcnow().replace(tzinfo=utc)
+        if settings.USE_TZ:
+            return datetime.utcnow().replace(tzinfo=utc)
+        else:
+            return datetime.now()
 
 
 def setnow(settotime):

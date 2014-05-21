@@ -170,6 +170,7 @@
 
 
         $('#calendar').fullCalendar({
+            timezone: false,
             firstDay:1,
             defaultView: calendarView,
             slotDuration: "1:00",
@@ -218,6 +219,8 @@
 
             },
             events:{
+                // awful time trying to get calendar to display proper time...
+                ignoreTimezone:true,
                 type:"get",
                 url:API+"bookings",
                 data: {
@@ -228,8 +231,8 @@
                     // convert dates to moment objects
                     data = new Array();
                     $.each(json.objects, function(i,d) {
-                        d['start'] = moment(d.start);
-                        d['end'] = moment(d.end);
+                        d['start'] = moment.utc(d.start);
+                        d['end'] = moment.utc(d.end);
                         d['className'] = "booking_status_"+d['status'];
 
                         data.push(d);
@@ -328,7 +331,7 @@
         var view = $('#calendar').fullCalendar('getView');
         var deadline = "";  // date as string - no spaces/punctuation
         if (view.name == "month") {
-            deadline = date.format("YYYYMMDD") + "1200";
+            deadline = date.format("YYYYMMDD") + "{{ DEFAULT_DEADLINE_TIME }}";
         } else {
             deadline = date.format("YYYYMMDDHHmm");
         }

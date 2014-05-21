@@ -100,3 +100,5 @@ class SimpleTest(TestCase):
         self.client.login(username='system', password='pass')
         response = self.client.get(reverse('bookings_list'))
         self.assertEqual(response.status_code, 200)
+
+

@@ -1038,7 +1038,7 @@ class Booking(models.Model, ModelDiffMixin):
                 deadline = datetime.combine(deadline, time(23, 59))
 
             # ensure deadline is timezone aware
-            deadline = add_tz(deadline)
+            # deadline = add_tz(deadline)
 
 
             if deadline > from_time and deadline < to_time:
