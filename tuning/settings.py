@@ -56,16 +56,19 @@ RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 # djcelery.setup_loader()
 BROKER_URL = "amqp://guest:guest@localhost:5672/"
 
-DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 
 NOTIFICATION_BACKENDS = [
     ("email", "notification.backends.email_logged.EmailLoggedBackend"),
 ]
 
-#CELERY_EMAIL_BACKEND = 'email_log.backends.EmailBackend'
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
+DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+'''
+EMAIL_HOST = "mail.beautifuldata.ie"
+EMAIL_PORT = "25"
+EMAIL_HOST_USER = "test@beautifuldata.ie"
+EMAIL_HOST_PASSWORD = "cabbage123"
+'''
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '$5n73rcxx(nk#4ix92rbia%zd-x^^4g&gwnx=9!1o_j%9_aue@'
