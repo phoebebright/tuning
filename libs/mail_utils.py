@@ -8,7 +8,7 @@ from django.conf import settings
 
 from web.models import TunerCall, BOOKING_REQUESTED
 
-from exceptions import GettingMailError
+from web.exceptions import GettingMailError
 
 """MailBox class for processing IMAP email.
 

@@ -122,6 +122,7 @@ urlpatterns = patterns('',
                        #                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
 
 
+                       url(r'^monitor/', include('email_monitor.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
                        ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
@@ -146,7 +147,7 @@ urlpatterns += patterns('web.views',
 
 
 
-urlpatterns += patterns('web.mail_utils',
+urlpatterns += patterns('libs.mail_utils',
                         url(r'^check_mail/$','check_mail' ,name="check_mail"),
                         url(r'^send_requests/$','send_requests' ,name="send_requests"),
                         )

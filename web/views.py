@@ -35,7 +35,7 @@ from datetime import datetime, timedelta, date
 import json
 
 from web.tasks import *
-from web.mail_utils import check_mail, send_requests
+from libs.mail_utils import check_mail, send_requests
 
 #App
 from web.models import *

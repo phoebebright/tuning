@@ -70,6 +70,9 @@ EMAIL_HOST_USER = "test@beautifuldata.ie"
 EMAIL_HOST_PASSWORD = "cabbage123"
 '''
 
+MONITOR_IMAP_SERVER = "mail.tunemypiano.co.uk"
+MONITOR_IMAP_PASSWORD = "Hg76bbqq"
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '$5n73rcxx(nk#4ix92rbia%zd-x^^4g&gwnx=9!1o_j%9_aue@'
 
@@ -179,7 +182,7 @@ INSTALLED_APPS = (
     #'djcelery_email',
     'django_twilio',
     'django_logtail',
-
+    'email_monitor',
     'web',
 )
 
