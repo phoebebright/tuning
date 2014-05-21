@@ -45,7 +45,14 @@ CELERYBEAT_SCHEDULE = {
     'check-bookings-to-complete': {
         'task': 'web.tasks.check_bookings',
         'schedule': crontab(),    # every n minutes crontab(minute='*/15')
-        'args': (1,2),
+    },
+    'email-monitor-send': {
+        'task': 'email_monitor.tasks.send',
+        'schedule': crontab(5),
+    },
+    'email-monitor-check': {
+        'task': 'email_monitor.tasks.check',
+        'schedule': crontab(1),
     },
 }
 

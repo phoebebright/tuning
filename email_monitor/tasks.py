@@ -15,6 +15,5 @@ def send(*args, **kwargs):
 
 @task
 def check(*args, **kwargs):
-    print "Pinged"
-    logger.info("pinged")
+    Monitor.check()
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 
 from django.db import models
 from django.conf import settings
@@ -22,7 +22,18 @@ MONITOR_IMAP_PASSWORD = getattr(settings, "MONITOR_IMAP_PASSWORD", None)
 SUBJECT_LINE = "Email Monitor Check Mail"
 
 assert MONITOR_IMAP_SERVER and MONITOR_IMAP_PASSWORD, "Add MONITOR_IMAP_SERVER and MONITOR_IMAP_PASSwORD to settings.py"
+assert settings.CELERYBEAT_SCHEDULE, "Celery and Celerybeat need to be setup with the Schedule in SETTINGS.Py"
+assert settings.CELERYBEAT_SCHEDULE.has_key('email-monitor-send'), """Add task to CELERYBEAT_SCHEDULE:
+   'email-monitor-send': {
+        'task': 'email_monitor.tasks.send',
+        'schedule': crontab(5),
+    },"""
 
+assert settings.CELERYBEAT_SCHEDULE.has_key('email-monitor-check'), """Add task to CELERYBEAT_SCHEDULE:
+   'email-monitor-check': {
+        'task': 'email_monitor.tasks.check',
+        'schedule': crontab(1),
+    },"""
 
 
 class Monitor(models.Model):
@@ -54,26 +65,33 @@ class Monitor(models.Model):
     def check(cls):
 
         with MailBox(MONITOR_TO_EMAIL, MONITOR_IMAP_PASSWORD) as mbox:
+
+            # get messages that have the expected subject line
+            # and return a list of tuples [msg num, id from message body]
             msgs = mbox.get_msgs()
 
-            for item in msgs:
-
-                body = email.message_from_string(msgs[0][1])
-                print body
+            for (num, id) in msgs:
+                if Monitor.match(id):
+                    mbox.delete_message(num)
 
 
     @classmethod
     def match(cls, id):
-            try:
-                matched = cls.objects.get(id=id, received__isnull=True)
-                matched.received = datetime.now()
-                seconds = (matched.received - matched.sent).seconds
-                matched.save()
-            except cls.DoesNotExist:
-                print "Email Monitor unable to match id %s"  % id
-                pass
+        ''' try to match the id from the email with a Monitor record
+        :param id: id to be matched
+        :return: True if success in matching
+        '''
+        try:
+            matched = cls.objects.get(id=id, received__isnull=True)
+            matched.received = timezone.now()
+            matched.seconds = (matched.received - matched.sent).seconds
+            matched.save()
+            return True
+        except cls.DoesNotExist:
+            print "Email Monitor unable to match id %s"  % id
+            return False
 
-
+        return False
 
 
 class MailBox(object):
@@ -100,15 +118,18 @@ class MailBox(object):
         return sum(1 for num in data[0].split())
 
     def get_msgs(self):
-        self.imap.select('Inbox')
-        status, data = self.imap.search(None, 'ALL')
 
         msgs = []
-        for num in reversed(data[0].split()):
-            #status, data = self.imap.fetch(num, '(RFC822)')
-            status, data = self.imap.search(None, '(SUBJECT "%s")' % SUBJECT_LINE)
-            if status == 'OK':
-                msgs.append(data)
+        self.imap.select('Inbox')
+        status, data = self.imap.search(None, '(SUBJECT "%s")' % SUBJECT_LINE)
+        if status == 'OK':
+
+            for num in reversed(data[0].split()):
+                    msg = self.fetch_message(num)
+                    try:
+                        msgs.append([num, msg._payload.split()[1]])
+                    except:
+                        pass
 
         return msgs
 
