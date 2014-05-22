@@ -1231,7 +1231,7 @@ class TunerCallQuerySet(QuerySet):
 
 class TunerCall(models.Model):
 
-
+    #TODO: delete tunercall relating to booking when booking is deleted (as opposed to cancelled)
     CALL_STATUS = ((CALL_INITIALISING, 'Initialising'),
                    (CALL_WAITING, 'Pending'),
                    (CALL_REJECTED, 'Rejected'),

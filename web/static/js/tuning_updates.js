@@ -328,7 +328,6 @@ function update_events() {
         e.stopPropagation();
         if (window.confirm("Are you sure you want to cancel this booking?")) {
 
-
             var ref = this.dataset['pk'];
 
             $.ajax({
@@ -339,6 +338,7 @@ function update_events() {
                 dataType : 'json',
                 success:function(json){
                     location.reload();
+
                 }
 
             });

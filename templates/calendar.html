@@ -221,6 +221,7 @@
             events:{
                 // awful time trying to get calendar to display proper time...
                 ignoreTimezone:true,
+                //currentTimezone: 'Europe/London',
                 type:"get",
                 url:API+"bookings",
                 data: {
@@ -231,6 +232,7 @@
                     // convert dates to moment objects
                     data = new Array();
                     $.each(json.objects, function(i,d) {
+                        d['id'] = d.ref;
                         d['start'] = moment.utc(d.start);
                         d['end'] = moment.utc(d.end);
                         d['className'] = "booking_status_"+d['status'];
@@ -263,7 +265,11 @@
 
     }
 
-    function refresh_event(eventid, eventref) {
+    function remove_event(eventid) {
+        $('#calendar').fullCalendar('removeEvents', [eventid]);
+    }
+
+    function refresh_event(eventid) {
         // reget data and redisplay on calendar
         // generally called after an update
 
@@ -272,22 +278,45 @@
             type: "get",
             url: API + "bookings",
             data: {
-                ref: eventref,
+                ref: eventid,
                 limit: 1},
             dataType: 'json',
             success: function (json) {
 
+                // remove from calendar
+                $('#calendar').fullCalendar('removeEvents', [eventid]);
 
-                // nothing will be returned if cancelled/forgot event
+                // redraw if it hasn't been deleted
                 if (json.objects.length > 0) {
+
+
                     var d = json.objects[0];
+
+                    // remove old event first
 
                     $('#calendar').fullCalendar('renderEvent', {
                         id: eventid,
-                        start: moment(d.start),
-                        end: moment(d.end),
+                        start: moment.utc(d.start),
+                        end: moment.utc(d.end),
+                        title: d.title,
                         className: "booking_status_" + d['status']
                     }, true);
+
+                    /* couldn't get update to work
+                     var event = $('#calendar').fullCalendar( 'clientEvents', d.ref );
+
+                     if (event.length > 0)
+                     {
+                     //event[0].title = d.title;
+                     event[0].start = moment(d.start);
+                     event[0].end = moment(d.end);
+                     event[0].className = "booking_status_" + d['status'];
+
+                     $('#calendar').fullCalendar( 'updateEvent', event[0] );
+                     } else {
+                     console.log("Error updating event after changes")
+                     }
+                     */
 
                 }
             }
@@ -299,9 +328,8 @@
         $("#booking_row").slideUp();
 
         //refresh event on calendar
-        var eventid = $("#editform").data('eventid');
-        var eventref = $("#editform").data('eventref');
-        refresh_event(eventid, eventref);
+        var eventid = $("#editform").data('eventref');  // eventid and eventref should be the same
+        refresh_event(eventid);
     }
 
     function load_booking(event) {
@@ -350,6 +378,7 @@
                 var new_event = Array();
 
                 // assign it the date that was reported
+                new_event.id = json['ref'];
                 new_event.title = json['title'];
                 new_event.start = date;
                 new_event.allDay = allDay;
@@ -516,7 +545,7 @@
             var msg = "Are you sure you want to cancel this booking?";
 
             if (parseInt(object.status) == 0) {
-                msg = "Are you don't want to save this booking? "
+                msg = "Are you sure you don't want to save this booking? "
             }
             if (window.confirm(msg)) {
 
@@ -526,11 +555,9 @@
                     data: {pk: object.ref, value:"{{ request.user.id }}"},
                     dataType : 'json',
                     success:function(json){
-                        close_form();
 
-                        var eventid = $("#editform").attr("data-eventid");
-                        // remove from calendar
-                        $('#calendar').fullCalendar( 'removeEvents' [ eventid ] );
+                        close_form();   // includes refresh event
+
 
                     }
                 });
