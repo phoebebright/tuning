@@ -680,7 +680,9 @@ class Booking(models.Model, ModelDiffMixin):
             if 'requested_at' in self.changed_fields:
                 self.recalc_prices(user)
 
-
+        # become booked once there is a tuner
+        if self.status < BOOKING_BOOKED and self.tuner:
+            self.statuis = BOOKING_BOOKED
 
         # change status to archived  when fully paid
         # TODO:test

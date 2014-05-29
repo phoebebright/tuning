@@ -93,7 +93,7 @@ def bookings_add(request, client_id=None, deadline=None):
     #TODO: this is geting called twice from JS - event propogating?
     when = None
     dline = None
-    
+
     if request.GET.has_key('start'):
         when = arrow.get(request.GET['start']).datetime
 
