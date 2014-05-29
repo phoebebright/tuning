@@ -2,8 +2,15 @@
 Development decisions:
 1. As far as possible use the api rather than views/django template tags so that it is more
 portable, however, in the interests of getting it done, some template tags are used.
-2. On the django side dates are timezone aware but are always passed to javascript as niave dates
-and it is assumed that dates from javascript are niave.
+2. Timezones - all database dates are utc.  On the django side dates are are utc EXCEPT,
+where a new deadline is being created and the default time is local.
+Javascript handles the conversion from utc for display and passed back utc to the api
+Tried every possible combination of where the conversion could be done and all other options
+seemed to end up in a mess with stray conversions.  This approach means django only has to
+know about the clients timezone when creating a default date, and this could be easily changed
+in future so that the default is created at the javascript end.
+
+
 """
 from __future__ import absolute_import
 
@@ -180,6 +187,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django.contrib.admindocs',
     'django_google_maps',
     'django_cron',
     'theme',  # holds themeforest template static files
@@ -231,13 +239,15 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-uk'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'UTC'  # for django and database
+USER_TIME_ZONE = "Europe/London"  # for converting data to/from javascript
+
 
 USE_I18N = False
 
 USE_L10N = False
 
-USE_TZ = False
+USE_TZ = True
 
 SITE_ID = 1
 

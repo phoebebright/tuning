@@ -252,7 +252,7 @@ class BookingsResource(ModelResource):
             bundle.data['start'] = ''
 
         if bundle.obj.end_time:
-            bundle.data['end'] = bundle.obj.end_time
+           bundle.data['end'] = bundle.obj.end_time
         else:
             bundle.data['end'] = ''
 
@@ -568,13 +568,13 @@ class BookingDeadlineResource(BookingUpdateResource):
 
 
     def obj_create(self, bundle, request=None, **kwargs):
-
+        ''' expecting datetime in utc
+        '''
         ref = bundle.data['pk']
         #TDOD: error handling
-        deadline = arrow.get(bundle.data['value']).datetime
+        deadline = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
 
-        #TODO: make a decision about where the logic if for how change to deadline effects requested date and vv. in models or javascript?
         try:
             booking = Booking.objects.get(ref=ref)
         except Booking.DoesNotExist:
@@ -583,10 +583,31 @@ class BookingDeadlineResource(BookingUpdateResource):
         booking.change_deadline(deadline)
         booking.save(user=bundle.request.user)
 
-        #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
-        #TODO: This object is not being returned, it's not getting serialised for some reason
-        return  None
+        return self.full_hydrate(bundle)
 
+
+class BookingRequestedResource(BookingUpdateResource):
+
+    class Meta(BookingStudioResource.Meta):
+        resource_name = 'set_requested_booking'
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        # date expected to be utc so no conversion required
+        ref = bundle.data['pk']
+        #TDOD: error handling
+        tm = datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M")
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+        booking.change_requested(tm)
+        booking.save(user=bundle.request.user)
+
+        return self.full_hydrate(bundle)
 
 class BookingClientrefResource(BookingUpdateResource):
 

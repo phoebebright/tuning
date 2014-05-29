@@ -37,6 +37,7 @@ v1_api.register(BookingClientrefResource())
 v1_api.register(BookingCompleteResource())
 v1_api.register(BookingCreateResource())
 v1_api.register(BookingDeadlineResource())
+v1_api.register(BookingRequestedResource())
 v1_api.register(BookingDeleteResource())
 v1_api.register(BookingDurationResource())
 v1_api.register(BookingInstrumentResource())
@@ -110,7 +111,7 @@ def is_tuner(user):
 
 urlpatterns = patterns('',
                        url(r'^api/', include(v1_api.urls)),
-
+                       #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                        url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
                        url(r'^login/$', 'django.contrib.auth.views.login', name='login'),
                        url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}, name="logout"),

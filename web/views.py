@@ -35,6 +35,7 @@ User = get_user_model()
 #python
 from datetime import datetime, timedelta, date
 import json
+import pytz
 
 from web.tasks import *
 from libs.mail_utils import check_mail, send_requests
@@ -61,6 +62,12 @@ def is_webmaster(user):
 @login_required
 @user_passes_test(can_book)
 def bookings_add(request, client_id=None, deadline=None):
+    '''add a new booking with minimal information
+    if the user is admin, they must supply a client id
+    if the user is a booker, then the client is the organisation they are attached to
+    deadline can be a datetime in format YYYYMMDDHHMM or a date in format YYYYMMDD or none
+    the model will add default values as required.  ASSUME ANY TIME SUPPLIED IS LOCAL TIME
+    '''
 
     # try to get client from user or raise error
     if not client_id or int(client_id) == 0:
@@ -77,15 +84,25 @@ def bookings_add(request, client_id=None, deadline=None):
         except Client.DoesNotExist:
             raise InvalidID
 
+    # parse deadline and assume in local time
+    tz = pytz.timezone (settings.USER_TIME_ZONE)
+
+
+
     if deadline:
         try:
             deadline = datetime.strptime(deadline, "%Y%m%d%H%M")
+            deadline = tz.localize(deadline)
         except:
-            raise InvalidData(message = "datetime passed %s did not parse" % deadline)
+            try:
+                deadline = datetime.strptime(deadline, "%Y%m%d").date
+            except:
+                raise InvalidData(message = "datetime passed %s did not parse" % deadline)
 
     # create new blank booking
     new =  Booking.create_booking(request.user, client=client, deadline=deadline)
 
+    # prepare new booking for display in template
     if new.instrument:
         default_instrument = new.instrument
     else:

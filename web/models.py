@@ -22,7 +22,7 @@ from django.http import  Http404
 from django.template import Context, Template
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
-
+from django.utils import timezone
 
 
 from model_utils import Choices
@@ -73,18 +73,44 @@ CALL_FAILED = 'F'
 
 # default booking request times
 
-def default_start():
-    return datetime.combine(TOMORROW, time(12, 00))
+def default_deadline(dt = None):
+    """Get the default deadline time for a booking.
 
-def default_end():
-   return datetime.combine(TOMORROW, time(12, 30))
+    :param dt: date for booking
+    :return: If no dt supplied returns tomorrow at DEFAULT_DEADLINE_TIME
+        otherwise, returns dt at DEFAULT_DEADLINE_TIME
+    """
+    if not dt:
+        dt = TOMORROW
 
-def default_start_time(deadline):
+    h,m = settings.DEFAULT_DEADLINE_TIME.split(":")
+    return make_time(datetime.combine(dt, time(int(h), int(m))))
 
-    if deadline:
-        return make_time(deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
+
+
+def default_start(deadline = None):
+    """Get default start time.
+
+    If deadline is supplied, make it DEFAULT_SLOT_TIME mins before deadline.  If deadline not supplied, use
+        default_deadline time.
+    """
+    if not deadline:
+        deadline = default_deadline()
+
+    return make_time( deadline - timedelta(minutes = settings.DEFAULT_SLOT_TIME))
+
+def default_end(start = None):
+    """Get default end time of booking.
+
+    If start (datetime) is supplied, then end is DEFAULT_SLOT_TIME minutes after start
+    If start not supplied, then end if DEFAULT_SLOT_TIME after default_start
+    """
+    if start:
+        return make_time( start + timedelta(minutes = settings.DEFAULT_SLOT_TIME))
     else:
-        return None
+        h,m = settings.DEFAULT_DEADLINE_TIME.split(":")
+        return make_time(datetime.combine(TOMORROW, time(int(h), int(m))))
+
 
 def system_user():
 
@@ -435,11 +461,14 @@ class Booker(CustomUser):
         return False
 
     def request_booking(self, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None):
-
+        """create a booking for this user with status BOOKING_REQUESTED.
+        calls Booking.create_booking with a who of this user and commit=True
+        :return: new booking object
+        """
 
         #TODO: may want to limit users who can create bookings
 
-        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, how, comments )
+        booking = Booking.create_booking(self, when, where, what, deadline, client_ref, how, comments, commit=True )
 
 
         return booking
@@ -636,7 +665,7 @@ class Booking(models.Model, ModelDiffMixin):
         # generate unique booking ref
         if not self.id:
             if not self.ref:
-                self.ref = Booking.create_ref(self.studio, self.deadline)
+                self.ref = Booking.create_ref()
 
             self.activity = Activity.default_activity()
             self.requested_at = NOW
@@ -679,28 +708,18 @@ class Booking(models.Model, ModelDiffMixin):
 
     @classmethod
     def create_temp_ref(cls):
+        print "thought create_temp_ref not used any more!"
 
+
+
+    @classmethod
+    def create_ref(cls):
+        # create unique 6 alphanum ref for booking
         code = str(uuid.uuid4())[:6]
         while True:
             try:
                 used = Booking.objects.get(ref = code)
                 code = str(uuid.uuid4())[:6]
-            except Booking.DoesNotExist:
-                # not found so is unique
-                return code
-
-
-    @classmethod
-    def create_ref(cls, studio=None, deadline=None):
-
-        if not studio or not deadline:
-            return Booking.create_temp_ref()
-
-        code = "%s-%s%sa" % (studio.short_code, deadline.strftime('%b'), deadline.strftime('%d'))
-        while True:
-            try:
-                used = Booking.objects.get(ref = code)
-                code = code[:-1] + chr(ord(used.ref[-1]) + 1)
             except Booking.DoesNotExist:
                 # not found so is unique
                 return code
@@ -976,18 +995,46 @@ class Booking(models.Model, ModelDiffMixin):
                 self.requested_from = self.deadline - timedelta(seconds= self.duration*60)
                 self.requested_to = self.deadline
 
-            self.save()
 
 
 
+    def change_requested(self, requested):
+
+        #TODO: add error checking etc.
+        self.requested_from = requested
 
 
     @classmethod
-    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, how=None, comments=None, client=None, commit=False):
-        ''' create a new booking record with status = 0 that can be edited.  Doesn't become a "real" booking until
-        it is saved and the status goes to 1 (self.create)
-        However, if commit = True, then saved with status of 1
-        '''
+    def create_booking(cls, who, when=None, where=None, what=None, deadline=None, client_ref=None, how=None,
+                       comments=None, client=None, commit=False):
+        """create a new booking record.
+
+        By default, creates a new record with a status of 0 (BOOKING_CREATING) which will be
+        immediately edited.  The reason for creating a 0 record is so that the reference can
+        be generated and used in the front end.  0 should be deleted by the front end if they
+        are not used or will be cleaned up using Booking.delete_temps called by celery/cron.
+
+        This 0 booking doesn't become a "real" booking until it is saved and the status goes to 1
+        (BOOKING_REQUESTED) (see self.create)
+
+        To create a "real" booking, use commit = True, and it is then saved with status of 1
+
+        All parameters are optional except who - the user who is creating the booking.
+
+        :param who: user object
+        :param when: - a datetime that specifies the start time of the booking OR a two element list
+            specifying start and end of booking as datetime
+        :param where:
+        :param what:
+        :param deadline:
+        :param client_ref:
+        :param how:
+        :param comments: if text is passed, is added as a comment object linked to this booking
+        :param client: defaults to the client of the user passed to who, otherwise a client object
+        :param commit: default False, False to create booking with status BOOKING_CREATING and
+            True to create a booking with status BOOKING_REQUESTED
+        :return:
+        """
 
         # if activity not specified, get default
         if not how:
@@ -1002,49 +1049,62 @@ class Booking(models.Model, ModelDiffMixin):
 
             # else assume activity is an object, it will fail further down if not
 
+
         # get start and end times for booking
-        if is_list(when):
-            if len(when) == 2:
-                from_time = make_time(when[0])
-                to_time = make_time(when[1])
+
+        # if only date passed, then use default start time
+        if deadline and not hasattr(deadline, 'hour'):
+            deadline = default_deadline(deadline)
+
+        #not times specified
+        if not deadline and not when:
+            deadline = default_deadline()
+            from_time = default_start(deadline)
+            to_time = default_end(from_time)
+
+        elif deadline and not when:
+            from_time = default_start(deadline)
+            to_time = default_end(from_time)
+
+        # make deadline same as to_time if not specified
+        elif when:
+
+            if is_list(when):
+                if len(when) == 2:
+                    from_time = make_time(when[0],"start")
+                    to_time = make_time(when[1], "end")
+                else:
+                    pass
+                    # TODO: raise error
             else:
-                pass
-                # TODO: raise error
-        else:
-            if when:
-                from_time = make_time(when, "start")
-                to_time = make_time(when, "end")
-                # can't bookin in the past
-                # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
-                # commented out for the moment to make testing easier
-                if to_time < NOW:
-                    raise PastDateException
 
-            else:
-                from_time = default_start_time(deadline)
-                to_time = make_time(deadline)
+                from_time = make_time(when,"start")
+                to_time = default_end(from_time)
+
+            if not deadline:
+                deadline = to_time
 
 
 
+        # validation
+
+        # make sure deadline is a datetime
+        if not hasattr(deadline, 'hour'):
+            deadline = datetime.combine(deadline, time(23, 59))
+
+        # ensure deadline is timezone aware
+        deadline = add_tz(deadline)
+
+        if deadline < from_time:
+            raise DeadlineBeforeBookingException
 
 
-        # fix end time if possible
+        # can't bookin in the past
+        # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
+        # commented out for the moment to make testing easier
+        if to_time < NOW and not who.is_admin:
+            raise PastDateException
 
-        if deadline:
-
-
-            # make sure deadline is a datetime
-            if not hasattr(deadline, 'hour'):
-                deadline = datetime.combine(deadline, time(23, 59))
-
-            # ensure deadline is timezone aware
-            # deadline = add_tz(deadline)
-
-
-            if deadline > from_time and deadline < to_time:
-                to_time = deadline
-            elif deadline < from_time:
-                raise DeadlineBeforeBookingException
 
 
         if not client:
@@ -1104,7 +1164,13 @@ class Booking(models.Model, ModelDiffMixin):
 
 
     def book(self, tuner, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
-
+        """
+        :param tuner: required - tuner object
+        :param start_time: optional - the datetime the tuning is to start otherwise defaults
+            to requested_from time
+        :param duration:
+        :return:
+        """
         # TODO: handle start_Time that is beyond deadline or within slot time
         # TODO: handle booked_time outside requested time
 

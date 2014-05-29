@@ -177,9 +177,8 @@ function load_data(client_id, start_date, end_date) {
 //                todayHighlight: true
 //            });
 
-    $('.when_time').clockin("12:00", time_update);
-
-
+    $('#field_requested_time').clockin($("#field_requested_time").text(), time_update);
+    $('#field_deadline_time').clockin($("#field_deadline_time").text(), time_update);
 
 
 // session ref
@@ -202,7 +201,7 @@ function load_data(client_id, start_date, end_date) {
         success: function(response, newValue) {
             //TODO: Error checking
             // reload as other values may have changed
-            load_booking({ref: this.dataset['pk'], id: this.parentElement.dataset['event_id']});
+            load_booking(this.dataset['pk']);
         }
     });
 
@@ -415,28 +414,71 @@ function update_events() {
 
 }
 
+function tidy_data(json) {
+    // convert dates and setup for calendar
+
+    // dates come in as utc
+    json['deadline'] = moment.utc(json['deadline']);
+    json['start'] = moment.utc(json['start']);
+    json['end'] = moment.utc(json['end']);
+    json['requested_from'] = moment.utc(json['requested_from']);
+    json['requested_to'] = moment.utc(json['requested_to']);
+    json['when'] = moment.utc(json['when']);
+
+    // stuff for calendar
+    json['id'] = json.ref;
+    json['className'] = "booking_status_"+json['status'];
+    return json;
+}
+
 function time_update(selection, time) {
+    // note that time is being sent back in utc
 
     var duration = parseInt($("#field_duration").text());
     var ref = selection[0].dataset['pk'];
 
-    // if deadline changed, then change start time
+    // Deadline
     if (selection[0].id == "field_deadline_time") {
 
 
         // combine deadline date with new time
-        var deadline = moment($("#field_deadline_date").attr("data-value") + " " + time);
+        var deadline = moment($("#field_deadline_time").data("date") + " " + time);
 
+        // note conversion to utc
         $.ajax({
             type:"post",
             url:API+"set_deadline_booking/",
             data: {
-                pk:ref, value:deadline.format()},
+                pk:ref, value:deadline.utc().format()},
             dataType : 'json',
             success:function(json){
 
                 // reload as other values may have changed
-                load_booking({ref: ref, id: ""});
+                load_booking(ref);
+
+            }
+
+        });
+
+    }
+
+    // Requested time
+    if (selection[0].id == "field_requested_time") {
+
+
+        // combine deadline date with new time
+        var tm = moment($("#field_requested_time").data("date") + " " + time);
+
+        $.ajax({
+            type:"post",
+            url:API+"set_requested_booking/",
+            data: {
+                pk:ref, value:tm.utc().format()},
+            dataType : 'json',
+            success:function(json){
+
+                // reload as other values may have changed
+                load_booking(ref);
 
             }
 

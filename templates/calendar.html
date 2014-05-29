@@ -9,6 +9,9 @@
     <link href="{{ STATIC_URL }}css/calendar.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}css/clockin.css" rel="stylesheet"/>
 
+    <script src="{{ STATIC_URL }}js/moment-timezone.min.js"></script>
+
+
     <style>
         .fc-header-title h2 {
             font-size: 90%;
@@ -170,11 +173,14 @@
 
 
         $('#calendar').fullCalendar({
-            timezone: false,
+            timezone: 'local',
             firstDay:1,
             defaultView: calendarView,
             slotDuration: "1:00",
             defaultEventMinutes: 60,
+            allDayDefault: false,
+            allDaySlot: false,
+            slotMinutes: 60,
             header: {
                 left: 'prev,next ',
                 center: 'title',
@@ -214,13 +220,15 @@
             droppable: true,
             drop: function(date, allDay) {
 
-                client_dropped(date, allDay, this.dataset['id']);
+                if (date > moment()) {
 
+                client_dropped(date, allDay, this.dataset['id']);
+            }
 
             },
             events:{
                 // awful time trying to get calendar to display proper time...
-                ignoreTimezone:true,
+                //ignoreTimezone:true,
                 //currentTimezone: 'Europe/London',
                 type:"get",
                 url:API+"bookings",
@@ -232,15 +240,10 @@
                     // convert dates to moment objects
                     data = new Array();
                     $.each(json.objects, function(i,d) {
-                        d['id'] = d.ref;
-                        d['start'] = moment.utc(d.start);
-                        d['end'] = moment.utc(d.end);
-                        d['className'] = "booking_status_"+d['status'];
 
-                        data.push(d);
+                        data.push(tidy_data(d));
 
-
-                    })
+                    });
                     return data;
                 }
             },
@@ -254,7 +257,7 @@
                     that.addClass('selected');
                     // display booking details
 
-                    load_booking(event);
+                    load_booking(event.id);
 
                 }
                 that.removeClass('selected');
@@ -290,14 +293,14 @@
                 if (json.objects.length > 0) {
 
 
-                    var d = json.objects[0];
+                    var d = tidy_data(json.objects[0]);
 
                     // remove old event first
 
                     $('#calendar').fullCalendar('renderEvent', {
                         id: eventid,
-                        start: moment.utc(d.start),
-                        end: moment.utc(d.end),
+                        start: d.start,
+                        end: d.end,
                         title: d.title,
                         className: "booking_status_" + d['status']
                     }, true);
@@ -332,18 +335,21 @@
         refresh_event(eventid);
     }
 
-    function load_booking(event) {
+    function load_booking(eventid) {
+
 
         // get full details
         $.ajax({
             type:"get",
             url:API+"bookings_fat",
             data: {
-                ref: event.ref,
+                ref: eventid,
                 limit:0},
             dataType : 'json',
             success:function(json){
-                populate_form(json.objects[0], event._id);
+
+                data = tidy_data(json.objects[0]);
+                populate_form(data, eventid);
             }
         });
     }
@@ -377,13 +383,18 @@
                 // retrieve the dropped element's stored Event Object
                 var new_event = Array();
 
+                // convert datetimes to moments
+                json = tidy_data(json);
+
                 // assign it the date that was reported
                 new_event.id = json['ref'];
                 new_event.title = json['title'];
-                new_event.start = date;
+                new_event.start = json['start'];
                 new_event.allDay = allDay;
                 new_event.ref = json['ref'];
                 new_event.className = "booking_status_1";
+
+
 
                 populate_form(json);
                 // display modal form
@@ -452,17 +463,26 @@
             $("#field_client_ref").text("?");
         }
 
-        var deadline = moment(object.deadline);
-        if (deadline.isValid() && (deadline.hour() > 0 || deadline.minute() > 0)) {
-            $("#field_deadline_time").text(deadline.format("HH:mm"));
-            $("#field_deadline_time").attr("data-value", deadline.toISOString());
+        // the line belows turns .uct property from true to false!!!!!
+        // var deadline = object.deadline;
+
+        var dline = object.deadline;
+        if (dline.isValid() && (dline.hour() > 0 || dline.minute() > 0)) {
+            // output as local time here
+            $("#field_deadline_time").text(dline.local().format("HH:mm"));
+            // store as utc
+            $("#field_deadline_time").attr("data-value", dline.toISOString());
         } else {
             $("#field_deadline_time").text("?");
         }
 
-        var requested = moment(object.requested_from);
+
+        var requested = object.requested_from;
+
         if (requested.isValid() && (requested.hour() > 0 || requested.minute() > 0)) {
-            $("#field_requested_time").text(requested.format("HH:mm"));
+            // convert as local time here
+            $("#field_requested_time").text(requested.local().format("HH:mm"));
+            //store as utc
             $("#field_requested_time").attr("data-value", requested.toISOString());
         } else {
             $("#field_requested_time").text("?");
