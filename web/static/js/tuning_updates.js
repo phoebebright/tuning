@@ -418,12 +418,12 @@ function tidy_data(json) {
     // convert dates and setup for calendar
 
     // dates come in as utc
-    json['deadline'] = moment.utc(json['deadline']);
-    json['start'] = moment.utc(json['start']);
-    json['end'] = moment.utc(json['end']);
-    json['requested_from'] = moment.utc(json['requested_from']);
-    json['requested_to'] = moment.utc(json['requested_to']);
-    json['when'] = moment.utc(json['when']);
+    json['deadline'] = moment(moment.utc(json['deadline']).toDate());
+    json['start'] = moment(moment.utc(json['start']).toDate());
+    json['end'] = moment(moment.utc(json['end']).toDate());
+    json['requested_from'] = moment(moment.utc(json['requested_from']).toDate());
+    json['requested_to'] = moment(moment.utc(json['requested_to']).toDate());
+    json['when'] = moment(moment.utc(json['when']).toDate());
 
     // stuff for calendar
     json['id'] = json.ref;
