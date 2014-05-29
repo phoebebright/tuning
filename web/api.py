@@ -270,6 +270,8 @@ class BookingsResource(ModelResource):
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
+        bundle.data['editable'] = bundle.obj.is_editable
+
         #bundle.data['activity'] = bundle.obj.activity.name
 
         return bundle
@@ -596,7 +598,8 @@ class BookingRequestedResource(BookingUpdateResource):
         # date expected to be utc so no conversion required
         ref = bundle.data['pk']
         #TDOD: error handling
-        tm = datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M")
+
+        tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
 
         try:
@@ -628,7 +631,8 @@ class BookingDurationResource(BookingUpdateResource):
 
     def update_booking(self, booking, bundle, value):
         #TODO: validation of duration
-        booking.duration = value
+
+        booking.change_duration(int(value))
         booking.recalc_prices()
         booking.save(user=bundle.request.user)
 

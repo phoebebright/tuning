@@ -28,6 +28,10 @@
             width: 300px;
             height: 300px;
         }
+
+        .fc-agenda-slots td div {
+            height: 25px !important;
+        }
     </style>
 {% endblock extra_head %}
 {% block heading %}Bookings Calendar{% endblock %}
@@ -176,11 +180,11 @@
             timezone: 'local',
             firstDay:1,
             defaultView: calendarView,
-            slotDuration: "1:00",
-            defaultEventMinutes: 60,
+            //slotDuration: "1:00",
+            //defaultEventMinutes: 60,
             allDayDefault: false,
             allDaySlot: false,
-            slotMinutes: 60,
+            //slotMinutes: 60,
             header: {
                 left: 'prev,next ',
                 center: 'title',
@@ -195,6 +199,22 @@
                 // save view to cookie
                 $.cookie('calendarDefaultView', view.name, {expires:7, path: '/'});
             },
+            selectable: true,
+            selectHelper: true,
+
+            eventResize: function(event, revertFunc) {
+
+                var duration = event.end.diff(event.start, 'minutes');
+                update_duration(event.id, duration);
+
+            },
+            eventDrop: function(event, revertFunc) {
+
+                var start = event.start.utc().format();
+                update_start(event.id, start);
+
+            },
+            editable: true,  // set individually per event in data feed
 
             dayClick:  function(date, jsEvent, view) {
                 //TODO: make double click to create entry and single click to bring up day view
@@ -216,14 +236,13 @@
 
             },
 
-            editable: false,
             droppable: true,
             drop: function(date, allDay) {
 
                 if (date > moment()) {
 
-                client_dropped(date, allDay, this.dataset['id']);
-            }
+                    client_dropped(date, allDay, this.dataset['id']);
+                }
 
             },
             events:{

@@ -676,6 +676,7 @@ class Booking(models.Model, ModelDiffMixin):
             self.vat = self.default_price * vat_rate()
             self.tuner_payment = tuner_pay(self.price)
         else:
+            #TODO: should this be requested_at?
             if 'requested_at' in self.changed_fields:
                 self.recalc_prices(user)
 
@@ -725,8 +726,11 @@ class Booking(models.Model, ModelDiffMixin):
                 return code
 
     @property
-    def has_temp_ref(self):
-        return len(self.ref) == 6
+    def is_editable(self):
+        ''' used to determine if the booking can be changed in the front end
+        :return:
+        '''
+        return self.status < BOOKING_BOOKED
 
     @property
     def short_heading(self):
@@ -991,7 +995,8 @@ class Booking(models.Model, ModelDiffMixin):
         if self.deadline != deadline:
             self.deadline = deadline
 
-            if self.status < '2':
+            # once booked, can't change time
+            if self.status < BOOKING_BOOKED:
                 self.requested_from = self.deadline - timedelta(seconds= self.duration*60)
                 self.requested_to = self.deadline
 
@@ -1002,6 +1007,15 @@ class Booking(models.Model, ModelDiffMixin):
 
         #TODO: add error checking etc.
         self.requested_from = requested
+
+    def change_duration(self, duration):
+
+       # once booked, can't change time
+        if self.status < BOOKING_BOOKED:
+            self.duration = duration
+            self.deadline = self.requested_from + timedelta(seconds= self.duration*60)
+            self.requested_to = self.deadline
+
 
 
     @classmethod

@@ -148,19 +148,17 @@ class BookingTest(TestCase):
 
         book = Booking.objects.create(ref = Booking.create_temp_ref())
 
-        self.assertTrue(book.has_temp_ref)
 
         book.client = self.o1
         book.studio = self.s1
         book.save()
 
-        self.assertTrue(book.has_temp_ref)
+
 
         book.deadline = TOMORROW
         book.save()
 
-        # has the data to create a permanent ref
-        self.assertFalse(book.has_temp_ref)
+
 
 
         book2 = Booking.objects.create(

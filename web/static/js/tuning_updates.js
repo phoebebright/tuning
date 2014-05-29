@@ -468,21 +468,41 @@ function time_update(selection, time) {
 
         // combine deadline date with new time
         var tm = moment($("#field_requested_time").data("date") + " " + time);
+        update_start(ref, tm.utc().format());
 
-        $.ajax({
+
+
+    }
+}
+
+function update_duration(eventid, duration) {
+      $.ajax({
+            type:"post",
+            url:API+ 'set_duration_booking/?format=json&limit=0',
+            data: {
+                pk:eventid, value:duration },
+            dataType : 'json',
+            success:function(json){
+                 // reload as other values may have changed
+                load_booking(eventid);
+            }
+
+        });
+}
+
+function update_start(eventid, start) {
+     $.ajax({
             type:"post",
             url:API+"set_requested_booking/",
             data: {
-                pk:ref, value:tm.utc().format()},
+                pk:eventid, value:start},
             dataType : 'json',
             success:function(json){
 
                 // reload as other values may have changed
-                load_booking(ref);
+                load_booking(eventid);
 
             }
 
         });
-
-    }
 }
