@@ -239,7 +239,7 @@
             droppable: true,
             drop: function(date, allDay) {
 
-                if (date > moment()) {
+                if (USER_TYPE == "admin" || date > moment()) {
 
                     client_dropped(date, allDay, this.dataset['id']);
                 }
@@ -385,8 +385,10 @@
         var deadline = "";  // date as string - no spaces/punctuation
         if (view.name == "month") {
             deadline = date.format("YYYYMMDD") + "{{ DEFAULT_DEADLINE_TIME }}";
+            data = {deadline: date.toDate()};
         } else {
             deadline = date.format("YYYYMMDDHHmm");
+            data = {start: date.toDate()};
         }
 
 
@@ -397,6 +399,7 @@
         $.ajax({
             type:"get",
             url:"/booking/add/" + client_id + "/" + deadline + "/",
+            data: data,
             dataType : 'json',
             success:function(json){
                 // retrieve the dropped element's stored Event Object
