@@ -383,12 +383,17 @@
         // if view is month, the default time to DEFAULT_START_TIME
         var view = $('#calendar').fullCalendar('getView');
         var deadline = "";  // date as string - no spaces/punctuation
+
+        // pass back date in utc
+
+        // if called from week/day view with a time, this is the requested from time (start)
+        // if on month view, then set the deadline to the default time
         if (view.name == "month") {
             deadline = date.format("YYYYMMDD") + "{{ DEFAULT_DEADLINE_TIME }}";
-            data = {deadline: date.toDate()};
+            data = {deadline: date.utc().toISOString()};
         } else {
             deadline = date.format("YYYYMMDDHHmm");
-            data = {start: date.toDate()};
+            data = {start: date.utc().toISOString()};
         }
 
 

@@ -36,6 +36,7 @@ User = get_user_model()
 from datetime import datetime, timedelta, date
 import json
 import pytz
+import arrow
 
 from web.tasks import *
 from libs.mail_utils import check_mail, send_requests
@@ -87,20 +88,33 @@ def bookings_add(request, client_id=None, deadline=None):
     # parse deadline and assume in local time
     tz = pytz.timezone (settings.USER_TIME_ZONE)
 
+    # if GETs, use these first
+    #TODO: remove deadline as part of URL and use GET instead
+    #TODO: this is geting called twice from JS - event propogating?
+    when = None
+    dline = None
+    
+    if request.GET.has_key('start'):
+        when = arrow.get(request.GET['start']).datetime
 
+    if request.GET.has_key('deadline'):
+        dline = arrow.get(request.GET['deadline']).datetime
 
     if deadline:
         try:
-            deadline = datetime.strptime(deadline, "%Y%m%d%H%M")
-            deadline = tz.localize(deadline)
+            dline = datetime.strptime(deadline, "%Y%m%d%H%M")
+            dline = tz.localize(dline)
         except:
             try:
-                deadline = datetime.strptime(deadline, "%Y%m%d").date
+                dline = datetime.strptime(deadline, "%Y%m%d").date
             except:
                 raise InvalidData(message = "datetime passed %s did not parse" % deadline)
 
     # create new blank booking
-    new =  Booking.create_booking(request.user, client=client, deadline=deadline)
+    if when:
+        new =  Booking.create_booking(request.user, client=client, when=when)
+    else:
+        new =  Booking.create_booking(request.user, client=client, deadline=dline)
 
     # prepare new booking for display in template
     if new.instrument:
