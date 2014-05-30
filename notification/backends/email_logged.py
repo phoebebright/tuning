@@ -11,10 +11,16 @@ class EmailLoggedBackend(backends.BaseBackend):
     spam_sensitivity = 2
 
     def can_send(self, user, notice_type):
-        can_send = super(EmailLoggedBackend, self).can_send(user, notice_type)
-        if can_send and user.email:
-            return True
-        return False
+
+        if not user.email:
+            print "No email address for user %s so can't send notification" % user
+            return False
+
+        return True
+        # can_send = super(EmailLoggedBackend, self).can_send(user, notice_type)
+        # if can_send and user.email:
+        #     return True
+        # return False
 
     def deliver(self, recipient, sender, notice_type, extra_context):
         # TODO: require this to be passed in extra_context

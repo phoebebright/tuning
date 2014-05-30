@@ -435,17 +435,26 @@ def send_test_email(request):
 
     to = system_user()
     sender = settings.DEFAULT_FROM_EMAIL
-    subject = "Mail 1 of 2 - test straight email"
+    subject = "Mail 1 of 3 - test straight email"
     body = "test email body"
 
-    send_mail(subject, body, sender, [to.email, ])
-    
-    subject = "Mail 2 of 2 - test noitification email"  
+    try:
+        send_mail(subject, body, sender, [to.email, ])
+    except:
+        print "Unable to send email directly from django"
+
+    subject = "Mail 2 of 3 - test noitification generated email - send manually"
     notification.send(users=[to,],
                           label='test_notification')
-                          
-                           
-                           
+
+    for email in EmailLog.objects.filter(date_sent__isnull = True, recipient = to ):
+        email.send()
+
+    subject = "Mail 3 of 3 - test noitification generated email - send via celery"
+    notification.send(users=[to,],
+                          label='test_notification')
+
+
     return HttpResponse('OK')
 
 
