@@ -301,6 +301,7 @@ TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',
     'celery': os.path.join(BASE_DIR, 'logs/celery.log'),
+    'logfile': os.path.join(BASE_DIR, 'logs/logfile.log'),
     }
 
 LOGGING = {
