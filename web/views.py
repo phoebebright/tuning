@@ -40,6 +40,7 @@ import arrow
 
 from web.tasks import *
 from libs.mail_utils import check_mail, send_requests
+from notification import models as notification
 
 #App
 from web.models import *
@@ -432,11 +433,19 @@ def check_bookings_task(request):
 @user_passes_test(is_webmaster)
 def send_test_email(request):
 
-    to = settings.WEBMASTER_EMAIL
+    to = system_user()
     sender = settings.DEFAULT_FROM_EMAIL
-    subject = "Mail 1 of 1 - straight email"
+    subject = "Mail 1 of 2 - test straight email"
     body = "test email body"
 
-    send_mail(subject, body, sender, [to, ])
+    send_mail(subject, body, sender, [to.email, ])
+    
+    subject = "Mail 2 of 2 - test noitification email"  
+    notification.send(users=[to,],
+                          label='test_notification')
+                          
+                           
+                           
+    return HttpResponse('OK')
 
 

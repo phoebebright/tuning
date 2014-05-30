@@ -55,7 +55,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'email-monitor-send': {
         'task': 'email_monitor.tasks.send',
-        'schedule': crontab(5),
+        'schedule': crontab(),
         },
     'email-monitor-check': {
         'task': 'email_monitor.tasks.check',
@@ -101,7 +101,6 @@ ALLOWED_HOSTS = []
 
 SITE_ID = 1
 
-WEBMASTER_EMAIL = "phoebebright310+tune@gmail.com"  # receives test emails etc.
 ADMINS = (
     ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
