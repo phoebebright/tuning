@@ -101,6 +101,7 @@ ALLOWED_HOSTS = []
 
 SITE_ID = 1
 
+WEBMASTER_EMAIL = "phoebebright310+tune@gmail.com"  # receives test emails etc.
 ADMINS = (
     ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
@@ -197,7 +198,7 @@ INSTALLED_APPS = (
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    'django_twilio',
+    #'django_twilio',
     'django_logtail',
     'email_monitor',
     'web',

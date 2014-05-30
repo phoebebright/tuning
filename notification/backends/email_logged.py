@@ -57,5 +57,6 @@ class EmailLoggedBackend(backends.BaseBackend):
                subject = subject,
                body = body,
         )
+        print 'about to send email'
         email.send()
 
