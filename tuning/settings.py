@@ -47,6 +47,7 @@ http://docs.celeryproject.org/en/latest/tutorials/daemonizing.html#daemonizing
 from celery.schedules import crontab
 
 
+
 CELERYBEAT_SCHEDULE = {
     # crontab(hour=0, minute=0, day_of_week='saturday')
     'check-bookings-to-complete': {
@@ -62,6 +63,9 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(1),
         },
     }
+
+# didn't think this was required
+CELERY_IMPORTS = ('web.tasks', 'email_monitor.tasks')
 
 CELERY_MONITOR_URL = "http://217.115.117.19:5555"
 RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"

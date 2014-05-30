@@ -128,11 +128,11 @@ class EmailLog(models.Model):
     subject = models.TextField(_("subject"))
     body = models.TextField(_("body"))
     attempts = models.PositiveSmallIntegerField(default=0)
-    date_sent = models.DateTimeField(_("date sent"), auto_now_add=True,
+    date_sent = models.DateTimeField(_("date sent"), blank=True, null=True,
                                      db_index=True)
 
     def __str__(self):
-        return "{s.recipients}: {s.subject}".format(s=self)
+        return "{s.recipient}: {s.subject}".format(s=self)
 
     class Meta:
         ordering = ('-id',)
@@ -153,16 +153,15 @@ class EmailLog(models.Model):
 
     def send(self):
 
-        try:
+
             self.attempts += 1
             self.save()
-            success = send_mail(self.subject, self.body, self.from_email, [self.recipient, ])
+            success = send_mail(self.subject, self.body, self.from_email,  [self.to_email, ])
 
             if success:
-                self.date_sent=datetime.now()
+                self.date_sent=datetime.datetime.now()
                 self.save()
-        except:
-            pass
+
 
 def get_notification_language(user):
     """

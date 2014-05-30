@@ -1,4 +1,6 @@
 from email_monitor.models import Monitor
+from notification.models import EmailLog
+
 
 from datetime import timedelta
 import imaplib
@@ -9,8 +11,8 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger('celery')
 
 
-@task(name='send-email')
-def send(sender, subject, body):
+@task()
+def send_email(sender, subject, body):
 
    logger.info('Checking for emails to send')
 
