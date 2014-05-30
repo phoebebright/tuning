@@ -418,7 +418,7 @@ def ping(request):
     return HttpResponse('OK')
 
 
-def check_bookings(request):
+def check_bookings_task(request):
     ''' trigger a celery task and return OK
     used to test if all is well
     :param request:

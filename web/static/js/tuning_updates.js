@@ -57,7 +57,9 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_tuner_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    //TODO: Error checking
+                    $("#booking_edit")
+                        .addClass("booking_status_" + response.status);
+
                 }
 
             });
@@ -65,6 +67,37 @@ function load_data(client_id, start_date, end_date) {
 
         }
     });
+
+    //TODO: what was this for?
+       // get list of tuners
+//    $.ajax({
+//        type:"get",
+//        url:API+"tuners",
+//        dataType : 'json',
+//        success:function(data){
+//
+//            var tuners = data.objects;
+//            var tuners_list = [];
+//            $.each(tuners, function(i,d) {
+//                tuners_list.push({value: d.id, text: d.name});
+//            });
+//
+//            $('.tuners').editable({
+//                type: 'select',
+//                source: tuners_list,
+//                sourceCache: true,
+//                url: API + 'accept_booking/?format=json&limit=0',
+//
+//                success: function(response, newValue) {
+//                    //TODO: Error checking
+//                },
+//                title: 'Select Tuner'
+//            });
+//
+//
+//        }
+//    });
+
 
     // get list of instruments and setup editable
     $.ajax({
@@ -219,34 +252,6 @@ function load_data(client_id, start_date, end_date) {
     }
 
 
-    // get list of tuners
-    $.ajax({
-        type:"get",
-        url:API+"tuners",
-        dataType : 'json',
-        success:function(data){
-
-            var tuners = data.objects;
-            var tuners_list = [];
-            $.each(tuners, function(i,d) {
-                tuners_list.push({value: d.id, text: d.name});
-            });
-
-            $('.tuners').editable({
-                type: 'select',
-                source: tuners_list,
-                sourceCache: true,
-                url: API + 'accept_booking/?format=json&limit=0',
-
-                success: function(response, newValue) {
-                    //TODO: Error checking
-                },
-                title: 'Select Tuner'
-            });
-
-
-        }
-    });
 
 
 }
@@ -493,9 +498,26 @@ function update_duration(eventid, duration) {
 function update_start(eventid, start) {
      $.ajax({
             type:"post",
-            url:API+"set_requested_booking/",
+            url:API+"set_requested_start_booking/",
             data: {
                 pk:eventid, value:start},
+            dataType : 'json',
+            success:function(json){
+
+                // reload as other values may have changed
+                load_booking(eventid);
+
+            }
+
+        });
+}
+
+function update_end(eventid, end) {
+     $.ajax({
+            type:"post",
+            url:API+"set_requested_end_booking/",
+            data: {
+                pk:eventid, value:end},
             dataType : 'json',
             success:function(json){
 

@@ -1,5 +1,6 @@
 import uuid
 from decimal import *
+import logging
 
 from datetime import datetime, date, timedelta, time
 
@@ -23,7 +24,7 @@ from django.template import Context, Template
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-
+from django.shortcuts import get_object_or_404
 
 from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
@@ -48,6 +49,8 @@ https://github.com/scdoshi/django-notifier - build different backends for sms et
 http://www.twilio.com/sms/pricing/gb - sending sms
 
 """
+celery_log = logging.getLogger('celery')
+
 
 # faketime allows the actual date to be set in the future past - for testing can be useful
 from libs.faketime import now
@@ -190,7 +193,7 @@ class ModelDiffMixin(object):
     @property
     def _dict(self):
         return model_to_dict(self, fields=[field.name for field in
-                             self._meta.fields])
+                                           self._meta.fields])
 
 
 class Activity(models.Model):
@@ -520,7 +523,7 @@ class Tuner(CustomUser):
 
         booking = Booking.objects.get(ref=booking_ref)
 
-        booking.book(self, start_time, duration)
+        booking.set_booked(self, start_time, duration)
 
         return booking
 
@@ -671,26 +674,33 @@ class Booking(models.Model, ModelDiffMixin):
             self.requested_at = NOW
             self.recalc_prices(user)
 
+        # recalculate price/vat if appropriate
         if 'price' in self.changed_fields:
             # recalc vat
             self.vat = self.default_price * vat_rate()
             self.tuner_payment = tuner_pay(self.price)
         else:
-            #TODO: should this be requested_at?
             if 'requested_at' in self.changed_fields:
                 self.recalc_prices(user)
 
+
+        super(Booking, self).save(*args, **kwargs)
+
+
         # become booked once there is a tuner
         if self.status < BOOKING_BOOKED and self.tuner:
-            self.statuis = BOOKING_BOOKED
+            self.set_booked(self.tuner, start_time=self.requested_from, duration= self.duration)
 
         # change status to archived  when fully paid
         # TODO:test
         if self.status == BOOKING_COMPLETE and self.paid_provider_at and self.paid_client_at:
-            self.status=BOOKING_ARCHIVED
-            self.archived_at = NOW
 
-        super(Booking, self).save(*args, **kwargs)
+            self.set_archived()
+
+
+
+
+        return self
 
     def recalc_prices(self, user=None):
         #NOTE: does not save
@@ -812,7 +822,10 @@ class Booking(models.Model, ModelDiffMixin):
 
     @property
     def start_time(self):
-
+        ''' when booking is only requested show the whole possible slot time
+        when becomes booked, show the actual time when the tuning will happen
+        :return:
+        '''
         if self.booked_time:
             return self.booked_time
         else:
@@ -841,9 +854,9 @@ class Booking(models.Model, ModelDiffMixin):
 
     @property
     def what(self):
-         if self.instrument:
+        if self.instrument:
             return self.activity.name_verb + " " + self.instrument.name
-         else:
+        else:
             return self.activity.name
 
     @property
@@ -948,14 +961,35 @@ class Booking(models.Model, ModelDiffMixin):
             if not self.tuner and self.deadline > NOW:
                 TunerCall.request(self)
 
+            self.log("Booking Requestsed %s" % self.description, type = "REQUEST")
 
             # notifications - don't send if booking is past
             if self.deadline > NOW:
-                notification.send([self.booker,], "booking_requested", {"booking": self,
-                   "description": self.description_for_user(self.booker)
-            })
+                self.notify(who=[self.booker,],
+                            what="booking_requested",
+                            context={
+                                "booking": self,
+                                "description": self.description_for_user(self.booker)
+
+                            })
 
 
+        return self
+
+    def notify(self, who, what, context):
+
+        cc = []
+        for username in settings.NOTIFICATIONS_CC:
+            user = get_object_or_404(CustomUser, username=username)
+            cc.append(user)
+
+
+        notify = cc + who
+
+        celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
+        notification.send(users=notify,
+                          label=what,
+                           extra_context=context)
 
 
 
@@ -977,6 +1011,7 @@ class Booking(models.Model, ModelDiffMixin):
             #TODO: delete comments
             self.delete()
 
+
         else:
 
             #TODO: test
@@ -991,6 +1026,7 @@ class Booking(models.Model, ModelDiffMixin):
             self.log(comment=msg, user=user, type='CANCEL')
 
 
+
     def change_deadline(self, deadline):
         ''' if booking is not complete, then change requested date based on deadline
         '''
@@ -999,24 +1035,43 @@ class Booking(models.Model, ModelDiffMixin):
 
             # once booked, can't change time
             if self.status < BOOKING_BOOKED:
-                self.requested_from = self.deadline - timedelta(seconds= self.duration*60)
-                self.requested_to = self.deadline
+
+                # only change requested time if deadline changed to before current
+                # requested time
+                if self.deadline < self.requested_to:
+                    self.requested_from = self.deadline - timedelta(seconds= self.duration*60)
+                    self.requested_to = self.deadline
 
 
 
 
-    def change_requested(self, requested):
+    def change_requested_from(self, requested):
 
-        #TODO: add error checking etc.
-        self.requested_from = requested
+        # once booked, can't change time
+        if self.status < BOOKING_BOOKED:
+
+            self.requested_from = requested
+
+
+
+    def change_requested_to(self, requested):
+
+        # once booked, can't change time
+        if self.status < BOOKING_BOOKED:
+
+            self.requested_to = requested
 
     def change_duration(self, duration):
 
-       # once booked, can't change time
+        # once booked, can't change time
         if self.status < BOOKING_BOOKED:
             self.duration = duration
-            self.deadline = self.requested_from + timedelta(seconds= self.duration*60)
-            self.requested_to = self.deadline
+
+            # only change times if changing duration has caused them to fall outside
+            # current times
+            new_from = self.deadline - timedelta(seconds= self.duration*60)
+            if new_from < self.requested_from:
+                self.requested_from = new_from
 
 
 
@@ -1063,7 +1118,7 @@ class Booking(models.Model, ModelDiffMixin):
                 except Activity.DoesNotExist:
                     raise InvalidActivity
 
-            # else assume activity is an object, it will fail further down if not
+                    # else assume activity is an object, it will fail further down if not
 
 
         # get start and end times for booking
@@ -1149,7 +1204,7 @@ class Booking(models.Model, ModelDiffMixin):
                 # make studio and instrument default if they are the only ones
                 studios = booking.client.studios
                 if len(studios) > 0:
-                   booking.studio = studios[0]
+                    booking.studio = studios[0]
 
 
 
@@ -1162,7 +1217,7 @@ class Booking(models.Model, ModelDiffMixin):
                 # make studio and instrument default if they are the only ones
                 instruments = booking.client.instruments
                 if len(instruments) > 0:
-                   booking.instrument = instruments[0]
+                    booking.instrument = instruments[0]
 
         if deadline:
             booking.deadline = deadline
@@ -1179,7 +1234,7 @@ class Booking(models.Model, ModelDiffMixin):
         return booking
 
 
-    def book(self, tuner, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
+    def set_booked(self, tuner, start_time=None, duration= settings.DEFAULT_SLOT_TIME):
         """
         :param tuner: required - tuner object
         :param start_time: optional - the datetime the tuning is to start otherwise defaults
@@ -1202,6 +1257,7 @@ class Booking(models.Model, ModelDiffMixin):
         self.save()
 
         self.log(comment="Tuner %s assigned" % (self.tuner,), type="BOOK")
+
 
 
     def set_complete(self):
@@ -1228,13 +1284,12 @@ class Booking(models.Model, ModelDiffMixin):
 
         self.paid_provider_at = NOW
 
-        if self.paid_client_at:
-            self.status = BOOKING_ARCHIVED
-
         self.save()
 
         self.log(comment="provider paid", type="PROVIDER_PAID")
 
+        if self.paid_client_at:
+            self.set_archived()
 
     def set_provider_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -1251,12 +1306,18 @@ class Booking(models.Model, ModelDiffMixin):
 
         self.paid_client_at = NOW
 
-        if self.paid_provider_at:
-            self.status = BOOKING_ARCHIVED
-
         self.save()
         self.log(comment="client paid", type="CLIENT_PAID")
 
+        if self.paid_provider_at:
+            self.set_archived()
+
+    def set_archived(self):
+
+        self.status = BOOKING_ARCHIVED
+        self.archived_at = NOW
+        self.save()
+        self.log(comment="archived", type="ARCHIVED")
 
     def client_unpaid(self):
         ''' set status back, but only if called  within a minute(ish)
@@ -1347,7 +1408,7 @@ class TunerCall(models.Model):
 
         if  self.tuner and not self.called:
             notification.send([self.tuner,], "tuner_request", {"booking": self.booking,
-               "description": self.booking.description_for_user(self.tuner)
+                                                               "description": self.booking.description_for_user(self.tuner)
             })
             self.called = NOW
 
@@ -1408,7 +1469,7 @@ class TunerCall(models.Model):
         self.status = CALL_ACCEPTED
         self.answered = NOW
         self.save()
-        self.booking.book(tuner=self.tuner)
+        self.booking.set_booked(tuner=self.tuner)
 
         # expire rest of calls
         for item in TunerCall.objects.filter(booking = self.booking, status=CALL_WAITING):
@@ -1430,33 +1491,33 @@ class TunerCall(models.Model):
 
     def msg_no_tuners(self):
 
-            msg = []
+        msg = []
 
-            subject = "NOT TUNERS AVAILABLE FOR %s?" % (self.booking.short_description)
-            body = """See full details: %s
+        subject = "NOT TUNERS AVAILABLE FOR %s?" % (self.booking.short_description)
+        body = """See full details: %s
 
             """ % (self.booking.get_absolute_url())
 
-            # extract list of emails
-            to = map((lambda  d:  d[1]), settings.ADMINS)
+        # extract list of emails
+        to = map((lambda  d:  d[1]), settings.ADMINS)
 
-            msg.append([subject, body, to])
-            self.booking.send_msgs(msg)
+        msg.append([subject, body, to])
+        self.booking.send_msgs(msg)
 
     def msg_call_expired(self):
 
-            msg = []
+        msg = []
 
-            subject = "Tuner no longer required for " % (self.booking.short_description)
-            body = """See full details: %s
+        subject = "Tuner no longer required for " % (self.booking.short_description)
+        body = """See full details: %s
 
             """ % (self.booking.get_absolute_url())
 
-            # extract list of emails
-            to = TunerCall.objects.filter(booking=self.booking, status=CALL_EXPIRED).values_list('tuner__email')
+        # extract list of emails
+        to = TunerCall.objects.filter(booking=self.booking, status=CALL_EXPIRED).values_list('tuner__email')
 
-            msg.append([subject, body, to])
-            self.booking.send_msgs(msg)
+        msg.append([subject, body, to])
+        self.booking.send_msgs(msg)
 
     def expire(self):
         self.status = CALL_EXPIRED

@@ -363,6 +363,8 @@ class BookingsCalendarResource(BookingsResource):
 
 class BookingUpdateResource(Resource):
 
+    booking = None
+
     class Meta:
         include_resource_uri = True
         allowed_methods = ['post','put','get','options']
@@ -374,6 +376,7 @@ class BookingUpdateResource(Resource):
         authorization = Authorization()
 
 
+
     def obj_create(self, bundle, request=None, **kwargs):
 
         ref = bundle.data['pk']
@@ -381,9 +384,9 @@ class BookingUpdateResource(Resource):
         me = bundle.request.user
 
         try:
-            booking = Booking.objects.get(ref=ref)
-
-            self.update_booking(booking, bundle, value)
+            self.booking = Booking.objects.get(ref=ref)
+            # self.booking will have the updated booking object which may be used in dehydrate
+            self.update_booking(self.booking, bundle, value)
 
         except Booking.DoesNotExist:
             raise BadRequest('Invalid Booking reference %s' % ref)
@@ -394,7 +397,8 @@ class BookingUpdateResource(Resource):
         return  None
 
     def update_booking(self, booking, bundle):
-        pass
+
+        return booking
 
     def obj_get_list(self, bundle, **kwargs):
         raise BadRequest('You are probably calling with get and it should be post')
@@ -420,6 +424,13 @@ class BookingUpdateResource(Resource):
 
         return self._build_reverse_url('api_dispatch_detail', kwargs = kwargs)
 
+    def full_dehydrate(self, bundle):
+
+        bundle = {}
+        if self.booking:
+            bundle['status'] = self.booking.status
+
+        return bundle
 
 class MakeBookingResource(BookingUpdateResource):
     #TODO: Couldn't quite get this to work as won't return ref as valid json to jquery
@@ -501,6 +512,7 @@ class BookingActivityResource(BookingUpdateResource):
         try:
             booking.activity = Activity.objects.get(id=value)
             booking.save(user=bundle.request.user)
+
         except Activity.DoesNotExist:
             raise BadRequest('Invalid Activity id %s' % value)
 
@@ -516,6 +528,7 @@ class BookingInstrumentResource(BookingUpdateResource):
         try:
             booking.instrument = Instrument.objects.get(id=value)
             booking.save(user=bundle.request.user)
+
         except Instrument.DoesNotExist:
             raise BadRequest('Invalid Instrument id %s' % value)
 
@@ -530,7 +543,8 @@ class BookingTunerResource(BookingUpdateResource):
 
         try:
             booking.tuner = Tuner.objects.get(id=value)
-            booking.save(user=bundle.request.user)
+            self.booking = booking.save(user=bundle.request.user)
+            #return updated_booking
         except Tuner.DoesNotExist:
             raise BadRequest('Invalid Tuner id %s' % value)
 
@@ -588,10 +602,10 @@ class BookingDeadlineResource(BookingUpdateResource):
         return self.full_hydrate(bundle)
 
 
-class BookingRequestedResource(BookingUpdateResource):
+class BookingRequestedStartResource(BookingUpdateResource):
 
     class Meta(BookingStudioResource.Meta):
-        resource_name = 'set_requested_booking'
+        resource_name = 'set_requested_start_booking'
 
 
     def obj_create(self, bundle, request=None, **kwargs):
@@ -607,7 +621,31 @@ class BookingRequestedResource(BookingUpdateResource):
         except Booking.DoesNotExist:
             raise BadRequest('Invalid Booking reference %s' % ref)
 
-        booking.change_requested(tm)
+        booking.change_requested_from(tm)
+        booking.save(user=bundle.request.user)
+
+        return self.full_hydrate(bundle)
+
+class BookingRequestedEndResource(BookingUpdateResource):
+
+    class Meta(BookingStudioResource.Meta):
+        resource_name = 'set_requested_end_booking'
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        # date expected to be utc so no conversion required
+        ref = bundle.data['pk']
+        #TDOD: error handling
+
+        tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+        booking.change_requested_to(tm)
         booking.save(user=bundle.request.user)
 
         return self.full_hydrate(bundle)
@@ -673,7 +711,7 @@ class AcceptBookingResource(Resource):
         try:
             booking = Booking.objects.get(ref=ref)
             tuner = Tuner.objects.get(id=tuner_id)
-            booking.book(tuner)
+            booking.set_booked(tuner)
 
         except Booking.DoesNotExist:
             raise BadRequest('Invalid Booking reference %s' % ref)

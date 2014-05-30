@@ -56,12 +56,12 @@ CELERYBEAT_SCHEDULE = {
     'email-monitor-send': {
         'task': 'email_monitor.tasks.send',
         'schedule': crontab(5),
-    },
+        },
     'email-monitor-check': {
         'task': 'email_monitor.tasks.check',
         'schedule': crontab(1),
-    },
-}
+        },
+    }
 
 CELERY_MONITOR_URL = "http://217.115.117.19:5555"
 RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
@@ -70,10 +70,12 @@ RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 # djcelery.setup_loader()
 BROKER_URL = "amqp://guest:guest@localhost:5672/"
 
+# usernames to cc on all notifications
+NOTIFICATIONS_CC = ['pbright', 'system']
 
 NOTIFICATION_BACKENDS = [
     ("email", "notification.backends.email_logged.EmailLoggedBackend"),
-]
+    ]
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -100,7 +102,7 @@ ALLOWED_HOSTS = []
 SITE_ID = 1
 
 ADMINS = (
-     ('Phoebe', 'phoebebright310+tune@gmail.com'),
+    ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
 NOTIFY_BOOKINGS = ['phoebebright310+notifybook@gmail.com',]
 
@@ -123,7 +125,7 @@ STATIC_URL = '/shared_static/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 TEMPLATE_LOADERS = (
@@ -155,7 +157,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    )
+)
 
 
 LOGIN_REDIRECT_URL = '/'
@@ -172,7 +174,7 @@ FILE_UPLOAD_PERMISSIONS = 0644
 TEMPLATE_DIRS = (
     BASE_DIR+ "/templates",
 
-    )
+)
 
 
 
@@ -219,7 +221,7 @@ WSGI_APPLICATION = 'tuning.wsgi.application'
 INTERNAL_IPS = ('217.115.117.19',)
 ALLOWED_HOSTS = [
     '.tunemypiano.co.uk',
-]
+    ]
 
 DATABASES = {
     'default': {
@@ -270,13 +272,19 @@ DEFAULT_SLOT_TIME = 60
 MAX_BOOK_DAYS_IN_ADVANCE = 380
 SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 
+
+# calendar settings
+
+CALENDAR_MIN_TIME = "05:00:00"
+CALENDAR_MAX_TIME = "22:00:00"
+
 API_URL = "http://tunemypiano.co.uk/api/v1/"
 
 
 CRON_CLASSES = [
     "web.cron.CheckBookingStatus",
 
-]
+    ]
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
@@ -288,10 +296,12 @@ SHORT_DATE_FORMAT = "D j N"
 TIME_FORMAT = "P"
 TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 
+
+
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',
     'celery': os.path.join(BASE_DIR, 'logs/celery.log'),
-}
+    }
 
 LOGGING = {
     'version': 1,
@@ -299,8 +309,13 @@ LOGGING = {
     'formatters': {
         'simple': {
             'format': '%(levelname)s %(message)s',
-             'datefmt': '%y %b %d, %H:%M:%S',
+            'datefmt': '%y %b %d, %H:%M:%S',
             },
+
+        'standard': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
         },
     'handlers': {
         'console': {
@@ -308,20 +323,43 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'logfile': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/logfile.log'),
+            'maxBytes': 50000,
+            'backupCount': 2,
+            'formatter': 'standard',
+            },
         'celery': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/celery.log'),
             'formatter': 'simple',
             'maxBytes': 1024 * 1024 * 100,  # 100 mb
+
         },
-    },
+        },
     'loggers': {
+        'django': {
+            'handlers':['console'],
+            'propagate': True,
+            'level':'WARN',
+            },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+            },
+        'web': {
+            'handlers': ['console', 'logfile'],
+            'level': 'DEBUG',
+            },
         'celery': {
             'handlers': ['celery', 'console'],
             'level': 'DEBUG',
             },
-    }
+        }
 }
 
 from logging.config import dictConfig

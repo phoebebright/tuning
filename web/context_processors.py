@@ -22,6 +22,8 @@ def add_stuff(request):
 
     context['DEFAULT_DEADLINE_TIME'] = settings.DEFAULT_DEADLINE_TIME.replace(':','')
     context['USER_TIME_ZONE'] = settings.USER_TIME_ZONE
+    context['CALENDAR_MIN_TIME'] = settings.CALENDAR_MIN_TIME
+    context['CALENDAR_MAX_TIME'] = settings.CALENDAR_MAX_TIME
 
     #TODO: optimise these calls they are calling custmuser for every record
     #TODO: try specifying values requred

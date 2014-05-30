@@ -98,7 +98,7 @@
 
 
 <span class="pull-right">
-
+    {% comment %}TODO: buttons can change mid edit based on data entered {% endcomment %}
     {% if object.status == '0' %}
         <button id="editable_save" type="button" class="btn btn-success" >Create Booking</button>
         <button id="editable_cancel" type="button" class="btn btn-warning" >Forget</button>
@@ -112,7 +112,7 @@
 
     {% if object.status == '3' %}
         <button id="editable_done" type="button" class="btn btn-success" >Done</button>
-        <button id="editable_complete" type="button" class="btn btn-success" >Completed</button>
+        <button id="editable_complete" type="button" class="btn booking_status_3" >Completed</button>
         <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
     {% endif %}
 

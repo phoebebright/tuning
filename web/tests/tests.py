@@ -246,7 +246,7 @@ class BookingTest(TestCase):
 
         # accept booking from booking object
         book1 = self.jima.request_booking(when=TOMORROW, client_ref="Jam", deadline=make_time(TOMORROW, "end"))
-        book1.book(tuner=self.matt, start_time=datetime.combine(TOMORROW, time(12,15)))
+        book1.set_booked(tuner=self.matt, start_time=datetime.combine(TOMORROW, time(12,15)))
 
         self.assertEqual(book1.status, BOOKING_BOOKED)
         self.assertEqual(book1.tuner, self.matt)
@@ -329,7 +329,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.to_complete().count(), 0)
 
         # to complete set as this booking was yesterday
-        book1.book(tuner=self.matt, start_time=YESTERDAY)
+        book1.set_booked(tuner=self.matt, start_time=YESTERDAY)
         self.assertEqual(Booking.objects.current().count(), 1)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 1)
@@ -339,7 +339,7 @@ class BookingTest(TestCase):
 
         # the to_complete only pulls bookings that are past their start time so add another to differentiate
         book2 = self.jima.request_booking(when=TOMORROW, client_ref="Jam2", deadline=TOMORROW)
-        book2.book(tuner=self.matt)
+        book2.set_booked(tuner=self.matt)
 
 
         self.assertEqual(Booking.objects.current().count(), 2)
@@ -367,7 +367,7 @@ class BookingTest(TestCase):
         book = self.jima.request_booking(when=YESTERDAY, client_ref="Jam2", deadline=YESTERDAY)
         self.assertTrue(book.status, "1")
 
-        book.book(tuner=self.matt)
+        book.set_booked(tuner=self.matt)
         self.assertTrue(book.status, "3")
 
         Booking.check_to_complete()

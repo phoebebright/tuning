@@ -20,7 +20,7 @@ API Stuff
 
 from tastypie.api import Api
 from web.api import *
-from web.views import BookingCreate, BookingUpdate, BookingDelete, BookingDetailView, BookingCompleteView
+from web.views import *
 from libs.utils import required
 
 v1_api = Api(api_name='v1')
@@ -37,7 +37,8 @@ v1_api.register(BookingClientrefResource())
 v1_api.register(BookingCompleteResource())
 v1_api.register(BookingCreateResource())
 v1_api.register(BookingDeadlineResource())
-v1_api.register(BookingRequestedResource())
+v1_api.register(BookingRequestedStartResource())
+v1_api.register(BookingRequestedEndResource())
 v1_api.register(BookingDeleteResource())
 v1_api.register(BookingDurationResource())
 v1_api.register(BookingInstrumentResource())
@@ -80,6 +81,10 @@ class DirectTemplateView(TemplateView):
 
 
 admin.autodiscover()
+
+#staff_required = user_passes_test(lambda u: u.is_staff)
+superuser_required = user_passes_test(lambda u: u.is_superuser)
+#run_permission = user_passes_test(lambda u: u.has_perm('bots.change_mutex'))
 
 def is_superuser(user):
 
@@ -143,8 +148,7 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/template/(?P<booking_ref>\w+)/$', 'render_booking_template', name="render_booking_template"),
                         url(r'^webmaster/$', 'webmaster', name='webmaster'),
                         url(r'^ping/$', 'ping', name='ping'),
-                        url(r'^check_bookings/$', user_passes_test(is_superuser)('check_bookings'), name='check_bookings'),
-                        )
+                         )
 
 
 
@@ -161,6 +165,7 @@ urlpatterns += patterns('',
                        url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
                        url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
+                       url(r'^check_bookings/$', superuser_required(check_bookings_task), name='check_bookings'),
 
 
 )

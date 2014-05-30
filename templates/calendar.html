@@ -180,6 +180,8 @@
             timezone: 'local',
             firstDay:1,
             defaultView: calendarView,
+            minTime: "{{ CALENDAR_MIN_TIME }}",
+            maxTime: "{{ CALENDAR_MAX_TIME }}",
             //slotDuration: "1:00",
             //defaultEventMinutes: 60,
             allDayDefault: false,
@@ -204,8 +206,9 @@
 
             eventResize: function(event, revertFunc) {
 
-                var duration = event.end.diff(event.start, 'minutes');
-                update_duration(event.id, duration);
+                //var duration = event.end.diff(event.start, 'minutes');
+
+                update_end(event.id, event.end);
 
             },
             eventDrop: function(event, revertFunc) {
