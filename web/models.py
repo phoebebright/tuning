@@ -38,8 +38,8 @@ from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
 from django_gravatar.helpers import get_gravatar_url
 
-from twilio.twiml import Response
-from django_twilio.decorators import twilio_view
+#from twilio.twiml import Response
+#from django_twilio.decorators import twilio_view
 
 """
 notifications:
@@ -1350,9 +1350,13 @@ class Booking(models.Model, ModelDiffMixin):
         RUN VIA CRON web.cron.CheckBookingStatus
         '''
 
+        n = 0
         for item in cls.objects.filter(status=BOOKING_BOOKED, booked_time__lt=NOW):
-            item.status = BOOKING_TOCOMPLETE
+            item.set_complete()
             item.save()
+            n += 1
+
+        return n
 
 
 

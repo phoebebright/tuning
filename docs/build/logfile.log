@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Applications/PyCharm 3.4 EAP.app/helpers/rest_runners/sphinx_runner.py", line 7, in <module>
+    raise NameError("Cannot find sphinx in selected interpreter.")
+NameError: Cannot find sphinx in selected interpreter.

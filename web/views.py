@@ -427,3 +427,16 @@ def check_bookings_task(request):
 
     check_bookings.delay()
     return HttpResponse('OK')
+
+@login_required
+@user_passes_test(is_webmaster)
+def send_test_email(request):
+
+    to = settings.WEBMASTER_EMAIL
+    sender = settings.DEFAULT_FROM_EMAIL
+    subject = "Mail 1 of 1 - straight email"
+    body = "test email body"
+
+    send_mail(subject, body, sender, [to, ])
+
+
