@@ -13,13 +13,13 @@ function show_comments(id) {
             booking_id: id},
         dataType : 'json',
         success:function(json){
-            var data =json.objects;
+
+
+            var data =tidy_comment_data(json.objects);
+
             $.each(data, function(i, d) {
 
-                var when = moment(d.created).format('ddd Do MMM - HH:mm')
-                var since = moment(d.created).fromNow()
-
-                html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + when +'</li>';
+                html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + d['when'] +'</li>';
             })
 
             $("#comment_list").html(html);
@@ -55,6 +55,12 @@ function add_comment_editable() {
 }
 
 function add_comment_list() {
+    /* the comment badge is the little circle with the number of comments in it.
+    Clicking on the badge reveals the comments.  In order to get this behaviour,
+    first load all comments for each booking - update_comment_list - this includes creating
+    badge.  Now update each badge with the count of comments.  Now can setup the onclick.
+    see Q docs - https://github.com/kriskowal/q
+     */
 
 
     $(".comment_list").each(function(i,d) {
@@ -105,7 +111,8 @@ function load_recent_comments(selection, filter) {
         dataType : 'json',
         success:function(json){
             var html = '';
-            $.each(json.objects, function(i, d) {
+            var data =tidy_comment_data(json.objects);
+            $.each(data, function(i, d) {
 
                 html += comment_html(d, template);
             });
@@ -151,7 +158,9 @@ function update_comment_list(selection, pk) {
         dataType : 'json',
         success:function(json){
             var html = '';
-            $.each(json.objects, function(i, d) {
+            var data =tidy_comment_data(json.objects);
+            
+            $.each(data, function(i, d) {
                 html += comment_html(d, template);
             });
 
@@ -176,9 +185,32 @@ function comment_html(d, template) {
 
     return Mustache.render(template, {
         user: d['user'],
-        time: moment(d['created']).fromNow(),
+        since: d['since'],
         booking_ref: d['booking_ref'],
         booking_url: d['booking_url'],
         long_heading: d['long_heading'],
         text: d['comment']});
+}
+
+function tidy_comment_data(data) {
+    /* convert utc dates to local */
+
+    var is_list = (typeof data.id === 'undefined');
+
+    // if passing in one object, make it a list
+    if (!is_list) {
+        data = [data];
+    }
+
+    $.each(data, function(i, d) {
+                d['created'] = moment(moment.utc(d.created).toDate());
+                d['when'] = moment(d['created']).format('ddd Do MMM - HH:mm');
+                d['since'] = moment(d['created']).fromNow();
+            });
+
+    if (!is_list) {
+        data = data[0];
+    }
+
+    return data
 }

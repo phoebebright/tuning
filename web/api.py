@@ -138,7 +138,7 @@ class BookerResource(ModelResource):
     client = fields.ToOneField(ClientResource, "client", full=False)
 
     class Meta:
-        queryset = Booker.objects.all()
+        queryset = Booker.objects.all().select_related()
         include_resource_uri = False
         resource_name = 'bookers'
         limit = 0
@@ -270,6 +270,8 @@ class BookingsResource(ModelResource):
         bundle.data['where'] = bundle.obj.where
         bundle.data['what'] = bundle.obj.what
 
+        bundle.data['description'] = bundle.obj.description_for_user(bundle.request.user)
+
         bundle.data['editable'] = bundle.obj.is_editable
 
         #bundle.data['activity'] = bundle.obj.activity.name
@@ -344,6 +346,7 @@ class BookingsFullResource(BookingsResource):
         bundle = super(BookingsFullResource, self).dehydrate(bundle)
 
         # return a rendered editable template for this booking
+        #TODO: don't need to populate?  Is done in js populate_form I think
         bundle.data['template'] = render_booking_template(bundle.request, bundle.obj)
         return bundle
 
@@ -429,27 +432,24 @@ class BookingUpdateResource(Resource):
         bundle = {}
         if self.booking:
             bundle['status'] = self.booking.status
+            bundle['ref'] = self.booking.ref
 
         return bundle
 
-class MakeBookingResource(BookingUpdateResource):
-    #TODO: Couldn't quite get this to work as won't return ref as valid json to jquery
+class InitBookingResource(BookingUpdateResource):
     '''
     without always_return_data = True the jquery ajax fails with 201 and no response data
     with always_return_data = True it retuns a copy of the post data but what I want is the ID.
     '''
 
     class Meta(BookingUpdateResource.Meta):
-        resource_name = 'make_booking'
+        resource_name = 'init_booking'
         always_return_data = True
-
 
 
     def obj_create(self, bundle, request=None, **kwargs):
 
         client_id = bundle.data['client_id']
-        when = datetime.strptime(bundle.data['when'], "%Y-%m-%d %H:%M")
-        user_id = bundle.data['user_id']
 
         try:
             client = Client.objects.get(id=client_id)
@@ -459,35 +459,35 @@ class MakeBookingResource(BookingUpdateResource):
             raise BadRequest('This Client id does not exist: %s' % client_id)
 
 
-        try:
-            user = CustomUser.objects.get(id=user_id)
-            if not user.can_book:
-                raise BadRequest('This User %s is not allowed to make bookings' % user)
-        except CustomUser.DoesNotExist:
-            raise BadRequest('This User id does not exist: %s' % user_id)
+        user = bundle.request.user
+        if not user.can_book:
+            raise BadRequest('This User %s is not allowed to make bookings' % user)
 
 
-        # all ok so create booking
-        booking = Booking.create_booking(user, deadline=when, client=client)
 
-        # create a simpleobject to return ref
+        if bundle.data.has_key('start'):
+            start = arrow.get(bundle.data['start']).datetime
+            self.booking =  Booking.create_booking(user, client=client, when=start)
 
-        bundle.obj = SimpleObject()
-        bundle = self.full_hydrate(bundle)
+        elif bundle.data.has_key('deadline'):
+            deadline = arrow.get(bundle.data['deadline']).datetime
+            self.booking =  Booking.create_booking(user, client=client, deadline=deadline)
 
-        bundle.obj.id = booking.ref
+
         return bundle
 
 
-class BookingCreateResource(BookingUpdateResource):
-
+class BookingMakeResource(BookingUpdateResource):
+    ''' take a booking object that has been created but still has a status of 0
+    and change to status = 1 which makes it a real booking
+    '''
     class Meta(BookingUpdateResource.Meta):
-        resource_name = 'create_booking'
+        resource_name = 'make_booking'
 
 
     def update_booking(self, booking, bundle, value):
 
-        booking.create(bundle.request.user)
+        booking.make_booking(bundle.request.user)
 
 class BookingDeleteResource(BookingUpdateResource):
 
@@ -687,6 +687,21 @@ class BookingPriceResource(BookingUpdateResource):
         booking.save(user=bundle.request.user)
 
 
+class BookingCompleteResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'booking_complete'
+
+    def update_booking(self, booking, bundle, value):
+
+        state = bundle.data['state']
+
+        if state == "true":
+            booking.set_complete()
+            message = "Booking %s set to Completed" % (booking.ref, )
+        else:
+            booking.set_uncomplete()
+            message = "Booking %s set back to Booked" % (booking.ref, )
 
 
 class AcceptBookingResource(Resource):
@@ -808,41 +823,6 @@ class BookingsToPaidResource(AcceptedBookingsResource):
 
 
 
-class BookingCompleteResource(Resource):
-
-    class Meta:
-        include_resource_uri = True
-        resource_name = 'booking_complete'
-        allowed_methods = ['post','option']
-        object_class = SimpleObject
-        serializer = urlencodeSerializer()
-        authentication = Authentication()
-        authorization = Authorization()
-
-
-    def obj_create(self, bundle, request=None, **kwargs):
-
-        ref = bundle.data['ref']
-        state = bundle.data['state']
-        me = bundle.request.user
-
-        try:
-            booking = Booking.objects.get(ref=ref)
-
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
-
-        if state == "true":
-            booking.set_complete()
-            message = "Booking %s set to Completed" % (ref, )
-        else:
-            booking.set_uncomplete()
-            message = "Booking %s set back to Booked" % (ref, )
-
-        #TODO: This object is not being returned, it's not getting serialised for some reason
-        return  None
-
 class BookingProviderPaidResource(Resource):
 
     class Meta:
@@ -952,7 +932,7 @@ class LogResource(ModelResource):
 
     #TODO: Only return comments on booking where involved
     class Meta:
-        queryset = Log.objects.all()
+        queryset = Log.objects.all().select_related('customuser')
         include_resource_uri = False
         resource_name = 'log'
         limit = 100

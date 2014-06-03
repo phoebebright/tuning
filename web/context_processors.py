@@ -38,13 +38,13 @@ def add_stuff(request):
         if request.user.is_admin:
 
             context['num_requested'] = Booking.objects.requested().count()
-            context['list_requested'] = Booking.objects.requested().select_related().order_by('deadline')
+            context['list_requested'] = Booking.objects.requested().select_related('client','studio').order_by('deadline')
             context['num_current'] = Booking.objects.booked().count()
-            context['list_current'] = Booking.objects.booked().select_related().order_by('deadline')
+            context['list_current'] = Booking.objects.booked().select_related('client','studio').order_by('deadline')
             context['num_to_complete'] = Booking.objects.to_complete().count()
-            context['list_to_complete'] = Booking.objects.to_complete().select_related().order_by('deadline')
+            context['list_to_complete'] = Booking.objects.to_complete().select_related('client','studio').order_by('deadline')
             context['num_complete'] = Booking.objects.completed().count()
-            context['list_complete'] = Booking.objects.completed().select_related().order_by('deadline')
+            context['list_complete'] = Booking.objects.completed().select_related('client','studio').order_by('deadline')
 
             # admins need a list of clients for the new bookings menu item
             context['CLIENTS'] = Client.objects.active()
@@ -52,26 +52,26 @@ def add_stuff(request):
 
         elif request.user.is_booker:
             context['num_requested'] = Booking.objects.ours(request.user.client).requested().count()
-            context['list_requested'] = Booking.objects.ours(request.user.client).requested().select_related().order_by('deadline')
+            context['list_requested'] = Booking.objects.ours(request.user.client).requested().select_related('client','studio').order_by('deadline')
             context['num_current'] = Booking.objects.ours(request.user.client).booked().count()
-            context['list_current'] = Booking.objects.ours(request.user.client).booked().select_related().order_by('deadline')
+            context['list_current'] = Booking.objects.ours(request.user.client).booked().select_related('client','studio').order_by('deadline')
             context['num_to_complete'] = Booking.objects.ours(request.user.client).to_complete().count()
-            context['list_to_complete'] = Booking.objects.ours(request.user.client).to_complete().select_related().order_by('deadline')
+            context['list_to_complete'] = Booking.objects.ours(request.user.client).to_complete().select_related('client','studio').order_by('deadline')
             context['num_complete'] = Booking.objects.ours(request.user.client).unpaid(request.user).count()
-            context['list_complete'] = Booking.objects.ours(request.user.client).unpaid(request.user).select_related().order_by('deadline')
+            context['list_complete'] = Booking.objects.ours(request.user.client).unpaid(request.user).select_related('client','studio').order_by('deadline')
 
             context['CLIENTS'] = []
 
 
         elif request.user.is_tuner:
             context['num_requested'] = Booking.objects.requested().count()
-            context['list_requested'] = Booking.objects.requested().select_related().order_by('deadline')
+            context['list_requested'] = Booking.objects.requested().select_related('client','studio').order_by('deadline')
             context['num_current'] = Booking.objects.mine(request.user).booked().count()
-            context['list_current'] = Booking.objects.mine(request.user).booked().select_related().order_by('deadline')
+            context['list_current'] = Booking.objects.mine(request.user).booked().select_related('client','studio').order_by('deadline')
             context['num_to_complete'] = Booking.objects.mine(request.user).to_complete().count()
-            context['list_to_complete'] = Booking.objects.mine(request.user).to_complete().select_related().order_by('deadline')
+            context['list_to_complete'] = Booking.objects.mine(request.user).to_complete().select_related('client','studio').order_by('deadline')
             context['num_complete'] = Booking.objects.mine(request.user).unpaid(request.user).count()
-            context['list_complete'] = Booking.objects.mine(request.user).unpaid(request.user).select_related().order_by('deadline')
+            context['list_complete'] = Booking.objects.mine(request.user).unpaid(request.user).select_related('client','studio').order_by('deadline')
 
             context['CLIENTS'] = []
 

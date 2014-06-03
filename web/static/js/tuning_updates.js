@@ -36,6 +36,8 @@ function load_data(client_id, start_date, end_date) {
         }
     });
 
+
+
     // get list of tuners and setup editable
     $.ajax({
         type:"get",
@@ -258,8 +260,9 @@ function load_data(client_id, start_date, end_date) {
 
 function update_events() {
 
+    /*  COMPLETE */
 
-    // for marking complete
+    // for marking complete - can be marked and unmarked
 
     $(".switch").bootstrapSwitch();  // make checkboxes in table into switches
 
@@ -271,20 +274,21 @@ function update_events() {
         var state = !(this.checked);
         var ref = this.dataset['pk'];
 
-        $.ajax({
-            type:"post",
-            url:API+"booking_complete/",
-            data: {
-                ref:ref,
-                state: state},
-            dataType : 'json',
-            success:function(json){
-                x=json;
-            }
+        complete_booking(ref, USER_ID, state);
 
-        });
     });
 
+    // complete button pressed
+        $(".complete_booking").on("click", function(e) {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to mark this booking as complete?")) {
+
+            var ref = this.dataset['pk'];
+
+            complete_booking(ref, USER_ID, "true");
+
+        }
+    });
 
     $(".switch_tuner").on("switch-change", function(e) {
         e.stopPropagation();
@@ -373,27 +377,7 @@ function update_events() {
         }
     });
 
-    $(".complete_booking").on("click", function(e) {
-        e.stopPropagation();
-        if (window.confirm("Are you sure you want to mark this booking as complete?")) {
 
-            var ref = this.dataset['pk'];
-
-            $.ajax({
-                type:"post",
-                url:API+"booking_complete/",
-                data: {
-                    value: USER_ID,
-                    state: "true",
-                    ref:ref},
-                dataType : 'json',
-                success:function(json){
-                    location.reload();
-                }
-
-            });
-        }
-    });
 
     $(".booking_provider_paid").on("click", function(e) {
         e.stopPropagation();
@@ -429,6 +413,7 @@ function tidy_data(json) {
     json['requested_from'] = moment(moment.utc(json['requested_from']).toDate());
     json['requested_to'] = moment(moment.utc(json['requested_to']).toDate());
     json['when'] = moment(moment.utc(json['when']).toDate());
+    json['price'] = parseFloat(json['price']).toFixed(2);
 
     // stuff for calendar
     json['id'] = json.ref;
@@ -528,3 +513,22 @@ function update_end(eventid, end) {
 
         });
 }
+
+function complete_booking(ref, user_id, state) {
+
+            $.ajax({
+                type:"post",
+                url:API+"booking_complete/",
+                data: {
+                    value: user_id,
+                    state: state,
+                    pk:ref},
+                dataType : 'json',
+                success:function(json){
+                    load_booking(ref);
+                }
+
+            });
+
+}
+

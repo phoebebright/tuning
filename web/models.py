@@ -540,7 +540,7 @@ class Tuner(CustomUser):
 class BookingsPassThroughManager(PassThroughManager):
 
     def get_queryset(self):
-        return super(BookingsPassThroughManager, self).get_queryset().filter(client__isnull=False)
+        return super(BookingsPassThroughManager, self).get_queryset()
 
 
 class BookingsQuerySet(QuerySet):
@@ -742,7 +742,7 @@ class Booking(models.Model, ModelDiffMixin):
         ''' used to determine if the booking can be changed in the front end
         :return:
         '''
-        return self.status < BOOKING_BOOKED
+        return self.status < BOOKING_COMPLETE
 
     @property
     def short_heading(self):
@@ -946,7 +946,7 @@ class Booking(models.Model, ModelDiffMixin):
         return item
 
 
-    def create(self, user=None):
+    def make_booking(self, user=None):
         ''' save booking and change status 1 so it becomes a real booking.  Bookings are created with cls.booking_create
         with a status of 0 so that they can be edit from javascript.  Don't become real until the user clicks on
         save and this method is called

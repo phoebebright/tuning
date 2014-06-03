@@ -129,13 +129,15 @@ def check_mail(request=None):
 
 def send_requests(request=None):
 
+
+
     # check and remove calls for bookings with deadline in the past
     expire_overdue_calls()
 
 
     for item in TunerCall.objects.unsent():
 
-
+        print "send_requests"
         # don't send message if booking already has a tuner or no tuner
         if item.booking.status > BOOKING_REQUESTED:
             item.expire()

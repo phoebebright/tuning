@@ -156,7 +156,7 @@ class EmailLog(models.Model):
         try:
             self.attempts += 1
             self.save()
-            success = send_mail(self.subject, self.body, self.from_email, [self.recipient, ])
+            success = send_mail(self.subject, self.body, self.from_email, [self.to_email, ])
 
             if success:
                 self.date_sent=datetime.now()
