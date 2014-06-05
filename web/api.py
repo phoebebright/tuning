@@ -382,6 +382,11 @@ class BookingUpdateResource(Resource):
 
     def obj_create(self, bundle, request=None, **kwargs):
 
+
+        # if no value then nothing to do
+        if not bundle.data.has_key('value'):
+            return None
+
         ref = bundle.data['pk']
         value = bundle.data['value']
         me = bundle.request.user

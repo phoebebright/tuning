@@ -220,10 +220,11 @@ function load_data(client_id, start_date, end_date) {
     $('.clientref').editable({
         type: 'text',
         mode: 'inline',
+        defaultValue: '',
         url: API + 'set_clientref_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-            var x=1;
+
             //TODO: Error checking
         }
     });
