@@ -48,6 +48,7 @@ http://docs.celeryproject.org/en/latest/tutorials/daemonizing.html#daemonizing
 from celery.schedules import crontab
 
 
+
 CELERYBEAT_SCHEDULE = {
     # crontab(hour=0, minute=0, day_of_week='saturday')
     'check-bookings-to-complete': {

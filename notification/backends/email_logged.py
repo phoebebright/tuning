@@ -63,6 +63,6 @@ class EmailLoggedBackend(backends.BaseBackend):
                subject = subject,
                body = body,
         )
-        print 'about to send email'
-        email.send()
+        print 'about to send email just added'
+        email.send_now()
 
