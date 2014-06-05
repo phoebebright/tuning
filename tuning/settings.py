@@ -1,8 +1,9 @@
 """
 Development decisions:
-1. As far as possible use the api rather than views/django template tags so that it is more
+1. Put as much logic as possible in the model.  Views should just serve data.
+2. As far as possible use the api rather than views/django template tags so that it is more
 portable, however, in the interests of getting it done, some template tags are used.
-2. Timezones - all database dates are utc.  On the django side dates are are utc EXCEPT,
+3. Timezones - all database dates are utc.  On the django side dates are are utc EXCEPT,
 where a new deadline is being created and the default time is local.
 Javascript handles the conversion from utc for display and passed back utc to the api
 Tried every possible combination of where the conversion could be done and all other options
@@ -295,7 +296,7 @@ CRON_CLASSES = [
 TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
 TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
 
-DATETIME_FORMAT = "D j N at P"
+DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
 TIME_FORMAT = "P"
 TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00

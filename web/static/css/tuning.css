@@ -115,3 +115,5 @@ color: #454545;
     float: none;
     margin: 0 auto;
 }
+
+#button_row button {margin-top:10px;}

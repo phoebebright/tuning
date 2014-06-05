@@ -540,7 +540,7 @@ class Tuner(CustomUser):
 class BookingsPassThroughManager(PassThroughManager):
 
     def get_queryset(self):
-        return super(BookingsPassThroughManager, self).get_queryset().filter(client__isnull=False)
+        return super(BookingsPassThroughManager, self).get_queryset()
 
 
 class BookingsQuerySet(QuerySet):
@@ -742,7 +742,7 @@ class Booking(models.Model, ModelDiffMixin):
         ''' used to determine if the booking can be changed in the front end
         :return:
         '''
-        return self.status < BOOKING_BOOKED
+        return self.status < BOOKING_COMPLETE
 
     @property
     def short_heading(self):
@@ -946,7 +946,7 @@ class Booking(models.Model, ModelDiffMixin):
         return item
 
 
-    def create(self, user=None):
+    def make_booking(self, user=None):
         ''' save booking and change status 1 so it becomes a real booking.  Bookings are created with cls.booking_create
         with a status of 0 so that they can be edit from javascript.  Don't become real until the user clicks on
         save and this method is called
@@ -986,7 +986,8 @@ class Booking(models.Model, ModelDiffMixin):
 
         notify = cc + who
 
-        celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
+        # next line just keeps repeating?????
+        #celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
         notification.send(users=notify,
                           label=what,
                            extra_context=context)
@@ -1430,18 +1431,29 @@ class TunerCall(models.Model):
     def request(self, booking):
 
 
-        call = TunerCall.objects.create(booking = booking)
-        tuner = call.get_next_tuner()
-        if tuner:
+        while True:
+            call = TunerCall(booking = booking)
+            tuner = call.get_next_tuner()
+            # loop until run out of tuners to call
+            if not tuner:
+                break
             call.tuner = tuner
-        else:
-            call.msg_no_tuners()
-            print "Failed to send request for booking %s" % self.booking
-            raise RequestTunerFailed
+            call.save()
 
 
-        call.save()
-        return call
+
+
+        # code for calling one at a time
+        # if tuner:
+        #     call.tuner = tuner
+        # else:
+        #     call.msg_no_tuners()
+        #     print "Failed to send request for booking %s" % self.booking
+        #     raise RequestTunerFailed
+
+
+        # call.save()
+        # return call
 
     def get_next_tuner(self):
 
@@ -1464,8 +1476,9 @@ class TunerCall(models.Model):
         '''
         :return:list of tuner ids that have already been called for this booking
         '''
-        return TunerCall.objects.filter(booking=self.booking).values_list('tuner',).exclude(tuner__isnull=True)
-
+        uncalled = TunerCall.objects.filter(booking=self.booking).values_list('tuner',).exclude(tuner__isnull=True)
+        # uncalled = a list of lists, so flatten before returning
+        return [item for sublist in uncalled for item in sublist]
 
     @transaction.atomic()
     def tuner_accepted(self):

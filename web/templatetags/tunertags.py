@@ -1,6 +1,8 @@
 from django import template
 from django.utils.safestring import mark_safe
 
+from web.models import Booking
+
 import json
 from django.forms.models import model_to_dict
 from decimal import Decimal
@@ -45,5 +47,9 @@ def json_dumps(data):
 
 @register.simple_tag(takes_context=True)
 def booking_description(context, object):
-    user = context['user']
-    return object.description_for_user(user)
+
+    if isinstance(object, Booking):
+        user = context['user']
+        return object.description_for_user(user)
+    else:
+        return ''

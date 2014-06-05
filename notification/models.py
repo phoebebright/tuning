@@ -159,11 +159,13 @@ class EmailLog(models.Model):
 
             self.attempts += 1
             self.save()
+
             logger.debug("About to send email %s" % self.id)
       
             success = send_mail(self.subject, self.body, self.from_email,  [self.to_email, ])
             logger.debug("Back")
             
+
             if success:
                 logger.debug("Success")
 

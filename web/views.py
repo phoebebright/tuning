@@ -63,7 +63,7 @@ def is_webmaster(user):
 
 @login_required
 @user_passes_test(can_book)
-def bookings_add(request, client_id=None, deadline=None):
+def bookings_add(request, client_id=None, when=None):
     '''add a new booking with minimal information
     if the user is admin, they must supply a client id
     if the user is a booker, then the client is the organisation they are attached to
@@ -101,7 +101,7 @@ def bookings_add(request, client_id=None, deadline=None):
     if request.GET.has_key('deadline'):
         dline = arrow.get(request.GET['deadline']).datetime
 
-    if deadline:
+    if when:
         try:
             dline = datetime.strptime(deadline, "%Y%m%d%H%M")
             dline = tz.localize(dline)
