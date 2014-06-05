@@ -15,6 +15,9 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.six.moves import cPickle as pickle  # pylint: disable-msg=F
 
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger('celery')
+
 
 from .compat import AUTH_USER_MODEL
 
@@ -151,14 +154,19 @@ class EmailLog(models.Model):
 
 
 
-    def send(self):
+    def send_now(self):
 
 
             self.attempts += 1
             self.save()
+            logger.debug("About to send email %s" % self.id)
+      
             success = send_mail(self.subject, self.body, self.from_email,  [self.to_email, ])
-
+            logger.debug("Back")
+            
             if success:
+                logger.debug("Success")
+
                 self.date_sent=datetime.datetime.now()
                 self.save()
 
