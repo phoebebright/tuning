@@ -475,10 +475,19 @@ class InitBookingResource(BookingUpdateResource):
             self.booking =  Booking.create_booking(user, client=client, when=start)
 
         elif bundle.data.has_key('deadline'):
-            deadline = arrow.get(bundle.data['deadline']).datetime
+
+            dline = arrow.get(bundle.data['deadline']).datetime
+
+            # was deadline passed as date or datetime
+            if len(bundle.data['deadline']) < 11:
+                deadline = dline.date()
+            else:
+                deadline = dline
+
             self.booking =  Booking.create_booking(user, client=client, deadline=deadline)
 
-
+        else:
+            self.booking =  Booking.create_booking(user, client=client)
         return bundle
 
 

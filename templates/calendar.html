@@ -416,28 +416,23 @@
                  // reload as other values may have changed
                 load_booking(json['ref']);
 
-{#                // retrieve the dropped element's stored Event Object#}
-{#                var new_event = Array();#}
-{##}
-{#                // convert datetimes to moments#}
-{#                json = tidy_data(json);#}
-{##}
-{#                // assign it the date that was reported#}
-{#                new_event.id = json['ref'];#}
-{#                new_event.title = json['title'];#}
-{#                new_event.start = json['start'];#}
-{#                new_event.allDay = allDay;#}
-{#                new_event.ref = json['ref'];#}
-{#                new_event.className = "booking_status_1";#}
-{##}
-{##}
-{##}
-{#                populate_form(json);#}
-{#                // display modal form#}
-{#                //$("#booking_entry_form").modal({show:true})#}
 
-                // render the event on the calendar
-                // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                // retrieve the dropped element's stored Event Object
+                var new_event = Array();
+
+
+                new_event.id = json['ref'];
+                new_event.title = json[''];
+                new_event.start = date;
+                new_event.allDay = allDay;
+                new_event.ref = json['ref'];
+                new_event.className = "booking_status_1";
+
+
+                populate_form(json);
+
+                 //render the event on the calendar
+                 //the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
                 $('#calendar').fullCalendar('renderEvent', new_event, true);
 
 

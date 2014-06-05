@@ -205,9 +205,11 @@ INSTALLED_APPS = (
     'django_logtail',
     'email_monitor',
     'web',
+    'django_statsd',
 )
 
 MIDDLEWARE_CLASSES = (
+    'django_statsd.middleware.StatsdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -215,6 +217,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'privateviews.middleware.LoginRequiredMiddleware',
+    'django_statsd.middleware.StatsdMiddlewareTimer',
 )
 
 ROOT_URLCONF = 'tuning.urls'
