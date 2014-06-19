@@ -176,6 +176,8 @@ def render_booking_template(request, object, user=None):
         template = "web/booking_editable_template.html"
     elif user.is_booker:
          template = "web/booking_editable_template_booker.html"
+    elif user.is_tuner:
+         template = "web/booking_editable_template_tuner.html"
 
     return render_to_string(template, {"object": object})
 
@@ -385,6 +387,7 @@ class BookingDelete(DeleteView):
 class BookingDetailView(DetailView):
     model = Booking
 
+    #TODO: show a day calendar with times - for bookers all for client, for tuner all for tuner
     def get_object(self, queryset=None):
         '''can retrieve object by id or ref
         '''
@@ -447,12 +450,12 @@ def send_test_email(request):
     notification.send(users=[to,],
                           label='test_notification')
 
-    for email in EmailLog.objects.filter(date_sent__isnull = True, recipient = to ):
-        email.send()
+    # for email in EmailLog.objects.filter(date_sent__isnull = True, recipient = to ):
+    #     email.send()
 
-    subject = "Mail 3 of 3 - test noitification generated email - send via celery"
-    notification.send(users=[to,],
-                          label='test_notification')
+    # subject = "Mail 3 of 3 - test noitification generated email"
+    # notification.send(users=[to,],
+    #                       label='test_notification')
 
 
     return HttpResponse('OK')

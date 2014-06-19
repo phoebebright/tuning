@@ -1,3 +1,5 @@
+//TODO: ON calendar optionally show archived bookings
+
 function load_data(client_id, start_date, end_date) {
     // pass parameters like this:
     //init({{ object.client_id }}, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
@@ -27,7 +29,9 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_activity_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    //TODO: Error checking
+
+                                        // reload form and event
+                    redraw(response.booking.ref, response.booking);
                 }
 
             });
@@ -59,8 +63,10 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_tuner_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    $("#booking_edit")
-                        .addClass("booking_status_" + response.status);
+
+                    // reload form and event
+                    redraw(response.booking.ref, response.booking);
+
 
                 }
 
@@ -71,7 +77,7 @@ function load_data(client_id, start_date, end_date) {
     });
 
     //TODO: what was this for?
-       // get list of tuners
+    // get list of tuners
 //    $.ajax({
 //        type:"get",
 //        url:API+"tuners",
@@ -123,7 +129,8 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_instrument_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    //TODO: Error checking
+                    // reload form and event
+                    redraw(response.booking.ref, response.booking);
                 }
 
             });
@@ -154,7 +161,8 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_studio_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    //TODO: Error checking
+                    // reload form and event
+                    redraw(response.booking.ref, response.booking);
                 }
             });
 
@@ -184,7 +192,8 @@ function load_data(client_id, start_date, end_date) {
                 url: API + 'set_booker_booking/?format=json&limit=0',
 
                 success: function(response, newValue) {
-                    //TODO: Error checking
+                    // reload form and event
+                    redraw(response.booking.ref, response.booking);
                 }
 
             });
@@ -224,8 +233,7 @@ function load_data(client_id, start_date, end_date) {
         url: API + 'set_clientref_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-
-            //TODO: Error checking
+        // nothing to do
         }
     });
 
@@ -235,9 +243,7 @@ function load_data(client_id, start_date, end_date) {
         url: API + 'set_duration_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-            //TODO: Error checking
-            // reload as other values may have changed
-            load_booking(this.dataset['pk']);
+                       redraw(response.ref, response.booking);
         }
     });
 
@@ -249,7 +255,7 @@ function load_data(client_id, start_date, end_date) {
             url: API + 'set_price_booking/?format=json&limit=0',
 
             success: function(response, newValue) {
-                //TODO: Error checking
+               // nothing to do
             }
         });
     }
@@ -280,7 +286,7 @@ function update_events() {
     });
 
     // complete button pressed
-        $(".complete_booking").on("click", function(e) {
+    $(".complete_booking").on("click", function(e) {
         e.stopPropagation();
         if (window.confirm("Are you sure you want to mark this booking as complete?")) {
 
@@ -306,7 +312,7 @@ function update_events() {
                 state: state},
             dataType : 'json',
             success:function(json){
-                x=json;
+                            redraw(ref, json.booking);
             }
 
         });
@@ -327,7 +333,7 @@ function update_events() {
                 state: state},
             dataType : 'json',
             success:function(json){
-                x=json;
+                 redraw(ref, json.booking)
             }
 
         });
@@ -346,7 +352,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                    location.reload();
+                                redraw(ref, json.booking)
 
                 }
 
@@ -370,8 +376,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-
-                    location.reload();
+            redraw(ref, json.booking)
                 }
 
             });
@@ -395,12 +400,35 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                    location.reload();
+                     redraw(ref, json.booking)
                 }
 
             });
         }
     });
+
+      $(".booking_client_paid").on("click", function(e) {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to mark this booking as paid?")) {
+
+            var ref = this.dataset['pk'];
+
+            $.ajax({
+                type:"post",
+                url:API+"booking_client_paid/",
+                data: {
+                    value: USER_ID,
+                    state: "true",
+                    ref:ref},
+                dataType : 'json',
+                success:function(json){
+                     redraw(ref, json.booking)
+                }
+
+            });
+        }
+    });
+
 
 }
 
@@ -445,7 +473,8 @@ function time_update(selection, time) {
             success:function(json){
 
                 // reload as other values may have changed
-                load_booking(ref);
+                var data = tidy_data(json.booking);
+                populate_form(data, eventid);
 
             }
 
@@ -466,70 +495,99 @@ function time_update(selection, time) {
     }
 }
 
-function update_duration(eventid, duration) {
-      $.ajax({
-            type:"post",
-            url:API+ 'set_duration_booking/?format=json&limit=0',
-            data: {
-                pk:eventid, value:duration },
-            dataType : 'json',
-            success:function(json){
-                 // reload as other values may have changed
-                load_booking(eventid);
-            }
+function update_duration(ref, duration) {
+    $.ajax({
+        type:"post",
+        url:API+ 'set_duration_booking/?format=json&limit=0',
+        data: {
+            pk:ref, value:duration },
+        dataType : 'json',
+        success:function(json){
+            redraw(ref, json.booking)
+        }
 
-        });
+    });
 }
 
-function update_start(eventid, start) {
-     $.ajax({
-            type:"post",
-            url:API+"set_requested_start_booking/",
-            data: {
-                pk:eventid, value:start},
-            dataType : 'json',
-            success:function(json){
+function update_start(ref, start) {
+    // this api call does not change other times
+    $.ajax({
+        type:"post",
+        url:API+"set_requested_start_booking/",
+        data: {
+            pk:ref, value:start},
+        dataType : 'json',
+        success:function(json){
 
-                // reload as other values may have changed
-                load_booking(eventid);
+            redraw(ref, json.booking)
 
-            }
+        }
 
-        });
+    });
 }
 
-function update_end(eventid, end) {
-     $.ajax({
-            type:"post",
-            url:API+"set_requested_end_booking/",
-            data: {
-                pk:eventid, value:end},
-            dataType : 'json',
-            success:function(json){
+function update_end(ref, end) {
+    $.ajax({
+        type:"post",
+        url:API+"set_requested_end_booking/",
+        data: {
+            pk:ref, value:end},
+        dataType : 'json',
+        success:function(json){
 
-                // reload as other values may have changed
-                load_booking(eventid);
+            redraw(ref, json.booking)
+        }
 
-            }
+    });
+}
 
-        });
+
+function update_time(ref, time_type,  end) {
+    $.ajax({
+        type:"post",
+        url:API+"set_booking_times/",
+        data: {
+            pk:ref, value:end, time_type: time_type},
+        dataType : 'json',
+        success:function(json){
+
+            redraw(ref, json.booking)
+
+        }
+
+    });
 }
 
 function complete_booking(ref, user_id, state) {
 
-            $.ajax({
-                type:"post",
-                url:API+"booking_complete/",
-                data: {
-                    value: user_id,
-                    state: state,
-                    pk:ref},
-                dataType : 'json',
-                success:function(json){
-                    load_booking(ref);
-                }
+    $.ajax({
+        type:"post",
+        url:API+"booking_complete/",
+        data: {
+            value: user_id,
+            state: state,
+            pk:ref},
+        dataType : 'json',
+        success:function(json){
+            // reload form and event
+            redraw(ref, json.booking);
 
-            });
+        }
+
+    });
 
 }
 
+function redraw(ref, json) {
+    /* redraw form and event with updted data */
+
+    var data = tidy_data(json);
+    populate_form(data, ref);
+    update_events();   // updates the on clicks etc.
+
+    // if called from a page with calendar then update related event
+    if( $('#calendar').length ) {
+        redraw_event(ref, data);
+    }
+
+}

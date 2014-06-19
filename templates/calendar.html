@@ -210,11 +210,12 @@
 
                 update_end(event.id, event.end);
 
+
             },
             eventDrop: function(event, revertFunc) {
 
                 var start = event.start.utc().format();
-                update_start(event.id, start);
+                update_time(event.id, "requested_from", start);
 
             },
             editable: true,  // set individually per event in data feed
@@ -294,9 +295,24 @@
         $('#calendar').fullCalendar('removeEvents', [eventid]);
     }
 
+
+    function redraw_event(eventid, d) {
+
+        var event = $("#calendar").fullCalendar( 'clientEvents', [eventid]);
+
+        event[0].title = d.title;
+        event[0].start = moment(d.start);
+        event[0].end = moment(d.end);
+        event[0].className = "booking_status_" + d['status'];
+
+        $('#calendar').fullCalendar( 'updateEvent', event[0] );
+
+    }
     function refresh_event(eventid) {
         // reget data and redisplay on calendar
         // generally called after an update
+
+        alert('not to self, probably dont need this');
 
 
         $.ajax({
@@ -351,10 +367,6 @@
     function close_form() {
         // hide form
         $("#booking_row").slideUp();
-
-        //refresh event on calendar
-        var eventid = $("#editform").data('eventref');  // eventid and eventref should be the same
-        refresh_event(eventid);
     }
 
     function load_booking(eventid) {
@@ -413,7 +425,7 @@
             dataType : 'json',
             success:function(json){
 
-                 // reload as other values may have changed
+                // reload as other values may have changed
                 load_booking(json['ref']);
 
 
@@ -431,8 +443,8 @@
 
                 populate_form(json);
 
-                 //render the event on the calendar
-                 //the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                //render the event on the calendar
+                //the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
                 $('#calendar').fullCalendar('renderEvent', new_event, true);
 
 
@@ -445,6 +457,7 @@
 
     }
     function populate_form(object, eventid) {
+        // eventid and object.ref are expected to be the same (were not in previous version)
         //TODO: should pass in name of div to hold form as paramter - currently hard coded to #booking_edit
 
         // create new form in div
@@ -462,10 +475,13 @@
         if (object.editable) {
 
 
-            // add ref to all editable fields
-            $('.editable').attr('data-pk', object.ref);
-            $('.editable_done').attr('data-pk', object.ref);
-            $('.editable_cancel').attr('data-pk', object.ref);
+            // add ref to all editable fields and buttons
+            // not working so put in template instead
+{#            $('.editable').data('pk', object.ref);#}
+{#            $("#booking_edit button").each(function() {#}
+{#                $(this).data('pk', object.ref);#}
+{#            });#}
+
 
             // now put data into "fields" or ? if no data
             $("#modal_label").text("Add Booking for " + object.client.name);
@@ -556,6 +572,17 @@
             $("#editform").html(object.description);
         }
 
+        // decide which buttons to show
+        $("#booking_edit button").each(function() {
+            $(this).hide();
+
+            // show/hide buttons based on user type and status
+            if ($(this).data('showUser').indexOf(USER_TYPE) > -1) {
+                if ($(this).data('showStatus').indexOf(object.status) > -1) {
+                    $(this).show();
+                }
+            }
+        });
 
         // now show the booking
         $("#booking_row").slideDown();

@@ -61,25 +61,45 @@
 
 
 
+<span id="button_row" class="pull-right">
+
+              <div id="button_bar">
 
 
-<span class="pull-right">
-
-    {% if object.status == '0' %}
-        <button id="editable_save" type="button" class="btn btn-success" >Create Booking</button>
-        <button id="editable_cancel" type="button" class="btn btn-warning" >Forget</button>
-    {% endif %}
-
-    {% if object.status == '1'  %}
-        <button id="editable_done" type="button" class="btn btn-success" >Done</button>
-        <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
-    {% endif %}
+                  <button id="editable_save" type="button" class="btn btn-success"
+                          data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Create Booking</button>
+                  <button id="editable_cancel" type="button" class="btn btn-warning"
+                          data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Forget</button>
 
 
-    {% if object.status == '2' %}
-        <button id="editable_complete" type="button" class="btn btn-success" >Booking Completed</button>
-        <button id="editable_cancel" type="button" class="btn btn-warning" >Cancel Booking</button>
-    {% endif %}
+
+
+                  <button type="button" class="btn booking_status_4 complete_booking"
+                          data-pk="{{ object.ref }}" data-show-status="_3,4" data-show-user="booker">Confirm {{ object.activity }} Complete</button>
+
+
+
+
+                  <button id="editable_done" type="button" class="btn btn-success"
+                          data-pk="{{ object.ref }}" data-show-status="_3,4,5" data-show-user="booker">Done</button>
+
+
+
+                  <button id="editable_cancel" type="button" class="btn btn-danger cancel_booking"
+                          data-pk="{{ object.ref }}" data-show-status="_1,3,4" data-show-user="booker">Cancel Booking</button>
+
+
+                  <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success"
+                     data-pk="{{ object.ref }}" data-show-status="_1,3,4,7,8,9" data-show-user="booker">Details...</a>
+
+              </div>
+
+
+
+
+
+
+
 
 </span>
 </div>
