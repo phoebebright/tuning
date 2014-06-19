@@ -16,6 +16,7 @@ def check_bookings():
     print 'Checking start'
     n = Booking.check_to_complete()
     logger.info('Checking updated %d' % n)
+    return n
 
 @task
 def celery_ping():
