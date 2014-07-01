@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
+from django.http import HttpRequest
 
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication, Authentication, BasicAuthentication
@@ -21,6 +22,7 @@ from web.models import *
 
 
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
 
 
@@ -314,7 +316,7 @@ class BookingsResource(ModelResource):
 class BookingsFullResource(BookingsResource):
 
     client = fields.ToOneField(ClientResource, "client", full=True)
-    booker = fields.ToOneField(UserResource, "booker", full=True)
+    booker = fields.ToOneField(UserResource, "booker", full=False)
     tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
     activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
     instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
@@ -332,14 +334,16 @@ class BookingsFullResource(BookingsResource):
     def dehydrate(self, bundle):
 
         # price goes up as time passes, so recalc prices if booking still not made
-        if bundle.obj.status <= BOOKING_REQUESTED:
-            upd = bundle.obj.recalc_prices()
-            bundle.obj.save(user=bundle.request.user)
 
-            bundle.data['default_price'] = upd['default_price']
-            bundle.data['vat'] = upd['vat']
-            bundle.data['price'] = upd['price']
-            bundle.data['tuner_payment'] = upd['tuner_payment']
+        # shouldn't be updating I don't think.
+        # if bundle.obj.status <= BOOKING_REQUESTED:
+        #     upd = bundle.obj.recalc_prices()
+        #     bundle.obj.save(user=bundle.request.user)
+        #
+        #     bundle.data['default_price'] = upd['default_price']
+        #     bundle.data['vat'] = upd['vat']
+        #     bundle.data['price'] = upd['price']
+        #     bundle.data['tuner_payment'] = upd['tuner_payment']
 
         from web.views import render_booking_template
 
@@ -347,7 +351,7 @@ class BookingsFullResource(BookingsResource):
 
         # return a rendered editable template for this booking
         #TODO: don't need to populate?  Is done in js populate_form I think
-        bundle.data['template'] = render_booking_template(bundle.request, bundle.obj)
+        bundle.data['template'] = render_booking_template(bundle.request, bundle.obj, user=bundle.request.user)
         return bundle
 
 
@@ -367,6 +371,7 @@ class BookingsCalendarResource(BookingsResource):
 class BookingUpdateResource(Resource):
 
     booking = None
+    user = None
 
     class Meta:
         include_resource_uri = True
@@ -399,10 +404,7 @@ class BookingUpdateResource(Resource):
         except Booking.DoesNotExist:
             raise BadRequest('Invalid Booking reference %s' % ref)
 
-
-        #message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
-        #TODO: This object is not being returned, it's not getting serialised for some reason
-        return  None
+        return  bundle
 
     def update_booking(self, booking, bundle):
 
@@ -432,12 +434,18 @@ class BookingUpdateResource(Resource):
 
         return self._build_reverse_url('api_dispatch_detail', kwargs = kwargs)
 
-    def full_dehydrate(self, bundle):
+    def dehydrate(self, bundle):
 
-        bundle = {}
-        if self.booking:
-            bundle['status'] = self.booking.status
-            bundle['ref'] = self.booking.ref
+        # return updated booking resource
+        resource = BookingsFullResource()
+
+        if not self.booking:
+          self.booking = resource.obj_get(bundle, ref=bundle.data['pk'])
+
+        booking_bundle = resource.build_bundle(obj=self.booking, request=bundle.request)
+
+
+        bundle.data['booking'] = resource.full_dehydrate(booking_bundle)
 
         return bundle
 
@@ -590,6 +598,30 @@ class BookingBookerResource(BookingUpdateResource):
             booking.save(user=bundle.request.user)
         except Booker.DoesNotExist:
             raise BadRequest('Invalid Booker id %s' % value)
+
+class BookingTimes(BookingUpdateResource):
+
+    class Meta(BookingStudioResource.Meta):
+        resource_name = 'set_booking_times'
+
+
+    def obj_create(self, bundle, request=None, **kwargs):
+        # date expected to be utc so no conversion required
+        ref = bundle.data['pk']
+        #TDOD: error handling
+
+        tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
+        me = bundle.request.user
+
+        try:
+            booking = Booking.objects.get(ref=ref)
+        except Booking.DoesNotExist:
+            raise BadRequest('Invalid Booking reference %s' % ref)
+
+        booking.change_all_times(bundle.data['time_type'], tm)
+        booking.save(user=bundle.request.user)
+
+        return self.full_hydrate(bundle)
 
 class BookingDeadlineResource(BookingUpdateResource):
 

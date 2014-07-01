@@ -742,7 +742,7 @@ class Booking(models.Model, ModelDiffMixin):
         ''' used to determine if the booking can be changed in the front end
         :return:
         '''
-        return self.status < BOOKING_COMPLETE
+        return self.status < BOOKING_CANCELLED
 
     @property
     def short_heading(self):
@@ -1027,6 +1027,24 @@ class Booking(models.Model, ModelDiffMixin):
             self.log(comment=msg, user=user, type='CANCEL')
 
 
+    def change_all_times(self, time_type, requested):
+        ''' one time is changed and adjust all other times.  Usuall this is called from the
+        api, eg. a booking has been dragged on the calendar
+        If changing on a form, then won't want to have this ripple effect, so just use
+        change_requested_from etc.
+        '''
+
+        # once booked, can't change time
+        if self.status < BOOKING_BOOKED:
+
+            if time_type == "requested_from":
+
+                # get difference of change and apply that to end and deadline
+                diff = self.requested_from - requested
+                self.requested_from = requested
+                self.requested_to = self.requested_to - diff
+                self.deadline = self.deadline - diff
+
 
     def change_deadline(self, deadline):
         ''' if booking is not complete, then change requested date based on deadline
@@ -1055,12 +1073,14 @@ class Booking(models.Model, ModelDiffMixin):
 
 
 
+
     def change_requested_to(self, requested):
 
         # once booked, can't change time
         if self.status < BOOKING_BOOKED:
 
             self.requested_to = requested
+
 
     def change_duration(self, duration):
 

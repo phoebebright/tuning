@@ -98,16 +98,9 @@
 
 
 
-
 <span id="button_row" class="pull-right">
 
               <div id="button_bar">
-
-
-                  <button id="editable_save" type="button" class="btn btn-success"
-                          data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Create Booking</button>
-                  <button id="editable_cancel" type="button" class="btn btn-warning"
-                          data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Forget</button>
 
 
 
@@ -115,28 +108,9 @@
                           data-pk="{{ object.ref }}" data-show-status="_1" data-show-user="tuner">Accept Booking</button>
 
 
-
-                  <button type="button" class="btn booking_status_4 complete_booking"
-                          data-pk="{{ object.ref }}" data-show-status="_3,4" data-show-user="booker,tuner,admin">{{ object.activity }} Complete</button>
-
-
-                  <button type="button" class="btn booking_status_4 booking_provider_paid"
-                          data-pk="{{ object.ref }}" data-show-status="_5" data-show-user="tuner">Confirm Payment Received</button>
-
-
-                  <button type="button" class="btn booking_status_4 booking_provider_paid"
-                          data-pk="{{ object.ref }}" data-show-status="_5" data-show-user="admin">Tuner Paid</button>
-                  <button type="button" class="btn booking_status_4 booking_client_paid"
-                          data-pk="{{ object.ref }}" data-show-status="_5" data-show-user="admin">Client Paid</button>
-
-
                   <button id="editable_done" type="button" class="btn btn-success"
                           data-pk="{{ object.ref }}" data-show-status="_3,4,5" data-show-user="booker,tuner,admin">Done</button>
 
-
-
-                  <button id="editable_cancel" type="button" class="btn btn-danger cancel_booking"
-                          data-pk="{{ object.ref }}" data-show-status="_1,3,4" data-show-user="booker,admin">Cancel Booking</button>
 
 
                   <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success"

@@ -79,8 +79,10 @@ BROKER_URL = "amqp://guest:guest@localhost:5672/"
 NOTIFICATIONS_CC = ['pbright', 'system']
 
 NOTIFICATION_BACKENDS = [
+
      #("email", "notification.backends.email_logged.EmailLoggedBackend"),
      ("email", "notification.backends.email.EmailBackend"),
+
     ]
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
@@ -155,17 +157,18 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 
 
-MIDDLEWARE_CLASSES = (
 
+MIDDLEWARE_CLASSES = (
+    #'django_statsd.middleware.StatsdMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'privateviews.middleware.LoginRequiredMiddleware',
+    #'django_statsd.middleware.StatsdMiddlewareTimer',
 )
-
 
 LOGIN_REDIRECT_URL = '/'
 
@@ -218,13 +221,11 @@ INSTALLED_APPS = (
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    #'django_twilio',
+    'django_twilio',
     'django_logtail',
     #'email_monitor',
     'web',
-
 )
-
 
 
 ROOT_URLCONF = 'tuning.urls'
@@ -304,6 +305,8 @@ CRON_CLASSES = [
 
 TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
 TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
+DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
+
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
