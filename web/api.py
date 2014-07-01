@@ -244,6 +244,9 @@ class BookingsResource(ModelResource):
         # for fullCalendar
         # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
 
+        qs = Booking.objects.raw('SELECT * FROM foo_bar')
+        return [row for row in qs]
+
         bundle.data['title'] = bundle.obj.long_heading
 
         bundle.data['client_id'] = bundle.obj.client_id

@@ -558,7 +558,9 @@
             {% endif %}
 
 
-            load_recent_comments($("#loglist"), "{{ user.logfilter }}");
+            // commented out because slow to load
+            //TODO: load when not busy
+            //load_recent_comments($("#loglist"), "{{ user.logfilter }}");
 
             base();
 

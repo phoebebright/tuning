@@ -35,6 +35,8 @@ NOTICE_MEDIA, NOTICE_MEDIA_DEFAULTS = backends.load_media_defaults(
 class LanguageStoreNotAvailable(Exception):
     pass
 
+class InvalidEmail(Exception):
+    pass
 
 def create_notice_type(label, display, description, **kwargs):
     NoticeType.create(label, display, description, **kwargs)
@@ -173,9 +175,13 @@ class EmailLog(models.Model):
 
                 revised_list = []
                 for email in self.to_email:
-                    parts = email.split('@')
-                    part = parts.split('+')
-                    revised_list.append("phoebebright310+%s@gmail.com" % part[0])
+                    try:
+                        parts = email.split('@')
+                        part = parts.split('+')
+                        revised_list.append("phoebebright310+%s@gmail.com" % part[0])
+                    except:
+
+                        raise InvalidEmail
 
                 self.to_email = revised_list
 

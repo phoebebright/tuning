@@ -236,6 +236,10 @@ ul.top-menu {
     margin-left:0px;
 }
 
+.panel-body, .panel-heading {
+    padding-left: 0px;
+    padding-right: 0px;
+}
 /*calendar*/
 .fc-button-inner, .fc-button-content {
     padding: 0;

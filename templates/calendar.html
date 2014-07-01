@@ -32,6 +32,9 @@
         .fc-agenda-slots td div {
             height: 25px !important;
         }
+    .client_selection {
+        margin-bottom:5px;
+    }
     </style>
 {% endblock extra_head %}
 {% block heading %}Bookings Calendar{% endblock %}
@@ -50,12 +53,12 @@
     <div class="row">
         <div class="col-sm-12">
             <section class="panel">
-                <header class="panel-heading">Calendar
-                        <span class="tools pull-right">
-                            <a href="javascript:;" class="fa fa-chevron-down"></a>
-
-                         </span>
-                </header>
+{#                <header class="panel-heading">Calendar#}
+{#                        <span class="tools pull-right">#}
+{#                            <a href="javascript:;" class="fa fa-chevron-down"></a>#}
+{##}
+{#                         </span>#}
+{#                </header>#}
                 <div class="panel-body">
 
 
@@ -64,13 +67,26 @@
 
                         {%  if user.is_admin %}
 
-                            <h4 class="drg-event-title">Clients</h4>
+
                             <!--TODO: message if drag to invalid date and if click or couble click -->
-                            <div id='external-events'>
+                            <div id='external-events' class="hidden-xs">
+                            <h4 class="drg-event-title">Clients</h4>
                                 {%  for item in clients %}
                                     <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
                                 {% endfor %}
                             </div>
+
+                            <div id="client_selection" class="hidden-sm hidden-md hidden-lg">
+                                <select id="client-select" class="form-control">
+                                <option value="0">Pick Client then Click Date</option>
+                                    {%  for item in clients %}
+                                        <option  value="{{ item.id }}">{{ item.name }}</option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+
+
                         {% else %}
 
                             <div class='message-log' data-items="10" >
@@ -230,7 +246,13 @@
                         client_dropped(date, true, CLIENT_ID);
                     {% endif %}
                     {% if user.is_admin %}
-                        alert("Drag Client button onto this date to create a new booking")
+                        // if using dropdown, may have client id
+                        var client_id = parseInt($("#client-select").val());
+                        if (client_id > 0) {
+                            client_dropped(date, true, client_id);
+                        } else {
+                            alert("Drag Client button onto this date to create a new booking");
+                        }
                     {% endif %}
                 }
 
@@ -477,10 +499,10 @@
 
             // add ref to all editable fields and buttons
             // not working so put in template instead
-{#            $('.editable').data('pk', object.ref);#}
-{#            $("#booking_edit button").each(function() {#}
-{#                $(this).data('pk', object.ref);#}
-{#            });#}
+            {#            $('.editable').data('pk', object.ref);#}
+            {#            $("#booking_edit button").each(function() {#}
+            {#                $(this).data('pk', object.ref);#}
+            {#            });#}
 
 
             // now put data into "fields" or ? if no data
