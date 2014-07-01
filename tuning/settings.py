@@ -372,16 +372,16 @@ LOGGING = {
             },
         'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'propagate': False,
             },
         'web': {
             'handlers': ['console', 'logfile'],
-            'level': 'DEBUG',
+            'level': 'ERROR',
             },
         'celery': {
             'handlers': ['celery', 'console'],
-            'level': 'DEBUG',
+            'level': 'WARN',
             },
         }
 }
