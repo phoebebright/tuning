@@ -10,12 +10,26 @@
         .fc-header-title h2 {
             font-size: 90%;
         }
+
+    #xs-nav {
+        margin: 5px;
+    }
+
     </style>
 {% endblock extra_head %}
 {% block main %}
 
+    <!-- menu for xs -->
+    <div id="xs-nav" class="row visible-xs-* hidden-sm hidden-md hidden-lg">
+    <a href="/booking/add/"  class="btn btn-success btn-lg btn-block">Add a Booking</a>
+    <a href="/calendar/"  class="btn btn-success btn-lg btn-block">Calendar</a>
+    <a href="/bookings/"  class="btn btn-success btn-lg btn-block">Update Bookings</a>
+
+    </div>
+
     <!--mini statistics start-->
-    <div class="row">
+
+    <div class="row hidden-xs">
         <div class="col-md-3">
             <div class="mini-stat clearfix">
                 <span class="mini-stat-icon booking_status_1"><i class="fa booking_status_1_icon"></i></span>
