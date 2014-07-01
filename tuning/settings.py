@@ -79,18 +79,21 @@ BROKER_URL = "amqp://guest:guest@localhost:5672/"
 NOTIFICATIONS_CC = ['pbright', 'system']
 
 NOTIFICATION_BACKENDS = [
-     ("email", "notification.backends.email_logged.EmailLoggedBackend"),
-     #("email", "notification.backends.email.EmailBackend"),
+
+     #("email", "notification.backends.email_logged.EmailLoggedBackend"),
+     ("email", "notification.backends.email.EmailBackend"),
+
     ]
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-'''
+
 EMAIL_HOST = "mail.beautifuldata.ie"
 EMAIL_PORT = "25"
 EMAIL_HOST_USER = "test@beautifuldata.ie"
 EMAIL_HOST_PASSWORD = "cabbage123"
-'''
+
 
 MONITOR_IMAP_SERVER = "mail.tunemypiano.co.uk"
 MONITOR_IMAP_PASSWORD = "Hg76bbqq"
@@ -183,12 +186,27 @@ TEMPLATE_DIRS = (
 
 )
 
+MIDDLEWARE_CLASSES = (
+   
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'privateviews.middleware.LoginRequiredMiddleware',
+    #cannot import name StatsClient"
+    #'django_statsd.middleware.GraphiteRequestTimingMiddleware',
+    #'django_statsd.middleware.GraphiteMiddleware',
+    #'django_statsd.middleware.TastyPieRequestTimingMiddleware'
 
+)
 
 
 # Application definition
 
 INSTALLED_APPS = (
+    #'django_statsd',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -198,7 +216,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django_google_maps',
-    'django_cron',
     'theme',  # holds themeforest template static files
     'django_gravatar',
     'notification',
@@ -206,9 +223,8 @@ INSTALLED_APPS = (
     #'djcelery_email',
     'django_twilio',
     'django_logtail',
-    'email_monitor',
+    #'email_monitor',
     'web',
-    #'django_statsd',
 )
 
 
@@ -298,6 +314,12 @@ TIME_FORMAT = "P"
 TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 
 
+
+STATSD_CLIENT = 'django_statsd.clients.normal'
+STATSD_PATCHES = [
+        'django_statsd.patches.db',
+        'django_statsd.patches.cache',
+]
 
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',

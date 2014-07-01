@@ -450,13 +450,14 @@ def send_test_email(request):
     notification.send(users=[to,],
                           label='test_notification')
 
-    # for email in EmailLog.objects.filter(date_sent__isnull = True, recipient = to ):
-    #     email.send()
+    '''
+    for email in EmailLog.objects.filter(date_sent__isnull = True, recipient = to ):
+        email.send()
 
-    # subject = "Mail 3 of 3 - test noitification generated email"
-    # notification.send(users=[to,],
-    #                       label='test_notification')
-
+    subject = "Mail 3 of 3 - test noitification generated email - send via celery"
+    notification.send(users=[to,],
+                          label='test_notification')
+    '''
 
     return HttpResponse('OK')
 

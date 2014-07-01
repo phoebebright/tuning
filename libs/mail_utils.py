@@ -5,6 +5,7 @@ import imaplib
 
 from django.core.mail import send_mail
 from django.conf import settings
+from django.http import HttpResponse
 
 from web.models import TunerCall, BOOKING_REQUESTED
 
@@ -121,11 +122,11 @@ class MailBox(object):
 
 def check_mail(request=None):
 
-   with MailBox("system@tunemypiano.co.uk", "Hg76bbqq") as mbox:
+    with MailBox("system@tunemypiano.co.uk", "Hg76bbqq") as mbox:
         print mbox.get_count()
         print mbox.print_msgs()
 
-
+    return HttpResponse("OK")
 
 def send_requests(request=None):
 
