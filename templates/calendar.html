@@ -32,9 +32,23 @@
         .fc-agenda-slots td div {
             height: 25px !important;
         }
-    .client_selection {
-        margin-bottom:5px;
+        .client_selection {
+            margin-bottom:5px;
+        }
+/* can't put responsive stuff for calendar in style-responsive as called before calendar.css */
+@media (max-width:767px) {
+
+
+    /* fullcalendar */
+    .fc-event-inner {
+        height: 18px;
     }
+    .fc-content .fc-event {
+        padding: 1px;
+    }
+
+}
+
     </style>
 {% endblock extra_head %}
 {% block heading %}Bookings Calendar{% endblock %}
@@ -53,12 +67,12 @@
     <div class="row">
         <div class="col-sm-12">
             <section class="panel">
-{#                <header class="panel-heading">Calendar#}
-{#                        <span class="tools pull-right">#}
-{#                            <a href="javascript:;" class="fa fa-chevron-down"></a>#}
-{##}
-{#                         </span>#}
-{#                </header>#}
+                {#                <header class="panel-heading">Calendar#}
+                {#                        <span class="tools pull-right">#}
+                {#                            <a href="javascript:;" class="fa fa-chevron-down"></a>#}
+                {##}
+                {#                         </span>#}
+                {#                </header>#}
                 <div class="panel-body">
 
 
@@ -70,7 +84,7 @@
 
                             <!--TODO: message if drag to invalid date and if click or couble click -->
                             <div id='external-events' class="hidden-xs">
-                            <h4 class="drg-event-title">Clients</h4>
+                                <h4 class="drg-event-title">Clients</h4>
                                 {%  for item in clients %}
                                     <div class='external-event label label-primary' id="client_{{ item.id }}" data-id="{{ item.id }}">{{ item.name }}</div>
                                 {% endfor %}
@@ -78,7 +92,7 @@
 
                             <div id="client_selection" class="hidden-sm hidden-md hidden-lg">
                                 <select id="client-select" class="form-control">
-                                <option value="0">Pick Client then Click Date</option>
+                                    <option value="0">Pick Client then Click Date</option>
                                     {%  for item in clients %}
                                         <option  value="{{ item.id }}">{{ item.name }}</option>
                                     {% endfor %}
@@ -188,8 +202,29 @@
 
     function calendar() {
 
+        // small is mobile sized and has a different layout
+        var small = ($( window ).width() < 768);
+
         // get last used view from cookie or defualt to month view
         var calendarView = (!$.cookie('calendarDefaultView')) ? 'month' : $.cookie('calendarDefaultView');
+
+        // cutomisation for very small screens
+        if (small) {
+            button_text = {
+                today:    'T',
+                month:    'M',
+                week:     'W',
+                day:      'D'
+            }
+        } else {
+            button_text = {
+                today:    'Today',
+                month:    'Month',
+                week:     'Week',
+                day:      'Day'
+            }
+        }
+
 
 
         $('#calendar').fullCalendar({
@@ -208,6 +243,7 @@
                 center: 'title',
                 right: 'month,agendaWeek,agendaDay'
             },
+            buttonText: button_text,
             columnFormat: {
                 month: 'ddd',
                 week: 'ddd Do',

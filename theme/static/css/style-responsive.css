@@ -65,10 +65,7 @@
     #main-content{
         margin-left: 0px;
     }
-    /*calendar*/
-    .fc-button-inner {
-        padding: 0;
-    }
+
     /*-*/
     .prd-row .action {
         right: 25px;
@@ -138,6 +135,8 @@
     }
 }
 @media (max-width:767px){
+
+
     #sidebar{
         margin-left:-240px;
         -webkit-transition:all .3s ease-in-out;
@@ -182,160 +181,187 @@
         float: left !important;
     }
 
+    /* fullcalendar */
+
+    .fc-event-inner {
+        height: 20px;
+    }
+    .fc-content .fc-event {
+        padding: 1px;
+    }
+
 }
 @media (max-width: 479px) {
-    body{
-        margin-top:80px !important;
+    body {
+        margin-top: 80px !important;
     }
+
     h1, .h1 {
         font-size: 18px;
     }
 
-.header{
-    position: relative !important;
+    .header {
+        position: relative !important;
 
-}
-.merge-header{
-    margin-right: 0px !important;
-}
-.brand{
-    width: 100%;
-    float: none;
-    position: fixed;
-    top: 0px;
-    z-index: 1005;
-}
-.sidebar-toggle-box{
-    right: 10px;
-}
-.top-nav{
-    margin-bottom: 20px;
-}
-.top-menu{
-    margin-right: 5px;
-}
-.wrapper{
-    margin-top: 0px;
-}
-ul.sidebar-menu {
-    margin-top: 0px;
-}
-ul.top-menu {
-    margin-right:5px;
-}
+    }
 
-#sidebar{
-    position: fixed !important;
-    z-index: 1002;
-    top: 80px;
-}
-#main-content{
-    margin-left: 0px;
-}
-.notify-row{
-    margin-left:0px;
-}
+    .merge-header {
+        margin-right: 0px !important;
+    }
 
-.panel-body, .panel-heading {
-    padding-left: 0px;
-    padding-right: 0px;
-}
-/*calendar*/
-.fc-button-inner, .fc-button-content {
-    padding: 0;
-}
-.fc-header-title h2 {
-    font-size: 12px!important;
-}
-.fc .fc-header-space {
-    padding-left: 0;
-}
-.fc-state-active, .fc-state-active .fc-button-inner, .fc-state-active, .fc-button-today .fc-button-inner, .fc-state-hover, .fc-state-hover .fc-button-inner {
-    background: none repeat scroll 0 0 #FFFFFF !important;
-    color: #32323A !important;
-}
-.fc-state-default, .fc-state-default .fc-button-inner {
-    background: none repeat scroll 0 0 #FFFFFF !important;
-}
+    .brand {
+        width: 100%;
+        float: none;
+        position: fixed;
+        top: 0px;
+        z-index: 1005;
+    }
 
-/*-*/
-.prd-row .action {
-    right: 25px;
-}
+    .sidebar-toggle-box {
+        right: 10px;
+    }
 
-.weather-full-info ul li {
-    width: 30%;
-    margin-bottom: 10px;
-}
+    .top-nav {
+        margin-bottom: 20px;
+    }
 
-.today-status {
-    margin-bottom: 10px;
-}
+    .top-menu {
+        margin-right: 5px;
+    }
 
-.hr-toggle {
-    background: #32D2C9;
-    color: rgba(0, 0, 0, 0.3);
-    border-radius: 50%;
-    -webkit-border-radius: 50%;
-    height: 30px;
-    line-height: 0;
-    margin-top: -58px;
-    position: fixed;
-    right: 10px;
-    width: 30px;
-    z-index: 10000;
-}
+    .wrapper {
+        margin-top: 0px;
+    }
 
-.hr-top-nav {
-    display: inline-block;
-    float: right;
-    margin: 10px 0;
-}
-.horizontal-menu {
-    width: 100%;
-}
+    ul.sidebar-menu {
+        margin-top: 0px;
+    }
 
-.horizontal-menu .navbar-nav > li {
-    margin-bottom: 10px;
-}
+    ul.top-menu {
+        margin-right: 5px;
+    }
 
-.lock-wrapper {
-    padding: 0 20px;
-}
-.lock-wrapper img {
-    width: 100px;
-    height: 100px;
-    margin-top: -25px;
-}
+    #sidebar {
+        position: fixed !important;
+        z-index: 1002;
+        top: 80px;
+    }
 
-.lock-pwd input {
-    width: 70%;
-}
+    #main-content {
+        margin-left: 0px;
+    }
 
-#time {
-    font-size: 50px;
-}
+    .notify-row {
+        margin-left: 0px;
+    }
 
-.lock-pwd {
-    padding: 0;
-}
+    .panel-body, .panel-heading {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
 
-.media-gal .item {
-    width: 100%;
-}
+    /*calendar*/
+    .fc-button-inner, .fc-button-content {
+        padding: 0;
+    }
 
-.media-filter {
-    margin: 5px 0;
-}
+    .fc-header-title h2 {
+        font-size: 12px !important;
+    }
 
-.media-filter + .pull-right, .media-filter + .pull-right + .btn  {
-    float: left !important;
-}
+    .fc .fc-header-space {
+        padding-left: 0;
+    }
 
-.media-filter li a {
-    margin-bottom: 10px;
-    display: inline-block;
-}
+    .fc-state-active, .fc-state-active .fc-button-inner, .fc-state-active, .fc-button-today .fc-button-inner, .fc-state-hover, .fc-state-hover .fc-button-inner {
+        background: none repeat scroll 0 0 #FFFFFF !important;
+        color: #32323A !important;
+    }
+
+    .fc-state-default, .fc-state-default .fc-button-inner {
+        background: none repeat scroll 0 0 #FFFFFF !important;
+    }
+
+    /*-*/
+    .prd-row .action {
+        right: 25px;
+    }
+
+    .weather-full-info ul li {
+        width: 30%;
+        margin-bottom: 10px;
+    }
+
+    .today-status {
+        margin-bottom: 10px;
+    }
+
+    .hr-toggle {
+        background: #32D2C9;
+        color: rgba(0, 0, 0, 0.3);
+        border-radius: 50%;
+        -webkit-border-radius: 50%;
+        height: 30px;
+        line-height: 0;
+        margin-top: -58px;
+        position: fixed;
+        right: 10px;
+        width: 30px;
+        z-index: 10000;
+    }
+
+    .hr-top-nav {
+        display: inline-block;
+        float: right;
+        margin: 10px 0;
+    }
+
+    .horizontal-menu {
+        width: 100%;
+    }
+
+    .horizontal-menu .navbar-nav > li {
+        margin-bottom: 10px;
+    }
+
+    .lock-wrapper {
+        padding: 0 20px;
+    }
+
+    .lock-wrapper img {
+        width: 100px;
+        height: 100px;
+        margin-top: -25px;
+    }
+
+    .lock-pwd input {
+        width: 70%;
+    }
+
+    #time {
+        font-size: 50px;
+    }
+
+    .lock-pwd {
+        padding: 0;
+    }
+
+    .media-gal .item {
+        width: 100%;
+    }
+
+    .media-filter {
+        margin: 5px 0;
+    }
+
+    .media-filter + .pull-right, .media-filter + .pull-right + .btn {
+        float: left !important;
+    }
+
+    .media-filter li a {
+        margin-bottom: 10px;
+        display: inline-block;
+    }
 }
 
 

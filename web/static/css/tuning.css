@@ -68,26 +68,26 @@ tr.booking_status_9{
 }
 
 .booking_status_0_icon:before, .booking_status_1_icon:before  {
-  content: "\f067";
+    content: "\f067";
 }
 .booking_status_3_icon:before  {
-  content: "\f00c";
+    content: "\f00c";
 }
 .booking_status_4_icon:before  {
-  content: "\f024";
+    content: "\f024";
 }
 .booking_status_5_icon:before  {
-content: "\f154";
+    content: "\f154";
 }
 .booking_status_8_icon:before  {
-content: "\f056";
+    content: "\f056";
 }
 .booking_status_9_icon:before  {
-  content: "\f0f2";
+    content: "\f0f2";
 }
 
 .comment_list {
-        list-style: none;
+    list-style: none;
     display: none;
 }
 .comment_badge {
@@ -102,7 +102,7 @@ content: "\f056";
 }
 
 .form-control {
-color: #454545;
+    color: #454545;
 }
 
 .editable_title {
@@ -120,3 +120,20 @@ color: #454545;
 
 #button_row button {margin-top:10px;}
 #button_row a {margin-top:10px;}
+
+/* for mobiles */
+@media (max-width:767px) {
+
+    .brand {
+        height:37px;
+    }
+
+    a.logo {
+        margin: 5px 0 0 15px;
+    }
+    .sidebar-toggle-box {
+
+        margin-top: 3px;
+        margin-left: -5px;
+    }
+}
