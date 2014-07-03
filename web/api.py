@@ -99,12 +99,27 @@ class UserResource(ModelResource):
         detail_allowed_methods = ['get',]
 
     def dehydrate(self, bundle):
-        # for fullCalendar
-        # see http://arshaw.com/fullcalendar/docs2/event_data/Event_Object/
 
         bundle.data['full_name'] = bundle.obj.get_full_name()
         return bundle
 
+
+class CustomUserResource(ModelResource):
+    class Meta:
+        queryset = CustomUser.objects.all()
+        fields = []
+        resource_name = 'customuser'
+        limit = 0
+        include_resource_uri = False
+        list_allowed_methods = ['get', ]
+        detail_allowed_methods = ['get',]
+
+    def dehydrate(self, bundle):
+
+
+        bundle.data['full_name'] = bundle.obj.get_full_name()
+
+        return bundle
 class ClientResource(ModelResource):
     class Meta:
         queryset = Client.objects.active()
@@ -137,10 +152,11 @@ class TunerResource(ModelResource):
         return bundle
 
 class BookerResource(ModelResource):
-    client = fields.ToOneField(ClientResource, "client", full=False)
+    # client = fields.ToOneField(ClientResource, "client", full=False)  not used, if used needs to be null=True in case admin user is booking?
 
     class Meta:
-        queryset = Booker.objects.all().select_related()
+        queryset = Booker.objects.filter(is_active=True).select_related()
+        fields = ['id',]
         include_resource_uri = False
         resource_name = 'bookers'
         limit = 0
@@ -319,8 +335,8 @@ class BookingsResource(ModelResource):
 class BookingsFullResource(BookingsResource):
 
     client = fields.ToOneField(ClientResource, "client", full=True)
-    booker = fields.ToOneField(UserResource, "booker", full=False)
-    tuner = fields.ToOneField(UserResource, "tuner", full=True, blank=True, null=True)
+    booker = fields.ToOneField(BookerResource, "booker", full=True)
+    tuner = fields.ToOneField(TunerResource, "tuner", full=True, blank=True, null=True)
     activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
     instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
     studio = fields.ToOneField(StudioResource, "studio", full=True, blank=True, null=True)
@@ -355,6 +371,7 @@ class BookingsFullResource(BookingsResource):
         # return a rendered editable template for this booking
         #TODO: don't need to populate?  Is done in js populate_form I think
         bundle.data['template'] = render_booking_template(bundle.request, bundle.obj, user=bundle.request.user)
+        bundle.data['testing'] = bundle.obj.booker.username
         return bundle
 
 
@@ -968,9 +985,10 @@ class BookingCancelResource(Resource):
 
 
         booking.cancel(me)
-        message = _("Booking %s cancelled") % (ref, )
 
-        return  None
+        bundle['message'] = _("Booking %s cancelled") % (ref, )
+
+        return  bundle
 
 class LogResource(ModelResource):
     """ calls to related

@@ -422,17 +422,19 @@
         // if view is month, the default time to DEFAULT_START_TIME
         var view = $('#calendar').fullCalendar('getView');
         var deadline = "";  // date as string - no spaces/punctuation
+        var post_data = {};
+        var when = "";
 
         // pass back date in utc
 
         // if called from week/day view with a time, this is the requested from time (start)
         // if on month view, then set the deadline to the default time
         if (view.name == "month") {
-            when = date.format("YYYYMMDD");
-            data = {client_id: client_id, deadline: date.utc().toISOString()};
+            when = date.utc().toISOString().substring(0,10);  // just date
+            post_data = {client_id: client_id, deadline: when};
         } else {
-            when = date.format("YYYYMMDDHHmm");
-            data = {client_id: client_id, start: date.utc().toISOString()};
+            when = date.utc().toISOString();
+            post_data = {client_id: client_id, start: when};
         }
 
 
@@ -443,27 +445,31 @@
         $.ajax({
             type:"post",
             url:API+"init_booking/",
-            data: data,
+            data: post_data,
             dataType : 'json',
             success:function(json){
 
                 // reload as other values may have changed
-                load_booking(json['ref']);
+                //load_booking(json['ref']);
+                var data = tidy_data(json.booking);
+                var ref =  json.booking.ref;
+
+                populate_form(data, ref);
+                // holds on click events etc.
+                update_events();
 
 
-                // retrieve the dropped element's stored Event Object
                 var new_event = Array();
 
 
-                new_event.id = json['ref'];
-                new_event.title = json[''];
-                new_event.start = date;
+                new_event.id = ref;
+                new_event.title = data.title;
+                new_event.start = moment(data.start);
+                new_event.end = moment(data.end);
                 new_event.allDay = allDay;
-                new_event.ref = json['ref'];
-                new_event.className = "booking_status_1";
+                new_event.ref = ref;
+                new_event.className = "booking_status_0";
 
-
-                populate_form(json);
 
                 //render the event on the calendar
                 //the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
@@ -598,7 +604,8 @@
         $("#booking_edit button").each(function() {
             $(this).hide();
 
-            // show/hide buttons based on user type and status
+            // show/hide buttons based on user type and status which are data attributes on buttons
+
             if ($(this).data('showUser').indexOf(USER_TYPE) > -1) {
                 if ($(this).data('showStatus').indexOf(object.status) > -1) {
                     $(this).show();
@@ -619,7 +626,10 @@
                 dataType : 'json',
                 success:function(json){
 
+                    var data = tidy_data(json.booking);
+
                     close_form();
+                    redraw_event(object.ref, data);
 
 
                 }
@@ -668,7 +678,8 @@
                     dataType : 'json',
                     success:function(json){
 
-                        close_form();   // includes refresh event
+                        close_form();
+                        remove_event(object.ref);
 
 
                     }

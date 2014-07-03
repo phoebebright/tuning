@@ -76,35 +76,6 @@ function load_data(client_id, start_date, end_date) {
         }
     });
 
-    //TODO: what was this for?
-    // get list of tuners
-//    $.ajax({
-//        type:"get",
-//        url:API+"tuners",
-//        dataType : 'json',
-//        success:function(data){
-//
-//            var tuners = data.objects;
-//            var tuners_list = [];
-//            $.each(tuners, function(i,d) {
-//                tuners_list.push({value: d.id, text: d.name});
-//            });
-//
-//            $('.tuners').editable({
-//                type: 'select',
-//                source: tuners_list,
-//                sourceCache: true,
-//                url: API + 'accept_booking/?format=json&limit=0',
-//
-//                success: function(response, newValue) {
-//                    //TODO: Error checking
-//                },
-//                title: 'Select Tuner'
-//            });
-//
-//
-//        }
-//    });
 
 
     // get list of instruments and setup editable
@@ -139,7 +110,7 @@ function load_data(client_id, start_date, end_date) {
         }
     });
 
-    // get list of instruments and setup editable
+    // get list of studios and setup editable
     $.ajax({
         type:"get",
         url:API+"studios",
@@ -170,7 +141,7 @@ function load_data(client_id, start_date, end_date) {
         }
     });
 
-    // get list of instruments and setup editable
+    // get list of bookers and setup editable
     $.ajax({
         type:"get",
         url:API+"bookers",
@@ -352,7 +323,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                                redraw(ref, json.booking)
+                        redraw(ref, json.booking)
 
                 }
 

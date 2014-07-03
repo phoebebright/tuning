@@ -108,7 +108,8 @@
                   <button id="editable_cancel" type="button" class="btn btn-warning"
                           data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Forget</button>
 
-
+                  <button id="editable_done" type="button" class="btn btn-success"
+                          data-pk="{{ object.ref }}" data-show-status="1 2 3,4,5" data-show-user="booker,tuner,admin">Done</button>
 
                   <button type="button" class="btn booking_status_3 accept_booking"
                           data-pk="{{ object.ref }}" data-show-status="_1" data-show-user="tuner">Accept Booking</button>
@@ -129,8 +130,7 @@
                           data-pk="{{ object.ref }}" data-show-status="_5" data-show-user="admin">Client Paid</button>
 
 
-                  <button id="editable_done" type="button" class="btn btn-success"
-                          data-pk="{{ object.ref }}" data-show-status="_3,4,5" data-show-user="booker,tuner,admin">Done</button>
+
 
 
 
