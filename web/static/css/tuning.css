@@ -14,8 +14,9 @@ a.logo {
     color: black !important ;
 }
 
+
 .booking_status_1 {
-    background-color: #fa8564;
+    background-color: #fabe66;
 }
 
 .booking_status_3 {
@@ -41,7 +42,7 @@ tr.booking_status_0{
     background-color: rgba(250, 250, 250, 1);
 }
 tr.booking_status_1{
-    background-color: rgba(252, 135, 101, 0.49);
+    background-color: rgba(250, 190, 202, 0.49);
 }
 
 tr.booking_status_3{
@@ -135,5 +136,9 @@ tr.booking_status_9{
 
         margin-top: 3px;
         margin-left: -5px;
+    }
+
+    .header {
+        margin-top: 30px !important;
     }
 }

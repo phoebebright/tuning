@@ -195,7 +195,7 @@ def bookings_list(request):
 @login_required()
 def dashboard(request):
 
-    check_mail(request)
+    #check_mail(request)
     send_requests(request)
 
     if request.user.is_admin:

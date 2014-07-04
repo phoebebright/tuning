@@ -254,10 +254,8 @@
     .notify-row {
         margin-left: 0px;
     }
-
     .panel-body, .panel-heading {
-        padding-left: 0px;
-        padding-right: 0px;
+        padding: 5px;
     }
 
     /*calendar*/

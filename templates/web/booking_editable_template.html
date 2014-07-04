@@ -61,10 +61,10 @@
     <a href="#" id="field_client_ref" class="editable clientref"
        data-pk="{{ object.ref }}"
        data-title="Reference"
-       data-value="{{ object.client_ref }}">
+       data-value="{% if object.client_ref %}{{ object.client_ref }}{% endif %}">
         {{ default_client_ref }}</a>
 
-    To start at
+    to start at
     <a href="#" id="field_requested_time" class="editable when_time"
        data-pk="{{ object.ref }}"
        data-date="{{ object.requested_from|date:"Y-m-d" }}"

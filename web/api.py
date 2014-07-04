@@ -147,7 +147,7 @@ class TunerResource(ModelResource):
         allowed_methods = ['get']
 
     def dehydrate(self, bundle):
-        bundle.data['name'] = bundle.obj.get_full_name()
+        bundle.data['full_name'] = bundle.obj.get_full_name()
 
         return bundle
 

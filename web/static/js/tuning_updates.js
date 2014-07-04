@@ -152,7 +152,7 @@ function load_data(client_id, start_date, end_date) {
             var objects = data.objects;
             var list = [];
             $.each(objects, function(i,d) {
-                list.push({value: d.id, text: d.name});
+                list.push({value: d.id, text: d.full_name});
             });
 
             $('.booker').editable({
