@@ -30,7 +30,7 @@ function load_data(client_id, start_date, end_date) {
 
                 success: function(response, newValue) {
 
-                                        // reload form and event
+                    // reload form and event
                     redraw(response.booking.ref, response.booking);
                 }
 
@@ -204,7 +204,7 @@ function load_data(client_id, start_date, end_date) {
         url: API + 'set_clientref_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-        // nothing to do
+            // nothing to do
         }
     });
 
@@ -214,7 +214,7 @@ function load_data(client_id, start_date, end_date) {
         url: API + 'set_duration_booking/?format=json&limit=0',
 
         success: function(response, newValue) {
-                       redraw(response.ref, response.booking);
+            redraw(response.ref, response.booking);
         }
     });
 
@@ -226,7 +226,7 @@ function load_data(client_id, start_date, end_date) {
             url: API + 'set_price_booking/?format=json&limit=0',
 
             success: function(response, newValue) {
-               // nothing to do
+                // nothing to do
             }
         });
     }
@@ -283,7 +283,7 @@ function update_events() {
                 state: state},
             dataType : 'json',
             success:function(json){
-                            redraw(ref, json.booking);
+                redraw(ref, json.booking);
             }
 
         });
@@ -304,7 +304,7 @@ function update_events() {
                 state: state},
             dataType : 'json',
             success:function(json){
-                 redraw(ref, json.booking)
+                redraw(ref, json.booking)
             }
 
         });
@@ -323,7 +323,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                        redraw(ref, json.booking)
+                    redraw(ref, json.booking)
 
                 }
 
@@ -347,7 +347,11 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-            redraw(ref, json.booking)
+                    redraw(ref, json.booking)
+                    if( $('#calendar').length ) {
+                        close_form();
+                    }
+
                 }
 
             });
@@ -371,14 +375,14 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                     redraw(ref, json.booking)
+                    redraw(ref, json.booking)
                 }
 
             });
         }
     });
 
-      $(".booking_client_paid").on("click", function(e) {
+    $(".booking_client_paid").on("click", function(e) {
         e.stopPropagation();
         if (window.confirm("Are you sure you want to mark this booking as paid?")) {
 
@@ -393,7 +397,7 @@ function update_events() {
                     ref:ref},
                 dataType : 'json',
                 success:function(json){
-                     redraw(ref, json.booking)
+                    redraw(ref, json.booking)
                 }
 
             });

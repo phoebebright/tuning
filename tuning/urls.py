@@ -128,7 +128,7 @@ urlpatterns = patterns('',
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
                        #                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
 
-
+                       url(r"^messaging/", include("django_twilio_sms.urls")),
                        url(r'^monitor/', include('email_monitor.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
@@ -168,6 +168,7 @@ urlpatterns += patterns('',
                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
                        url(r'^check_bookings/$', superuser_required(check_bookings_task), name='check_bookings'),
                        url(r'^test_email/$', superuser_required(send_test_email), name='send_test_email'),
+                       url(r'^test_sms/$', superuser_required(send_test_sms), name='send_test_sms'),
 
 
 )

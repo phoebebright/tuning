@@ -35,21 +35,31 @@
         {{ default_studio }}</a>
 
        for session beginning at
-    <a href="#" id="field_deadline_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ deadline_time }}</a>
+    {% if object.status < '2' %}
+        <a href="#" id="field_deadline_time" class="editable when_time"
+           data-pk="{{ object.ref }}"
+           data-date="{{ object.deadline|date:"Y-m-d" }}"
+                >{{ deadline_time }}</a>
+    {% else %}
+        <span id="field_deadline_time" >{ deadline_time }}</span>
+    {% endif %}
 
 
     with reference
     <a href="#" id="field_client_ref" class="editable clientref"
        data-pk="{{ object.ref }}"
        data-title="Reference"
-       data-value="{{ object.client_ref }}">
+       data-value="{% if object.client_ref %}{{ object.client_ref }}{% endif %}">
         {{ default_client_ref }}</a>
 
 
-    To start at
-   <a href="#" id="field_requested_time" class="editable when_time" data-pk="{{ object.ref }}" >{{ requested_time }}</a>
+    to start
+    <a href="#" id="field_requested_time" class="editable when_time"
+       data-pk="{{ object.ref }}"
+       data-date="{{ object.requested_from|date:"Y-m-d" }}"
+            >{{ requested_time }}</a>
     duration
-        <a href="#" id="field_duration" class="editable duration"
+    <a href="#" id="field_duration" class="editable duration"
        data-pk="{{ object.ref }}"
        data-title="Duration in Mins"
        data-value="{{ object.duration }}"
@@ -57,7 +67,7 @@
         {{ default_duration }}</a>&nbsp;mins&nbsp;
 
 
-    price £{{ object.price }} inc VAT
+    price {{ object.price }} ex VAT
 
 
 
@@ -71,17 +81,13 @@
                   <button id="editable_cancel" type="button" class="btn btn-warning"
                           data-pk="{{ object.ref }}" data-show-status="_0" data-show-user="booker,admin">Forget</button>
 
+                  <button id="editable_done" type="button" class="btn btn-success"
+                          data-pk="{{ object.ref }}" data-show-status="1 2 3,4,5" data-show-user="booker,tuner,admin">Done</button>
 
 
 
                   <button type="button" class="btn booking_status_4 complete_booking"
                           data-pk="{{ object.ref }}" data-show-status="_3,4" data-show-user="booker">Confirm {{ object.activity }} Complete</button>
-
-
-
-
-                  <button id="editable_done" type="button" class="btn btn-success"
-                          data-pk="{{ object.ref }}" data-show-status="_3,4,5" data-show-user="booker">Done</button>
 
 
 

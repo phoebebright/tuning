@@ -35,19 +35,38 @@
         .client_select {
             margin-bottom:5px;
         }
-/* can't put responsive stuff for calendar in style-responsive as called before calendar.css */
-@media (max-width:767px) {
+        /* can't put responsive stuff for calendar in style-responsive as called before calendar.css */
+        @media (max-width:767px) {
 
 
-    /* fullcalendar */
-    .fc-event-inner {
-        height: 18px;
-    }
-    .fc-content .fc-event {
-        padding: 1px;
-    }
+            /* fullcalendar */
+            .fc-event-inner {
+                height: 18px;
+            }
+            .fc-content .fc-event {
+                padding: 1px;
+            }
 
-}
+        }
+
+
+
+        @-webkit-keyframes pulse
+        {
+            0% {background-color: #fabe66;}
+            50% {background-color: #fa6205;}
+            100% {background-color: #fabe66;}
+        }
+
+        /* pulse events that require a tuner - add back when can hide bookings this tuner has already responded to */
+        {#        .booking_status_1#}
+        {#        {#}
+        {#            -webkit-animation: pulse 5s infinite;#}
+        {#            -moz-animation: pulse 5s infinite;#}
+        {#            animation: pulse 5s infinite;#}
+        {#        }#}
+
+
 
     </style>
 {% endblock extra_head %}
@@ -108,13 +127,7 @@
                             </div>
 
 
-                            {% if user.is_booker %}
-                                Booker stuff here
-                            {% else %}
-                                {% if user.is_tuner %}
-                                    Tuner stuff here
-                                {% endif %}
-                            {% endif %}
+
                         {% endif %}
                     </aside>
                     <aside class="col-lg-9">
@@ -134,25 +147,6 @@
 
 
 {%  block js %}
-
-    {#  TODO: x-editable doesn't work in modals - put back if it does #}
-    {#    <div class="modal fade" id="booking_entry_form" tabindex="-1" role="dialog" aria-labelledby="modal_label" aria-hidden="true">#}
-    {#        <div class="modal-dialog">#}
-    {#            <div class="modal-content">#}
-    {#                <div class="modal-header">#}
-    {#                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>#}
-    {#                    <h4 class="modal-title" id="modal_label">Add Booking</h4>#}
-    {#                </div>#}
-    {#                <div class="modal-body">#}
-    {#                    {%  include "web/booking_editable_template.html" %}#}
-    {#                </div>#}
-    {#                <div class="modal-footer">#}
-    {#                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>#}
-    {#                    <button type="button" class="btn btn-primary">Save changes</button>#}
-    {#                </div>#}
-    {#            </div>#}
-    {#        </div>#}
-    {#    </div>#}
 
     <script type="text/javascript" src="{{ STATIC_URL }}js/fullcalendar/fullcalendar.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/modal.js"></script>
@@ -451,7 +445,7 @@
     function client_dropped(date, allDay, client_id) {
 
         // ignore if date before now
-        if (date < moment() && USER_TYPE != "admin") {
+        if (date < moment() && USER_TYPE != "admin" && USER_TYPE != "booker") {
             return
         }
 
@@ -624,10 +618,19 @@
                 $("#field_price").text("?");
             }
 
+            if (object.tuner_payment != null) {
+                $("#field_fee").text(object.tuner_payment);
+                $("#field_fee").attr("data-value", String(object.tuner_payment));
+            } else {
+                $("#field_fee").text("?");
+            }
+
+
             $("#field_duration").text(object.duration.toFixed(2));
             $("#field_duration").attr("data-value", String(object.duration));
 
             // can only update bookings with status < complete
+
 
             // load lists of instruments, activities etc. to be used for editable fields
             load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}", "{{ MAX_DATE|date:"d/m/Y" }}");
@@ -678,6 +681,8 @@
             close_form();
 
         });
+
+
 
         {#        // .complete_booking in tuning_updates not being triggered so doing it from here#}
         {#        $("#editable_complete").on("click", function() {#}

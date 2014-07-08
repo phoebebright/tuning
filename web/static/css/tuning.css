@@ -141,4 +141,9 @@ tr.booking_status_9{
     .header {
         margin-top: 30px !important;
     }
+
+    .editable_title {
+        font-size: 18px;
+    }
+
 }

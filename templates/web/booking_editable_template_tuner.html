@@ -18,38 +18,36 @@
 </h3>
 <div id="editform" class="editable_content" data-eventid="">
 
-    {% if object.status >= '0' and object.status <= '3' %}
-        <a href="#" id="field_tuner" class="editable tuners"
-           data-pk="{{ object.ref }}"
-           data-title="Tuner"
-           data-value="{{ object.tuner.id }}"
-           data-title="Tuner">
-            {{ default_tuner }}</a>
-        &nbsp;to&nbsp;
-    {% endif %}
+    NOT USED - tuner cannot edit, so booking description is put in here in load_data function
 
-    <a href="#" id="field_activity" class="editable activities"
+    <a href="#" id="field_activity" class=" activities"
        data-pk="{{ object.ref }}"
        data-title="Activity"
        data-value="{{ object.activity.id }}"
        data-title="Activity">
         {{ default_activity }}</a>
     &nbsp;
-    <a href="#" id="field_instrument" class="editable instruments"
+    <a href="#" id="field_instrument" class=" instruments"
        data-pk="{{ object.ref }}"
        data-title="Instrument"
        data-value="{{ object.instrument.id }}">
         {{ default_instrument }}</a>
     &nbsp;at&nbsp;
-    <a href="#" id="field_studio" class="editable studios"
+    <a href="#" id="field_studio" class=" studios"
        data-pk="{{ object.ref }}"
        data-title="Studio"
        data-value="{{ object.studio.id }}">
         {{ default_studio }}</a>
 
+ to start
+    <a href="#" id="field_requested_time" class=" when_time"
+       data-pk="{{ object.ref }}"
+       data-date="{{ object.requested_from|date:"Y-m-d" }}"
+            >{{ requested_time }}</a>
+
     for session beginning at
     {% if object.status < '2' %}
-        <a href="#" id="field_deadline_time" class="editable when_time"
+        <a href="#" id="field_deadline_time" class=" when_time"
            data-pk="{{ object.ref }}"
            data-date="{{ object.deadline|date:"Y-m-d" }}"
                 >{{ deadline_time }}</a>
@@ -57,21 +55,18 @@
         <span id="field_deadline_time" >{ deadline_time }}</span>
     {% endif %}
 
+{% if object.client_ref %}
     with reference
-    <a href="#" id="field_client_ref" class="editable clientref"
+    <a href="#" id="field_client_ref" class=" clientref"
        data-pk="{{ object.ref }}"
        data-title="Reference"
        data-value="{{ object.client_ref }}">
         {{ default_client_ref }}</a>
+{% endif %}
 
 
-    To start at
-    <a href="#" id="field_requested_time" class="editable when_time"
-       data-pk="{{ object.ref }}"
-       data-date="{{ object.requested_from|date:"Y-m-d" }}"
-            >{{ requested_time }}</a>
     duration
-    <a href="#" id="field_duration" class="editable duration"
+    <a href="#" id="field_duration" class=" duration"
        data-pk="{{ object.ref }}"
        data-title="Duration in Mins"
        data-value="{{ object.duration }}"
@@ -79,7 +74,7 @@
         {{ default_duration }}</a>&nbsp;mins&nbsp;
 
     booked by
-    <a href="#" id="field_booker" class="editable booker"
+    <a href="#" id="field_booker" class=" booker"
        data-pk="{{ object.ref }}"
        data-title="Booker"
        data-value="{{ object.booker.id }}"
@@ -87,15 +82,15 @@
         {{ default_booker }}</a>
 
 
-    price £
-    <a href="#" id="field_price" class="editable price"
+    pays £
+    <a href="#" id="field_fee" class=" fee"
        data-pk="{{ object.ref }}"
-       data-title="Price"
-       data-value="{{ object.price }}"
-       data-title="Price">
-        {{ default_price }}</a>
+       data-title="Fee"
+       data-value="{{ object.tuner_payment }}"
+       data-title="Fee">
+        {{ object.tuner_payment }}</a>
 
-
+</div>
 
 
 <span id="button_row" class="pull-right">
@@ -104,12 +99,13 @@
 
 
 
+                  <button id="editable_done" type="button" class="btn btn-success"
+                          data-pk="{{ object.ref }}" data-show-status="1 2 3,4,5" data-show-user="booker,tuner,admin">Done</button>
+
                   <button type="button" class="btn booking_status_3 accept_booking"
                           data-pk="{{ object.ref }}" data-show-status="_1" data-show-user="tuner">Accept Booking</button>
 
 
-                  <button id="editable_done" type="button" class="btn btn-success"
-                          data-pk="{{ object.ref }}" data-show-status="_3,4,5" data-show-user="booker,tuner,admin">Done</button>
 
 
 
@@ -126,4 +122,4 @@
 
 
 </span>
-</div>
+

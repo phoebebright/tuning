@@ -168,7 +168,7 @@ class BookerResource(ModelResource):
 
 
     def dehydrate(self, bundle):
-        bundle.data['name'] = bundle.obj.get_full_name()
+        bundle.data['full_name'] = bundle.obj.get_full_name()
 
         return bundle
 
@@ -293,7 +293,8 @@ class BookingsResource(ModelResource):
 
         bundle.data['description'] = bundle.obj.description_for_user(bundle.request.user)
 
-        bundle.data['editable'] = bundle.obj.is_editable
+        # set true if booking active and this user can change
+        bundle.data['editable'] = bundle.obj.is_editable(bundle.request.user)
 
         #bundle.data['activity'] = bundle.obj.activity.name
 
@@ -769,25 +770,17 @@ class BookingCompleteResource(BookingUpdateResource):
             booking.set_uncomplete()
             message = "Booking %s set back to Booked" % (booking.ref, )
 
+class AcceptBookingResource(BookingUpdateResource):
 
-class AcceptBookingResource(Resource):
-
-    class Meta:
-        include_resource_uri = True
+    class Meta(BookingUpdateResource.Meta):
         resource_name = 'accept_booking'
-        allowed_methods = ['post','put','get','options']
-        include_resource_uri = False
-        object_class = SimpleObject
-        serializer = urlencodeSerializer()
-        authentication = Authentication()
-        authorization = Authorization()
 
-
-    def obj_create(self, bundle, request=None, **kwargs):
+    def update_booking(self, booking, bundle, value):
 
         ref = bundle.data['pk']
         tuner_id = bundle.data['value']
         me = bundle.request.user
+
 
         try:
             booking = Booking.objects.get(ref=ref)
@@ -800,8 +793,9 @@ class AcceptBookingResource(Resource):
             raise BadRequest('Invalid Tuner id %s' % tuner_id)
 
         message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
-        #TODO: This object is not being returned, it's not getting serialised for some reason
-        return  None
+
+
+
 
 
 

@@ -86,6 +86,7 @@ NOTIFICATION_BACKENDS = [
     ]
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
+DEFAULT_FROM_SMS = "+441618500659"
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
@@ -221,7 +222,8 @@ INSTALLED_APPS = (
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    'django_twilio',
+    #'django_twilio',
+    'django_twilio_sms',
     'django_logtail',
     #'email_monitor',
     'web',
@@ -303,10 +305,15 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
-TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
-TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
+#TWILIO_ACCOUNT_SID = 'PN1f1890c5266684f8971ab826341772fd'  phone
+TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
+TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
-
+TWILIO_PHONE_NUMBER = "+441618500659"
+# TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER - copy credentials from the Twilio panel.
+# TWILIO_CALLBACK_USE_HTTPS - use https or not for delivery confirmation callback urls.
+# TWILIO_CALLBACK_DOMAIN - optionally set domain name or IP of your site (otherwise the server name will be extracted from the request info).
+# TWILIO_DRY_MODE - set if you want to run in test mode.
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"

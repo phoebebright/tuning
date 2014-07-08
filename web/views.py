@@ -38,14 +38,14 @@ import json
 import pytz
 import arrow
 
-from web.tasks import *
-from libs.mail_utils import check_mail, send_requests
+from django_twilio_sms.utils import send_sms
 from notification import models as notification
 
 #App
 from web.models import *
 from web.api import BookingsFullResource
-
+from web.tasks import *
+from libs.mail_utils import check_mail, send_requests
 
 def can_book(user):
     if user and user.is_authenticated():
@@ -460,5 +460,19 @@ def send_test_email(request):
     '''
 
     return HttpResponse('OK')
+
+@login_required
+@user_passes_test(is_webmaster)
+def send_test_sms(request):
+
+    to = '+447973843189'
+    sender = settings.DEFAULT_FROM_SMS
+    body = "test sms"
+
+
+    result = send_sms(request, to, body)
+
+    print result
+    return HttpResponse(result)
 
 

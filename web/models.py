@@ -393,6 +393,10 @@ class CustomUser(AbstractUser, ModelDiffMixin):
     def can_see_price(self):
         return self.is_staff or self.is_booker
 
+    @property
+    def client(self):
+        return None
+
     def can_cancel(self, booking):
 
         if self.is_admin:
@@ -593,7 +597,8 @@ class BookingsQuerySet(QuerySet):
             return self.filter(booker=user)
 
         elif user.is_tuner:
-            return self.filter(tuner=user)
+            # all this tuners bookings and bookings looking for tuners
+            return self.filter(Q(tuner=user) | Q(status=BOOKING_REQUESTED))
 
         elif user.is_admin:
             return self
@@ -737,12 +742,24 @@ class Booking(models.Model, ModelDiffMixin):
                 # not found so is unique
                 return code
 
-    @property
-    def is_editable(self):
+
+    def is_editable(self, user=None):
         ''' used to determine if the booking can be changed in the front end
         :return:
         '''
-        return self.status < BOOKING_CANCELLED
+        # can edit if not cancelled of archived
+        if self.status < BOOKING_CANCELLED:
+            # tuners can't edit
+            if user:
+                if user.is_tuner:
+                    return False
+                if user.is_booker and self.client != user.client:
+                    return False
+
+
+            return True
+        else:
+            return False
 
     @property
     def short_heading(self):
@@ -773,13 +790,13 @@ class Booking(models.Model, ModelDiffMixin):
 
 
         if user_type == "admin":
-            return "%s charging %s%s paying %s%s" % (base, "&pound", self.price, "&pound", self.tuner_payment)
+            return "%s charging %s paying %s%s" % (base,  self.price, "&pound;", self.tuner_payment)
 
         if user_type == "booker":
-            return "%s%s ex VAT" % (base, "&pound", self.price)
+            return "%s price %s ex VAT" % (base,  self.price)
 
         if user_type == "tuner":
-            return "%s  paying %s%s" % (base,  "&pound", self.tuner_payment)
+            return "%s  paying %s" % (base,  self.tuner_payment)
 
 
     @property
@@ -807,9 +824,10 @@ class Booking(models.Model, ModelDiffMixin):
         if self.studio:
             txt += "at %s " % self.studio
 
+        txt += "starting %s " %  (formats.date_format(self.start_time, "TIME_FORMAT"), )
 
         if self.deadline:
-            txt  += "for session starting at %s " % (formats.date_format(self.deadline, "DATETIME_FORMAT"), )
+            txt  += "for session starting at %s " % (formats.date_format(self.deadline, "TIME_FORMAT"), )
 
         if self.client_ref:
             txt += "with ref %s " % self.client_ref
