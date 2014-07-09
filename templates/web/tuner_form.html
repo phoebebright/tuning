@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load tunertags %}
+
+{% block extra_head %}
+
+
+{% endblock extra_head %}
+
+{% block main %}
+
+
+    <div class="container">
+        <div class="row">
+
+            <form action="{% url "tuner-profile" object.id %}" method="POST">
+                {% csrf_token %}
+                <ul>
+                    {{ form.as_ul }}
+                </ul>
+                <input id="save" type="submit" value="Save" />
+            </form>
+
+        </div>
+    </div>
+
+
+{% endblock main %}
+
+{%  block js %}
+
+
+    </script>
+{% endblock js %}

@@ -476,3 +476,9 @@ def send_test_sms(request):
     return HttpResponse(result)
 
 
+class TunerDetailView(UpdateView):
+
+    model = Tuner
+    fields = ['email', 'mobile', 'use_email', 'use_sms']
+
+

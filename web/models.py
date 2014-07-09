@@ -488,6 +488,8 @@ class Tuner(CustomUser):
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
     activities = models.ManyToManyField(Activity, blank=True, null=True)
     score = models.PositiveSmallIntegerField(default=1)
+    use_email = models.BooleanField(default=True)
+    use_sms = models.BooleanField(default=True)
     #TODO: add vat registered
     #TODO: add availability schedule
 
