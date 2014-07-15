@@ -226,6 +226,7 @@ INSTALLED_APPS = (
     'django_twilio_sms',
     'django_logtail',
     #'email_monitor',
+    'easy_pdf',
     'web',
 )
 
@@ -295,8 +296,9 @@ SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 CALENDAR_MIN_TIME = "05:00:00"
 CALENDAR_MAX_TIME = "22:00:00"
 
-API_URL = "http://tunemypiano.co.uk/api/v1/"
-
+# this causes xdomain issues if using www.tunemypiano...
+#API_URL = "http://tunemypiano.co.uk/api/v1/"
+API_URL = "/api/v1/"
 
 CRON_CLASSES = [
     "web.cron.CheckBookingStatus",

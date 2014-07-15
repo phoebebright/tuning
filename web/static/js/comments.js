@@ -4,13 +4,20 @@ function show_comments(id) {
      */
 
     var html = '';
+    var selection = $("#comment_list");
+
+    var data = {
+            limit:100,
+            booking_id: id}
+
+    if (selection.data('type') ) {
+        data['log_type'] = selection.data('type');
+    }
 
     $.ajax({
         type:"get",
         url:API+"log",
-        data: {
-            limit:100,
-            booking_id: id},
+        data: data,
         dataType : 'json',
         success:function(json){
 
@@ -22,7 +29,7 @@ function show_comments(id) {
                 html += "<li>" + d['comment'] + ' - ' + d['created_by']['full_name'] + ' - ' + d['when'] +'</li>';
             })
 
-            $("#comment_list").html(html);
+            selection.html(html);
 
         }
     });
@@ -95,19 +102,36 @@ function add_comment_list() {
 
 function load_recent_comments(selection, filter) {
 
+    var data = {};
+
+    // comments that can be viewed depends on user type
+    if (USER_TYPE == "admin") {
+        data['filter'] = '';
+    } else if (USER_TYPE == "booker") {
+        data['filter'] = {client_id: CLIENT_ID};
+    } else if (USER_TYPE == "tuner") {
+        data['filter'] = {user_id: USER_ID};
+    }
+
 
     var template = $('#log_list_template').html();
     Mustache.parse(template);
 
-    var limit = parseInt(selection[0].dataset['limit']);
+    var limit = parseInt(selection[0].dataset['items']);
     if (limit < 1) { limit=1; }
+
+    data['limit'] = limit;
+
+    // limit comments to just one type - usually "user" comments
+    if (selection.data('type') ) {
+        data['log_type'] = selection.data('type');
+    }
 
 
     $.ajax({
         type:"get",
         url:API+"log",
-        data: {
-            limit:10},
+        data: data,
         dataType : 'json',
         success:function(json){
             var html = '';
@@ -126,12 +150,19 @@ function load_recent_comments(selection, filter) {
 
 function load_comment_count(pk, selection, template) {
 
+       var data = {
+            limit:100,
+            ref: pk};
+
+        // limit comments to just one type - usually "user" comments
+    if (selection.data('type') ) {
+        data['log_type'] = selection.data('type');
+    }
+
     $.ajax({
         type:"get",
         url:API+"log",
-        data: {
-            limit:100,
-            ref:pk},
+        data: data,
         dataType : 'json',
         success:function(json){
             var num = json.meta['total_count'];
@@ -149,12 +180,19 @@ function update_comment_list(selection, pk) {
     var template = $('#comment_list_template').html();
     Mustache.parse(template);
 
+       var data = {
+            limit:0,
+            ref: pk};
+
+        // limit comments to just one type - usually "user" comments
+    if (selection.data('type') ) {
+        data['log_type'] = selection.data('type');
+    }
+
     $.ajax({
         type:"get",
         url:API+"log",
-        data: {
-            limit:0,
-            ref:pk},
+        data: data,
         dataType : 'json',
         success:function(json){
             var html = '';
@@ -189,6 +227,7 @@ function comment_html(d, template) {
         booking_ref: d['booking_ref'],
         booking_url: d['booking_url'],
         long_heading: d['long_heading'],
+        status: d['status'],
         text: d['comment']});
 }
 

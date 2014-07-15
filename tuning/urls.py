@@ -168,6 +168,7 @@ urlpatterns += patterns('',
                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
 
                        url(r'tunerprofile/(?P<pk>\d+)/$', login_required(TunerDetailView.as_view()), name='tuner-profile'),
+                       url(r'invoice/(?P<ref>\w+)/$', login_required(GenerateInvoice.as_view()), name='invoice'),
 
                        url(r'^check_bookings/$', superuser_required(check_bookings_task), name='check_bookings'),
                        url(r'^test_email/$', superuser_required(send_test_email), name='send_test_email'),

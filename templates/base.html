@@ -57,6 +57,8 @@
         {% endif %}
 
         TZ = "{{ USER_TIME_ZONE }}";
+
+
     </script>
 
     {% block extra_head %}
@@ -330,17 +332,13 @@
 
                         {% if user.is_booker %}
 
-                            <li class="sub-menu">
-                                <a href="javascript:;">
-                                    <i class="fa fa-laptop"></i>
-                                    <span>Bookings</span>
-                                </a>
-                                <ul class="sub">
-                                    <li><a href="/calendar/">Calendar</a></li>
-                                    <li><a href="/booking/add/">New Booking</a></li>
-                                    <li><a href="/bookings/">Browse Bookings</a></li>
-                                </ul>
-                            </li>
+                                 <li><a href="/bookings/">Browse Bookings</a></li>
+
+                        {% endif %}
+
+                         {% if user.is_tuner %}
+
+                                 <li><a href="/bookings/">Browse Bookings</a></li>
 
                         {% endif %}
 
@@ -393,7 +391,7 @@
 
 
         <div class="right-stat-bar leftside-navigation">
-            <ul id="loglist" class="messages sidebar-menu" data-limit="10">
+            <ul id="loglist" class="message-log messages sidebar-menu" data-items="10">
 
 
 
@@ -467,19 +465,25 @@
     </script>
 
 <script id="log_list_template" type="x-tmpl-mustache">
-                <li>
+            <div class="row alert booking_status_{{ status }}">
+
+                 <div class="col-md-3">
+                     <span class="photo"><img alt="" src="{{ gravatar }}"></span>
+                 </div>
+                 <div class="col-md-9">
+
+
                     <a href="{{ booking_url }}">
-                        <span class="photo"><img alt="avatar" src="{{ gravatar }}"></span>
-                                <span class="subject">
                                 <span class="booking">{{ long_heading }}</span>
-                                <span class="time">{{ since }}</span>
+                                <span class="time pull-right">{{ since }}</span>
                                 </span>
                                 <span class="comment">
                                     {{text}}
                                 </span>
                     </a>
-                </li>
-                </script>
+                 </div>
+            </div>
+            </script>
 {% endverbatim %}
 
 
@@ -488,18 +492,18 @@
 
 
     function do_last() {
-
-{#        // make left side nav accordian#}
-{#        $('#nav-accordion').dcAccordion({#}
-{#            eventType: 'click',#}
-{#            autoClose: true,#}
-{#            saveState: true,#}
-{#            disableLink: true,#}
-{#            speed: 'slow',#}
-{#            showCount: true,#}
-{#            autoExpand: true,#}
-{#            classExpand: 'dcjq-current-parent'#}
-{#        });#}
+        console.log('do_last base');
+        {#        // make left side nav accordian#}
+        {#        $('#nav-accordion').dcAccordion({#}
+        {#            eventType: 'click',#}
+        {#            autoClose: true,#}
+        {#            saveState: true,#}
+        {#            disableLink: true,#}
+        {#            speed: 'slow',#}
+        {#            showCount: true,#}
+        {#            autoExpand: true,#}
+        {#            classExpand: 'dcjq-current-parent'#}
+        {#        });#}
 
         // tool tips
 
@@ -525,6 +529,10 @@
 
 
 
+        // commented out because slow to load
+        //TODO: load when not busy
+        load_recent_comments($(".message-log"));
+
     }
 
 </script>
@@ -546,20 +554,6 @@
     (function ($) {
         "use strict";
         $(document).ready(function () {
-
-            // load messages from log
-            {% if user.is_admin %}
-                var call = API + "log?format=json";
-            {% elif user.is_booker %}
-                var call = API + "log?format=json&client_id={{ user.client_id }}";
-            {% elif user.is_tuner %}
-                var call = API + "log?format=json&user_id={{ user.id }}";
-            {% endif %}
-
-
-            // commented out because slow to load
-            //TODO: load when not busy
-            //load_recent_comments($("#loglist"), "{{ user.logfilter }}");
 
             base();
 

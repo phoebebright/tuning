@@ -1,6 +1,7 @@
 import urlparse
 from django.utils.timezone import is_aware
 import arrow
+import json
 
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
@@ -420,6 +421,7 @@ class BookingUpdateResource(Resource):
         try:
             self.booking = Booking.objects.get(ref=ref)
             # self.booking will have the updated booking object which may be used in dehydrate
+
             self.update_booking(self.booking, bundle, value)
 
         except Booking.DoesNotExist:
@@ -429,7 +431,7 @@ class BookingUpdateResource(Resource):
 
     def update_booking(self, booking, bundle):
 
-        return booking
+        pass
 
     def obj_get_list(self, bundle, **kwargs):
         raise BadRequest('You are probably calling with get and it should be post')
@@ -501,7 +503,11 @@ class InitBookingResource(BookingUpdateResource):
 
         if bundle.data.has_key('start'):
             start = arrow.get(bundle.data['start']).datetime
-            self.booking =  Booking.create_booking(user, client=client, when=start)
+
+            try:
+                self.booking =  Booking.create_booking(user, client=client, when=start)
+            except Exception, e:
+                bundle = {"code": 777, "status": False, "error": json.loads(e.response.content)}
 
         elif bundle.data.has_key('deadline'):
 
@@ -517,6 +523,8 @@ class InitBookingResource(BookingUpdateResource):
 
         else:
             self.booking =  Booking.create_booking(user, client=client)
+
+
         return bundle
 
 
@@ -728,6 +736,7 @@ class BookingClientrefResource(BookingUpdateResource):
         booking.client_ref = value
         booking.save(user=bundle.request.user)
 
+
 class BookingDurationResource(BookingUpdateResource):
 
     class Meta(BookingUpdateResource.Meta):
@@ -740,6 +749,7 @@ class BookingDurationResource(BookingUpdateResource):
         booking.change_duration(int(value))
         booking.recalc_prices()
         booking.save(user=bundle.request.user)
+
 
 class BookingPriceResource(BookingUpdateResource):
 
@@ -764,11 +774,28 @@ class BookingCompleteResource(BookingUpdateResource):
         state = bundle.data['state']
 
         if state == "true":
-            booking.set_complete()
-            message = "Booking %s set to Completed" % (booking.ref, )
+            booking.set_complete(user=bundle.request.user)
         else:
-            booking.set_uncomplete()
-            message = "Booking %s set back to Booked" % (booking.ref, )
+            booking.set_uncomplete(user=bundle.request.user)
+
+
+
+class BookingProviderPaidResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'booking_provider_paid'
+
+
+    def update_booking(self, booking, bundle, value):
+
+
+        state = bundle.data['state']
+
+        if state == "true":
+            booking.set_provider_paid(user=bundle.request.user)
+        else:
+            booking.set_provider_unpaid(user=bundle.request.user)
+
 
 class AcceptBookingResource(BookingUpdateResource):
 
@@ -777,23 +804,45 @@ class AcceptBookingResource(BookingUpdateResource):
 
     def update_booking(self, booking, bundle, value):
 
-        ref = bundle.data['pk']
+
         tuner_id = bundle.data['value']
         me = bundle.request.user
 
+        tuner = Tuner.objects.get(id=tuner_id)
+        booking.set_booked(tuner,user=bundle.request.user)
 
-        try:
-            booking = Booking.objects.get(ref=ref)
-            tuner = Tuner.objects.get(id=tuner_id)
-            booking.set_booked(tuner)
 
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-        except Tuner.DoesNotExist:
-            raise BadRequest('Invalid Tuner id %s' % tuner_id)
+class BookingClientPaidResource(BookingUpdateResource):
 
-        message = "Booking %s accepted by %s" % (ref, tuner.get_full_name())
+    class Meta(BookingUpdateResource.Meta):
 
+        resource_name = 'booking_client_paid'
+
+
+    def update_booking(self, booking, bundle, value):
+
+
+        state = bundle.data['state']
+
+
+        if state == "true":
+            booking.set_client_paid(user=bundle.request.user)
+        else:
+            booking.set_client_unpaid(user=bundle.request.user)
+
+
+class BookingCancelResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'booking_cancel'
+
+
+    def update_booking(self, booking, bundle, value):
+
+
+        me = bundle.request.user
+
+        booking.cancel(me)
 
 
 
@@ -881,108 +930,6 @@ class BookingsToPaidResource(AcceptedBookingsResource):
         queryset = Booking.objects.completed()
         resource_name = 'bookings_to_paid'
 
-
-
-class BookingProviderPaidResource(Resource):
-
-    class Meta:
-        include_resource_uri = True
-        resource_name = 'booking_provider_paid'
-        allowed_methods = ['post','option']
-        object_class = SimpleObject
-        serializer = urlencodeSerializer()
-        authentication = Authentication()
-        authorization = Authorization()
-
-
-    def obj_create(self, bundle, request=None, **kwargs):
-
-        ref = bundle.data['ref']
-        state = bundle.data['state']
-        me = bundle.request.user
-
-        try:
-            booking = Booking.objects.get(ref=ref)
-
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
-
-        if state == "true":
-            booking.set_provider_paid()
-            message = _("Booking %s tuner paid") % (ref, )
-        else:
-            booking.set_provider_unpaid()
-            message = _("Booking %s tuner unpaid") % (ref, )
-
-
-        return  None
-
-class BookingClientPaidResource(Resource):
-
-    class Meta:
-        include_resource_uri = True
-        resource_name = 'booking_client_paid'
-        allowed_methods = ['post','option']
-        object_class = SimpleObject
-        serializer = urlencodeSerializer()
-        authentication = Authentication()
-        authorization = Authorization()
-
-
-    def obj_create(self, bundle, request=None, **kwargs):
-
-        ref = bundle.data['ref']
-        state = bundle.data['state']
-        me = bundle.request.user
-
-        try:
-            booking = Booking.objects.get(ref=ref)
-
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
-
-        if state == "true":
-            booking.set_client_paid()
-            message = _("Booking %s client paid") % (ref, )
-        else:
-            booking.set_client_unpaid()
-
-            message = _("Booking %s client unpaid") % (ref, )
-
-        return  None
-
-class BookingCancelResource(Resource):
-
-    class Meta:
-        include_resource_uri = True
-        resource_name = 'booking_cancel'
-        allowed_methods = ['post','option']
-        object_class = SimpleObject
-        serializer = urlencodeSerializer()
-        authentication = Authentication()
-        authorization = Authorization()
-
-
-    def obj_create(self, bundle, request=None, **kwargs):
-
-        ref = bundle.data['ref']
-        me = bundle.request.user
-
-        try:
-            booking = Booking.objects.get(ref=ref)
-
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
-
-
-        booking.cancel(me)
-
-        bundle['message'] = _("Booking %s cancelled") % (ref, )
-
-        return  bundle
 
 class LogResource(ModelResource):
     """ calls to related

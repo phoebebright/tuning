@@ -14,7 +14,9 @@ a.logo {
     color: black !important ;
 }
 
-
+.booking_status_ {
+     background-color: #ffeff8;
+}
 .booking_status_1 {
     background-color: #fabe66;
 }
@@ -24,16 +26,20 @@ a.logo {
 }
 .booking_status_4 {
     background-color: #1fb5ac;
+        color: white;
 }
 
 .booking_status_5 {
     background-color: #a48ad4;
+    color: white;
 }
 .booking_status_6 {
     background-color: #7EBCD4;
+        color: white;
 }
 .booking_status_8 {
     background-color: #8C98AB;
+        color: white;
 }
 .booking_status_9 {
     background-color: #fdd752;
@@ -121,6 +127,8 @@ tr.booking_status_9{
 
 #button_row button {margin-top:10px;}
 #button_row a {margin-top:10px;}
+
+#button_bar button {display:none;}
 
 /* for mobiles */
 @media (max-width:767px) {

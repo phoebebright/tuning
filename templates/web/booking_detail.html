@@ -4,6 +4,7 @@
 {% block extra_head %}
 
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/clockin.css" rel="stylesheet"/>
 
     <style>
         .shout {
@@ -41,209 +42,163 @@
 
 
     <div class="container">
-    <div class="row">
-
-        <div class="col-sm-12">
-            <section class="panel">
-                <header class="panel-heading">
-                    <h1>{{ object }}</h1>
-                </header>
-                <div class="panel-body">
-
-                    <div class="alert alert-block shout booking_status_{{ object.status }} fade in">{% booking_description object %}</div>
-
-                </div>
-            </section>
+        <div id="booking_row" class="row" style="display:none;">
+            <div class="col-sm-12">
+                <section class="panel">
+                    <div id="booking_edit" class="panel-body booking_status_1">
+                        {%  include "web/booking_editable_template.html" with user=user object=object %}
+                    </div>
+                </section>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-6">
-            <section class="panel">
-                <header class="panel-heading">
-                    {{ object.short_heading }} History
-                </header>
-
-                <div class="panel-body">
-
-                    <div class="row">
-                        <div class="chunk">
-                            <i class="fa booking_status_1_icon"></i>Requested by <strong>{{ object.booker }}</strong><span class="label pull-right booking_status_1">{{ object.requested_at }}</span>
-                        </div>
-                    </div>
 
 
-                    <div class="row">
-                        <div class="chunk">
-                            {%  if object.status == '1' %}
-                                {% if user.is_admin %}
+        <div class="row">
+            <div class="col-sm-6">
+                <section class="panel">
+                    <header class="panel-heading">
+                        {{ object.short_heading }} History
+                    </header>
 
-                                    <i class="fa booking_status_3_icon"></i>Assign Tuner &nbsp;&nbsp:<strong><span class="label pull-right booking_status_3"></span><a href="#" class="tuners" data-pk="{{ object.ref }}">?</a></strong>
-                                {% endif %}
-                            {%  else  %}
-                                <i class="fa booking_status_3_icon"></i>Tuner <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
-                            {%  endif %}
-                        </div>
-                    </div>
+                    <div class="panel-body">
 
-
-                    {%  if object.status == '4' %}
                         <div class="row">
                             <div class="chunk">
-
-                                <i class="fa booking_status_4_icon"></i>Mark as Complete
-                                    <span class="label pull-right booking_status_3">
-                               <input type="checkbox" class="switch switch_complete" data-text-label="Tuned" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="complete_{{ object_ref }}" data-pk="{{ object.ref }}" /></span>
-
+                                <i class="fa booking_status_1_icon"></i>Requested by <strong>{{ object.booker }}</strong><span class="label pull-right booking_status_1">{{ object.requested_at }}</span>
                             </div>
                         </div>
-                    {%  endif %}
 
-                    {%  if object.status >= '5' %}
-                        {%  if not object.cancelled %}
-                            <div class="row">
-                                <div class="chunk">
-                                    <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_4">{{ object.completed_at }}</span>
-                                </div>
+
+                        <div class="row">
+                            <div class="chunk">
+                                {%  if object.status >= '1' %}
+
+                                    <i class="fa booking_status_3_icon"></i>Booked <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
+                                {%  endif %}
                             </div>
-                        {% endif %}
+                        </div>
 
-                        {% if user.is_admin %}
-                            {%  if object.has_provider_paid %}
+
+                        {%  if object.status >= '5' %}
+                            {%  if not object.cancelled %}
                                 <div class="row">
                                     <div class="chunk">
-                                        <i class="fa booking_status_5_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
+                                        <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_4">{{ object.completed_at }}</span>
                                     </div>
                                 </div>
-                            {% else %}
-                                {%  if not object.cancelled %}
+                            {% endif %}
+
+                            {% if user.is_admin %}
+                                {%  if object.has_provider_paid %}
                                     <div class="row">
                                         <div class="chunk">
-                                            <i class="fa booking_status_5_icon"></i>Pay Tuner
-                                            <span class="label pull-right booking_status_6">
-                                                <input type="checkbox" class="switch switch_tuner" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="tuner_paid_{{ object_ref }}" data-pk="{{ object.ref }}" />
-                                            </span>
+                                            <i class="fa booking_status_5_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
                                         </div>
                                     </div>
-                                {% endif %}
+
+                                {%  endif %}
                             {%  endif %}
+
+
+                            {%  if user.is_admin or user.is_booker %}
+                                {%  if  object.has_client_paid %}
+                                    <div class="row">
+                                        <div class="chunk">
+                                            <i class="fa booking_status_5_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
+                                        </div>
+                                    </div>
+
+
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+
+
+                        {%  if object.status == '9'  %}
+                            <div class="row">
+                                <div class="chunk">
+                                    <i class="fa booking_status_9_icon"></i>Archived<span class="label pull-right booking_status_9">{{ object.archived_at }}</span>
+                                </div>
+                            </div>
+                        {%  endif %}
+                        {%  if object.status == '8'  %}
+                            <div class="row">
+                                <div class="chunk">
+                                    <i class="fa booking_status_8_icon"></i>Cancelled<span class="label pull-right booking_status_8">{{ object.cancelled_at }}</span>
+                                </div>
+                            </div>
                         {%  endif %}
 
 
-                        {%  if user.is_admin or user.is_booker %}
-                            {%  if  object.has_client_paid %}
-                                <div class="row">
-                                    <div class="chunk">
-                                        <i class="fa booking_status_5_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
-                                    </div>
-                                </div>
-                            {% else %}
-                                {%  if not object.cancelled %}
-                                    <div class="row">
-                                        <div class="chunk">
-                                            <i class="fa booking_status_5_icon"></i>Client Paid
-                                            <span class="label pull-right booking_status_6"></li>
-                                                <input type="checkbox" class="switch switch_client" data-text-label="Paid" data-on=null, data-off=success data-on-label="No" data-off-label="Yes" checked id="client_paid_{{ object_ref }}" data-pk="{{ object.ref }}" /></span>
-                                        </div>
-                                    </div>
-                                {%  endif %}
-                            {% endif %}
-                        {% endif %}
-                    {% endif %}
-
-
-                    {%  if object.status == '9'  %}
-                        <div class="row">
-                            <div class="chunk">
-                                <i class="fa booking_status_9_icon"></i>Archived<span class="label pull-right booking_status_9">{{ object.archived_at }}</span>
-                            </div>
-                        </div>
-                    {%  endif %}
-                    {%  if object.status == '8'  %}
-                        <div class="row">
-                            <div class="chunk">
-                                <i class="fa booking_status_8_icon"></i>Cancelled<span class="label pull-right booking_status_8">{{ object.cancelled_at }}</span>
-                            </div>
-                        </div>
-                    {%  endif %}
-
-
-                </div>
-
-
-
-            </section>
-
-
-                    <div id="button_bar">
-                        {% if object.status < '5' %}
-                            {% if user.is_booker or user.is_admin %}
-                                <button type="button" class="btn btn-danger cancel_booking" data-pk="{{ object.ref }}">Cancel Booking</button>
-                            {% endif %}
-                        {% endif %}
-
-                        {% if object.status == '1' %}
-                            {% if user.is_tuner %}
-                                <button type="button" class="btn  btn-lg center-block booking_status_3 accept_booking" data-pk="{{ object.ref }}">Accept Booking</button>
-
-                            {% endif %}
-                        {% endif %}
-
-                        {% if object.status > '2' and object.status < '5' %}
-                            {% if user.is_tuner %}
-
-                                <button type="button" class="btn  btn-lg center-block booking_status_4 complete_booking" data-pk="{{ object.ref }}">Confirm {{ object.activity }} is Complete</button>
-
-                            {% endif %}
-                        {% endif %}
-                        {% if object.status == '5' %}
-                            {% if user.is_tuner %}
-
-                                <button type="button" class="btn  btn-lg center-block booking_status_4 booking_provider_paid" data-pk="{{ object.ref }}">Confirm Payment Received</button>
-
-                            {% endif %}
-                        {% endif %}
                     </div>
 
 
-        </div>
-        <div class="col-sm-6">
-            <section class="panel">
-                <header class="panel-heading wht-bg">
-                    Location
-                </header>
 
-                <div class="panel-body">
-                    <div id="map_canvas"></div>
-                </div>
-
-            </section>
-        </div>
-
-
-    </div>
-
-
-    <div class="row">
-        <div class="col-sm-12">
-            <section class="panel">
-                <header class="panel-heading wht-bg">
-                    Comments
-                    <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="{{ object.ref }}" data-value="">Comment</a>
-                </header>
-
-                <div class="panel-body">
-
-
-                    <div class="comment_list" data-pk="{{ object.ref }}"></div>
-
-                </div>
+                </section>
 
 
 
-            </section>
+
+            </div>
+
+            <div class="col-sm-6">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                        Location
+                    </header>
+
+                    <div class="panel-body">
+                        <div id="map_canvas"></div>
+                    </div>
+
+                </section>
+            </div>
+
 
         </div>
-    </div>
+
+        <div id="booking_row" class="row" style="display:none;">
+            <div class="col-sm-12">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                        <div id="booking_edit" class="panel-body booking_status_1">
+                            {%  include "web/booking_editable_template.html" with user=user object=object %}
+                        </div>
+                    </header>
+
+                    <div class="panel-body">
+
+
+                        <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
+
+                    </div>
+
+
+                </section>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <section class="panel">
+                    <header class="panel-heading wht-bg">
+                        Comments
+                        <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="{{ object.ref }}" data-value="">Comment</a>
+                    </header>
+
+                    <div class="panel-body">
+
+
+                        <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
+
+                    </div>
+
+
+
+                </section>
+
+            </div>
+        </div>
     </div>
 
 
@@ -252,7 +207,9 @@
 {%  block js %}
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
     <script src="{{ STATIC_URL }}js/tuning_updates.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+    <script src="{{ STATIC_URL }}js/clockin.js"></script>
 
     <script type="text/javascript">
         API = "{{ API_URL }}";
@@ -260,10 +217,10 @@
         $(document).ready(function () {
 
             init();
-            update_events();  // in tuning_updates.js
+            add_form_events();  // in tuning_updates.js
 
             // get comments and add box to add comments
-                                $(".comment_list").slideDown();
+            $(".comment_list").slideDown();
             add_comment_editable();
             add_comment_list();
 
@@ -274,37 +231,8 @@
         function init() {
             // when page is first loaded
 
-            // get list of tuners
-            $.ajax({
-                type:"get",
-                url:API+"tuners",
-                dataType : 'json',
-                success:function(data){
-
-                    var tuners = data.objects;
-                    var tuners_list = [];
-                    $.each(tuners, function(i,d) {
-                        tuners_list.push({value: d.id, text: d.name});
-                    });
-
-                    $('.tuners').editable({
-                        type: 'select',
-                        source: tuners_list,
-                        sourceCache: true,
-                        url: API + 'accept_booking/?format=json&limit=0',
-
-                        success: function(response, newValue) {
-                            if(response.status == 'error') return response.msg; //msg will be shown in editable form
-
-                            location.reload();
-                        },
-                        title: 'Select Tuner'
-                    });
-
-
-                }
-            });
-
+            // populate editable template
+            load_booking("{{ object.ref }}");
 
 
         }
@@ -328,6 +256,12 @@
         }
 
         google.maps.event.addDomListener(window, 'load', init_map);
+
+        function redraw(ref, json) {
+            // override redraw in tuning_updates.js as just want to reload page
+            location.reload();
+
+        }
 
     </script>
 {% endblock js %}

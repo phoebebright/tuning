@@ -1,5 +1,12 @@
 {% extends "registration/registration_base.html" %}
 
+{% block extra-head %}
+    <style>
+    .errorlist {
+        list-style: none;
+    }
+    </style>
+{% endblock extra-head %}
 {% block content %}
 
     <form class="form-signin" role="form" action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
