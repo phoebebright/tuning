@@ -29,7 +29,7 @@ function populate_form(object, eventid) {
     // eventid and object.ref are expected to be the same
     //TODO: should pass in name of div to hold form as paramter - currently hard coded to #booking_edit
 
-    
+
     // create new form in div
     $("#booking_edit").html(object.template);
 
@@ -750,8 +750,6 @@ function populate_form(object, eventid) {
                 url:API+"booking_provider_paid/",
                 data: {
                     state: "true",
-                    value: USER_ID,
-                    ref: ref,
                     pk: ref},
                 dataType : 'json',
                 success:function(json){
@@ -769,7 +767,6 @@ function populate_form(object, eventid) {
                 url:API+"booking_client_paid/",
                 data: {
                     state: "true",
-                    ref:ref,
                     pk:ref},
                 dataType : 'json',
                 success:function(json){
@@ -798,7 +795,7 @@ function populate_form(object, eventid) {
         }
         function redraw(ref, json) {
             /* redraw form and event with updted data */
-            console.log('redraw from tuning_update');
+
             var data = tidy_data(json);
             populate_form(data, ref);
             add_form_events();   // updates the on clicks etc.

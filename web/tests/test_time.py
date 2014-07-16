@@ -162,6 +162,7 @@ class SimpleTest(TestCase):
         book2 = Booking.objects.get(id=2)
 
         self.assertEqual(book1.deadline, book2.deadline)
+        # expect difference as booking1 created during daylight saving
         self.assertNotEqual(book1.deadline.strftime("%H:%M"), book2.deadline.strftime("%H:%M"))
         self.assertEqual(book1.deadline.strftime("%H:%M"), "14:00")
         self.assertEqual(book2.deadline.strftime("%H:%M"), "13:00")

@@ -64,6 +64,8 @@ BOOKING_REQUESTED = "1"   # waiting for a tuner
 BOOKING_BOOKED = "3"      # tuner has been assigned but not yet happened
 BOOKING_TOCOMPLETE = "4"      # booking has past and not marked complete
 BOOKING_COMPLETE = "5"    # tuning has been done but not yet paid
+BOOKING_CLIENT_PAID = "6"    # client has  paid but not provider
+BOOKING_PROVIDER_PAID = "7"    # provider has been paid but not client
 BOOKING_CANCELLED = "8"    # tuning cancelled
 BOOKING_ARCHIVED = "9"    # paid and finished
 
@@ -472,11 +474,13 @@ class Booker(CustomUser):
         calls Booking.create_booking with a who of this user and commit=True
         :return: new booking object
         """
+        #TODO: Only used in testing I think.
 
         #TODO: may want to limit users who can create bookings
 
         booking = Booking.create_booking(self, when, where, what, deadline, client_ref, how, comments, commit=True )
-
+        booking.status = BOOKING_REQUESTED
+        booking.save()
 
         return booking
 
@@ -595,8 +599,9 @@ class BookingsQuerySet(QuerySet):
 
     def mine(self, user):
 
+        # booker can see all bookings for the client
         if user.is_booker:
-            return self.filter(booker=user)
+            return self.filter(client=user.client)
 
         elif user.is_tuner:
             # all this tuners bookings and bookings looking for tuners
@@ -700,7 +705,7 @@ class Booking(models.Model, ModelDiffMixin):
 
         # change status to archived  when fully paid
         # TODO:test
-        if self.status == BOOKING_COMPLETE and self.paid_provider_at and self.paid_client_at:
+        if self.status >= BOOKING_COMPLETE and self.status < BOOKING_CANCELLED and self.paid_provider_at and self.paid_client_at:
 
             self.set_archived()
 
@@ -726,10 +731,6 @@ class Booking(models.Model, ModelDiffMixin):
                 'price': self.price,
                 'tuner_payment': self.tuner_payment}
 
-    @classmethod
-    def create_temp_ref(cls):
-        print "thought create_temp_ref not used any more!"
-
 
 
     @classmethod
@@ -749,19 +750,23 @@ class Booking(models.Model, ModelDiffMixin):
         ''' used to determine if the booking can be changed in the front end
         :return:
         '''
-        # can edit if not cancelled of archived
-        if self.status < BOOKING_CANCELLED:
-            # tuners can't edit
-            if user:
-                if user.is_tuner:
-                    return False
-                if user.is_booker and self.client != user.client:
-                    return False
 
-
-            return True
-        else:
+        if not user:
             return False
+
+        # can edit if not cancelled of archived
+        if user.is_admin and self.status < BOOKING_CANCELLED:
+            return True
+
+        # tuners can't edit
+        if user.is_tuner:
+                return False
+
+        if user.is_booker and self.status < BOOKING_COMPLETE and self.client == user.client:
+            return True
+
+
+        return False
 
     @property
     def short_heading(self):
@@ -1325,12 +1330,16 @@ class Booking(models.Model, ModelDiffMixin):
 
         self.paid_provider_at = NOW
 
+        if self.paid_client_at:
+            self.set_archived()
+        else:
+            self.status = BOOKING_PROVIDER_PAID
+
         self.save()
 
         self.log(comment="provider paid", user=user, type="PROVIDER_PAID")
 
-        if self.paid_client_at:
-            self.set_archived()
+
 
     def set_provider_unpaid(self, user=None):
         ''' set status back, but only if called  within a minute(ish)
@@ -1338,7 +1347,13 @@ class Booking(models.Model, ModelDiffMixin):
 
         if (NOW - self.paid_provider_at).seconds < 90:
 
-            self.status = BOOKING_COMPLETE
+            # reset status
+            if self.paid_client_at:
+                self.status = BOOKING_CLIENT_PAID
+            else:
+                self.status = BOOKING_COMPLETE
+
+
             self.paid_provider_at = None
             self.save()
             self.log(comment="provider unmarked as paid", user=user, type="UNPROVIDER_PAID")
@@ -1347,18 +1362,16 @@ class Booking(models.Model, ModelDiffMixin):
 
         self.paid_client_at = NOW
 
+        if self.paid_provider_at:
+            self.set_archived()
+        else:
+            self.status = BOOKING_CLIENT_PAID
+
         self.save()
         self.log(comment="client paid", user=user, type="CLIENT_PAID")
 
-        if self.paid_provider_at:
-            self.set_archived()
 
-    def set_archived(self, user=None):
 
-        self.status = BOOKING_ARCHIVED
-        self.archived_at = NOW
-        self.save()
-        self.log(comment="archived",  user=user,type="ARCHIVED")
 
     def client_unpaid(self, user=None):
         ''' set status back, but only if called  within a minute(ish)
@@ -1366,13 +1379,24 @@ class Booking(models.Model, ModelDiffMixin):
 
         if (NOW - self.paid_client_at).seconds < 90:
 
-            self.status = BOOKING_COMPLETE
+            # reset status
+            if self.paid_provider_at:
+                self.status = BOOKING_PROVIDER_PAID
+            else:
+                self.status = BOOKING_COMPLETE
+
             self.paid_client_at = None
             self.save()
             self.log(comment="client unmakred as paid", user=user, type="UNCLIENT_PAID")
 
 
 
+    def set_archived(self, user=None):
+
+        self.status = BOOKING_ARCHIVED
+        self.archived_at = NOW
+        self.save()
+        self.log(comment="archived",  user=user,type="ARCHIVED")
 
 
     @classmethod

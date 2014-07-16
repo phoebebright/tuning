@@ -187,7 +187,8 @@ def render_booking_template(request, object, user=None):
 
 @login_required
 @user_passes_test(can_view_bookings)
-def bookings_list(request):
+def bookings_list(request, status=None):
+
     return render_to_response('web/booking_list.html',{
 
     },

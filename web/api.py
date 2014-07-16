@@ -282,6 +282,11 @@ class BookingsResource(ModelResource):
 
         bundle.data['who'] = bundle.obj.who
 
+        if bundle.obj.tuner:
+            bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
+        else:
+            bundle.data['tuner'] = ''
+
         if bundle.obj.when:
 
             bundle.data['when'] = bundle.obj.when
@@ -410,12 +415,8 @@ class BookingUpdateResource(Resource):
     def obj_create(self, bundle, request=None, **kwargs):
 
 
-        # if no value then nothing to do
-        if not bundle.data.has_key('value'):
-            return None
-
         ref = bundle.data['pk']
-        value = bundle.data['value']
+        value = bundle.data.get('value', None)
         me = bundle.request.user
 
         try:
@@ -780,21 +781,6 @@ class BookingCompleteResource(BookingUpdateResource):
 
 
 
-class BookingProviderPaidResource(BookingUpdateResource):
-
-    class Meta(BookingUpdateResource.Meta):
-        resource_name = 'booking_provider_paid'
-
-
-    def update_booking(self, booking, bundle, value):
-
-
-        state = bundle.data['state']
-
-        if state == "true":
-            booking.set_provider_paid(user=bundle.request.user)
-        else:
-            booking.set_provider_unpaid(user=bundle.request.user)
 
 
 class AcceptBookingResource(BookingUpdateResource):
@@ -811,11 +797,25 @@ class AcceptBookingResource(BookingUpdateResource):
         tuner = Tuner.objects.get(id=tuner_id)
         booking.set_booked(tuner,user=bundle.request.user)
 
+class BookingProviderPaidResource(BookingUpdateResource):
+
+    class Meta(BookingUpdateResource.Meta):
+        resource_name = 'booking_provider_paid'
+
+
+    def update_booking(self, booking, bundle, value):
+
+
+        state = bundle.data['state']
+
+        if state == "true":
+            booking.set_provider_paid(user=bundle.request.user)
+        else:
+            booking.set_provider_unpaid(user=bundle.request.user)
 
 class BookingClientPaidResource(BookingUpdateResource):
 
     class Meta(BookingUpdateResource.Meta):
-
         resource_name = 'booking_client_paid'
 
 

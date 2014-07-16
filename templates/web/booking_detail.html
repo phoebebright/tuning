@@ -64,14 +64,16 @@
 
                         <div class="row">
                             <div class="chunk">
+                                                                {%  if object.status >= '1' %}
                                 <i class="fa booking_status_1_icon"></i>Requested by <strong>{{ object.booker }}</strong><span class="label pull-right booking_status_1">{{ object.requested_at }}</span>
+                            {% endif %}
                             </div>
                         </div>
 
 
                         <div class="row">
                             <div class="chunk">
-                                {%  if object.status >= '1' %}
+                                {%  if object.status >= '3' %}
 
                                     <i class="fa booking_status_3_icon"></i>Booked <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
                                 {%  endif %}
@@ -83,7 +85,7 @@
                             {%  if not object.cancelled %}
                                 <div class="row">
                                     <div class="chunk">
-                                        <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_4">{{ object.completed_at }}</span>
+                                        <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_5">{{ object.completed_at }}</span>
                                     </div>
                                 </div>
                             {% endif %}
@@ -92,7 +94,7 @@
                                 {%  if object.has_provider_paid %}
                                     <div class="row">
                                         <div class="chunk">
-                                            <i class="fa booking_status_5_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
+                                            <i class="fa booking_status_6_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
                                         </div>
                                     </div>
 
@@ -104,7 +106,7 @@
                                 {%  if  object.has_client_paid %}
                                     <div class="row">
                                         <div class="chunk">
-                                            <i class="fa booking_status_5_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
+                                            <i class="fa booking_status_6_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
                                         </div>
                                     </div>
 
