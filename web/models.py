@@ -1214,8 +1214,8 @@ class Booking(models.Model, ModelDiffMixin):
         # can't bookin in the past
         # TODO: Allow bookings in the past but only as completed bookings - ie. for payments/records purposes
         # commented out for the moment to make testing easier
-        if to_time < NOW and not who.is_admin:
-            raise PastDateException
+        #if to_time < NOW and not who.is_admin:
+        #    raise PastDateException
 
 
 
