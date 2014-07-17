@@ -242,6 +242,7 @@
 
         function init_map() {
             // init map
+            {% if object.studio.lat %}
             var map_canvas = document.getElementById('map_canvas');
             var location = new google.maps.LatLng({{ object.studio.lat}}, {{ object.studio.lon}});
             var map_options = {
@@ -256,6 +257,7 @@
                 map: map,
                 title: '{{ object.studio }}'
             });
+            {% endif %}
         }
 
 

@@ -689,7 +689,7 @@ class Booking(models.Model, ModelDiffMixin):
         return "%s %s on %s %s " % (self.ref, self.studio, self.when.strftime('%b'), self.when.strftime('%d'))
 
     def get_absolute_url(self):
-        return reverse('booking-detail', kwargs={'pk': self.pk})
+        return reverse('booking-detail', kwargs={'pk': self.ref})
 
     class Meta:
         ordering = ["-deadline",]
