@@ -12,6 +12,7 @@
     <script src="{{ STATIC_URL }}js/moment-timezone.min.js"></script>
 
 
+
     <style>
         .fc-header-title h2 {
             font-size: 90%;
@@ -49,7 +50,11 @@
 
         }
 
+        .alert {
+            padding: 5px;
+            margin-bottom: 5px;
 
+        }
 
         @-webkit-keyframes pulse
         {
@@ -421,26 +426,7 @@
         $("#booking_row").slideUp();
     }
 
-    function load_booking(eventid) {
 
-
-        // get full details
-        $.ajax({
-            type:"get",
-            url:API+"bookings_fat",
-            data: {
-                ref: eventid,
-                limit:0},
-            dataType : 'json',
-            success:function(json){
-
-                data = tidy_data(json.objects[0]);
-                populate_form(data, eventid);
-                // holds on click events etc.
-                update_events();
-            }
-        });
-    }
 
     function client_dropped(date, allDay, client_id) {
 
@@ -486,7 +472,7 @@
 
                 populate_form(data, ref);
                 // holds on click events etc.
-                update_events();
+                add_form_events();
 
 
                 var new_event = Array();
@@ -509,228 +495,12 @@
 
             },
             error: function (request, status, error) {
-                alert(request.responseText);
+                alert("Unable to add booking - Bookings cannot be in the past.")
+                //alert(request.responseText);
             }
         });
 
     }
-    function populate_form(object, eventid) {
-        // eventid and object.ref are expected to be the same (were not in previous version)
-        //TODO: should pass in name of div to hold form as paramter - currently hard coded to #booking_edit
-
-        // create new form in div
-        $("#booking_edit").html(object.template);
-
-        // save event id from calendar and ref of object
-        // update: these are now the same eventid==ref
-        $("#editform")
-                .attr("data-eventid", eventid )
-                .attr("data-eventref", object.ref );
-
-        // add classes
-        $("#booking_edit").attr("class", 'panel-body booking_status_'+object.status);
-
-        if (object.editable) {
-
-
-            // add ref to all editable fields and buttons
-            // not working so put in template instead
-            {#            $('.editable').data('pk', object.ref);#}
-            {#            $("#booking_edit button").each(function() {#}
-            {#                $(this).data('pk', object.ref);#}
-            {#            });#}
-
-
-            // now put data into "fields" or ? if no data
-            $("#modal_label").text("Add Booking for " + object.client.name);
-
-            $("#field_client_name").text(object.client.name);
-            $("#field_deadline_date").text(moment(object.deadline).format("dddd D MMM"));
-
-            $("#field_activity").text(object.activity.name_verb);
-            $("#field_activity_name").text(object.activity.name);
-            $("#field_activity").attr("data-value", String(object.activity.id));
-
-            if (object.instrument != null) {
-                $("#field_instrument").text(object.instrument.name);
-                $("#field_instrument").attr("data-value", String(object.instrument.id));
-            } else {
-                $("#field_instrument").text("?");
-            }
-
-            if (object.studio != null) {
-                $("#field_studio").text(object.studio.name);
-                $("#field_studio").attr("data-value", String(object.studio.id));
-            } else {
-                $("#field_studio").text("?");
-            }
-
-            if (object.client_ref != null) {
-                $("#field_client_ref").text(object.client_ref);
-                $("#field_client_ref").attr("data-value", String(object.client_ref));
-            } else {
-                $("#field_client_ref").text("?");
-            }
-
-            // the line belows turns .uct property from true to false!!!!!
-            // var deadline = object.deadline;
-
-            var dline = object.deadline;
-            if (dline.isValid() && (dline.hour() > 0 || dline.minute() > 0)) {
-                // output as local time here
-                $("#field_deadline_time").text(dline.local().format("HH:mm"));
-                // store as utc
-                $("#field_deadline_time").attr("data-value", dline.toISOString());
-            } else {
-                $("#field_deadline_time").text("?");
-            }
-
-
-            var requested = object.requested_from;
-
-            if (requested.isValid() && (requested.hour() > 0 || requested.minute() > 0)) {
-                // convert as local time here
-                $("#field_requested_time").text(requested.local().format("HH:mm"));
-                //store as utc
-                $("#field_requested_time").attr("data-value", requested.toISOString());
-            } else {
-                $("#field_requested_time").text("?");
-            }
-
-            if (object.booker != null) {
-                $("#field_booker").text(object.booker.full_name);
-                $("#field_booker").attr("data-value", String(object.booker.id));
-            } else {
-                $("#field_booker").text("?");
-            }
-            if (object.tuner != null) {
-                $("#field_tuner").text(object.tuner.full_name);
-                $("#field_tuner").attr("data-value", String(object.tuner.id));
-            } else {
-                $("#field_tuner").text("?");
-            }
-
-
-            if (object.price != null) {
-                $("#field_price").text(object.price);
-                $("#field_price").attr("data-value", String(object.price));
-            } else {
-                $("#field_price").text("?");
-            }
-
-            if (object.tuner_payment != null) {
-                $("#field_fee").text(object.tuner_payment);
-                $("#field_fee").attr("data-value", String(object.tuner_payment));
-            } else {
-                $("#field_fee").text("?");
-            }
-
-
-            $("#field_duration").text(object.duration.toFixed(2));
-            $("#field_duration").attr("data-value", String(object.duration));
-
-            // can only update bookings with status < complete
-
-
-            // load lists of instruments, activities etc. to be used for editable fields
-            load_data(object.client.id, "{{ NOW|date:"d/m/Y" }}", "{{ MAX_DATE|date:"d/m/Y" }}");
-
-        } else {
-            $("#editform").html(object.description);
-        }
-
-        // decide which buttons to show
-        $("#booking_edit button").each(function() {
-            $(this).hide();
-
-            // show/hide buttons based on user type and status which are data attributes on buttons
-
-            if ($(this).data('showUser').indexOf(USER_TYPE) > -1) {
-                if ($(this).data('showStatus').indexOf(object.status) > -1) {
-                    $(this).show();
-                }
-            }
-        });
-
-        // now show the booking
-        $("#booking_row").slideDown();
-
-        // enable onclicks
-        $("#editable_save").on("click", function() {
-            // mark booking as created
-            $.ajax({
-                type:"post",
-                url:API+"make_booking/",
-                data: {pk: object.ref, value:"{{ request.user.id }}"},
-                dataType : 'json',
-                success:function(json){
-
-                    var data = tidy_data(json.booking);
-
-                    close_form();
-                    redraw_event(object.ref, data);
-
-
-                }
-            });
-
-        });
-        $("#editable_done").on("click", function() {
-            // nothing to do as everything saved already
-
-            close_form();
-
-        });
-
-
-
-        {#        // .complete_booking in tuning_updates not being triggered so doing it from here#}
-        {#        $("#editable_complete").on("click", function() {#}
-        {#            // mark booking as complete#}
-        {##}
-        {#            $.ajax({#}
-        {#                type:"post",#}
-        {#                url:API+"bookings_to_complete/",#}
-        {#                data: {ref: object.ref,  value:"{{ request.user.id }}"},#}
-        {#                dataType : 'json',#}
-        {#                success:function(json){#}
-        {#                    //TOOD: work out how to return updated object so can pass into close_form#}
-        {#                    close_form();#}
-        {##}
-        {##}
-        {#                }#}
-        {#            });#}
-        {##}
-        {#        });#}
-
-        $("#editable_cancel").on("click", function() {
-
-            var msg = "Are you sure you want to cancel this booking?";
-
-            if (parseInt(object.status) == 0) {
-                msg = "Are you sure you don't want to save this booking? "
-            }
-            if (window.confirm(msg)) {
-
-                $.ajax({
-                    type:"post",
-                    url:API+"delete_booking/",
-                    data: {pk: object.ref, value:"{{ request.user.id }}"},
-                    dataType : 'json',
-                    success:function(json){
-
-                        close_form();
-                        remove_event(object.ref);
-
-
-                    }
-                });
-            }
-
-        });
-
-    }
-
 
 
     </script>

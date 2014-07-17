@@ -261,7 +261,7 @@ DID SOME EDITING AND WENT DOWN A WAYS USING BOOKING_EDITABLE_TEMPLATE LOOKING LI
 
                     init();
                     populate_booking_template(json.objects[0]);
-                    update_events();  // in tuning_updates.js
+                    add_form_events();  // in tuning_updates.js
                     do_last();   // in base
 
 
@@ -273,7 +273,7 @@ DID SOME EDITING AND WENT DOWN A WAYS USING BOOKING_EDITABLE_TEMPLATE LOOKING LI
 
 
         function init() {
-            load_data({{ object.client_id }}, "{{ NOW|date:"d/m/Y" }}","{{ MAX_DATE|date:"d/m/Y" }}");
+            load_data({{ object.client_id }});
         }
 
     </script>

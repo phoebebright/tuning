@@ -40,6 +40,8 @@ import arrow
 
 from django_twilio_sms.utils import send_sms
 from notification import models as notification
+from easy_pdf.views import PDFTemplateView
+
 
 #App
 from web.models import *
@@ -185,7 +187,8 @@ def render_booking_template(request, object, user=None):
 
 @login_required
 @user_passes_test(can_view_bookings)
-def bookings_list(request):
+def bookings_list(request, status=None):
+
     return render_to_response('web/booking_list.html',{
 
     },
@@ -482,3 +485,29 @@ class TunerDetailView(UpdateView):
     fields = ['email', 'mobile', 'use_email', 'use_sms']
 
 
+class GenerateInvoice(PDFTemplateView):
+    template_name = "pdf/invoice.html"
+
+
+    def get_context_data(self, **kwargs):
+
+        try:
+            booking =  Booking.objects.get(ref=self.kwargs['ref'])
+        except Booking.DoesNotExist:
+            raise Http404(_("No Booking with ref %s" % self.kwargs['ref']))
+
+        return super(GenerateInvoice, self).get_context_data(
+            pagesize="A4",
+            title="Hi there!",
+            booking = booking,
+            **kwargs
+        )
+
+
+
+
+
+        # if not user:
+        #     user = request.user
+        # if not user:
+        #     raise PermissionDenied()

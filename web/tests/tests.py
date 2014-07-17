@@ -134,12 +134,6 @@ class BookingTest(TestCase):
         to add comments (comments needs a booking ref)
         """
 
-        temp_ref = Booking.create_temp_ref()
-        self.assertEqual(len(temp_ref), 6)
-
-        temp_ref2 = Booking.create_temp_ref()
-        self.assertNotEqual(temp_ref, temp_ref2)
-
 
         """
         if a booking is created without a studio and with a ref, then assume the ref is a temporary one and
@@ -276,7 +270,7 @@ class BookingTest(TestCase):
         book1.cancel(self.jima)
 
         book1 = Booking.objects.get(id=book1.id)
-        self.assertEqual(book1.status, BOOKING_ARCHIVED)
+        self.assertEqual(book1.status, BOOKING_CANCELLED)
         self.assertEqual(roundTime(book1.cancelled_at, 120), roundTime(NOW, 120))
 
         # fully booked
@@ -288,7 +282,7 @@ class BookingTest(TestCase):
         self.assertEqual(self.matt.accepted_bookings.count(),1)
 
         book2 = Booking.objects.get(id=book2.id)
-        self.assertEqual(book2.status, BOOKING_ARCHIVED)
+        self.assertEqual(book2.status, BOOKING_CANCELLED)
         self.assertEqual(book2.cancelled_at, roundTime(NOW, 120))
 
 
@@ -316,7 +310,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 0)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 0)
-        self.assertEqual(Booking.objects.set_complete().count(), 0)
+        self.assertEqual(Booking.objects.completed().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 0)
 
@@ -324,7 +318,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 1)
         self.assertEqual(Booking.objects.requested().count(), 1)
         self.assertEqual(Booking.objects.booked().count(), 0)
-        self.assertEqual(Booking.objects.set_complete().count(), 0)
+        self.assertEqual(Booking.objects.completed().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 0)
 
@@ -333,7 +327,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 1)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 1)
-        self.assertEqual(Booking.objects.set_complete().count(), 0)
+        self.assertEqual(Booking.objects.completed().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 1)
 
@@ -345,7 +339,7 @@ class BookingTest(TestCase):
         self.assertEqual(Booking.objects.current().count(), 2)
         self.assertEqual(Booking.objects.requested().count(), 0)
         self.assertEqual(Booking.objects.booked().count(), 2)
-        self.assertEqual(Booking.objects.set_complete().count(), 0)
+        self.assertEqual(Booking.objects.completed().count(), 0)
         self.assertEqual(Booking.objects.archived().count(), 0)
         self.assertEqual(Booking.objects.to_complete().count(), 1)
 
@@ -364,7 +358,7 @@ class BookingTest(TestCase):
     def test_status(self):
 
         # new booking
-        book = self.jima.request_booking(when=YESTERDAY, client_ref="Jam2", deadline=YESTERDAY)
+        book = self.jima.request_booking(when=TOMORROW, client_ref="Jam2", deadline=TOMORROW)
         self.assertTrue(book.status, "1")
 
         book.set_booked(tuner=self.matt)
@@ -380,9 +374,10 @@ class BookingTest(TestCase):
         self.assertFalse(book.has_client_paid)
 
         book.set_provider_paid()
-        self.assertTrue(book.status, "5")
+        self.assertTrue(book.status, "6")
         self.assertTrue(book.has_provider_paid)
         self.assertFalse(book.has_client_paid)
+
 
         book.set_client_paid()
         self.assertTrue(book.status, "9")
@@ -391,7 +386,7 @@ class BookingTest(TestCase):
 
 
         book.client_unpaid()
-        self.assertTrue(book.status, "5")
+        self.assertTrue(book.status, "6")
         self.assertTrue(book.has_provider_paid)
         self.assertFalse(book.has_client_paid)
 
@@ -401,7 +396,7 @@ class BookingTest(TestCase):
         self.assertFalse(book.has_client_paid)
 
         book.set_client_paid()
-        self.assertTrue(book.status, "5")
+        self.assertTrue(book.status, "7")
         self.assertFalse(book.has_provider_paid)
         self.assertTrue(book.has_client_paid)
 

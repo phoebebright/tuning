@@ -57,6 +57,8 @@
         {% endif %}
 
         TZ = "{{ USER_TIME_ZONE }}";
+
+
     </script>
 
     {% block extra_head %}
@@ -100,15 +102,14 @@
                         <span class="badge booking_status_1">{{ num_requested }}</span>
                     </a>
                     <ul class="dropdown-menu extended tasks-bar">
-                        <li>
-                            <p class="">You have <span>{{ num_requested|length }}</span> requests for tunings</p>
-                        </li>
-                        {%  for item in list_requested %}
+
+                        {%  for item in list_requested|slice:":6" %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
+                                            <h5>{{ item.where }}<br />
+                                                {{ item.what }}</h5>
 
                                             <p>requested at {{ item.requested_at|time:"h:i a" }}</p>
                                             <p>for {{ item.when|date:"DATETIME_FORMAT" }}</p>
@@ -122,10 +123,11 @@
 
                         {% endfor %}
 
-
-                        <li class="external">
-                            <a href="{%  url "assign_tuner" %}">Browse All Unassigned Tunings</a>
-                        </li>
+                        {% if list_requested|length > 6 %}
+                            <li class="external">
+                                <a href="/bookings/?status=1">Browse all {{ list_requested|length }} Requested Bookings</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
 
@@ -136,16 +138,14 @@
                         <i class="fa booking_status_3_icon"></i>
                         <span class="badge booking_status_3">{{ num_current }}</span>
                     </a>
-                    <ul class="dropdown-menu extended inbox">
-                        <li>
-                            <p class="">You have <span>{{ num_current }}</span> pending tunings</p>
-                        </li>
-                        {%  for item in list_current %}
+                    <ul class="dropdown-menu extended tasks-bar">
+
+                        {%  for item in list_current|slice:":6" %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
+                                            <h5>{{ item.where }}<br />{{ item.what }}</h5>
                                             <p>{{ item.when }}</p>
                                             <p>Tuner: {{ item.tuner }}</p>
                                         </div>
@@ -157,9 +157,11 @@
                             </li>
                         {%  endfor %}
 
-                        <li>
-                            <a href="{%  url "to_completed" %}">Browse All Pending Bookings</a>
-                        </li>
+                        {% if list_requested|length > 6 %}
+                            <li class="external">
+                                <a href="/bookings/?status=3">Browse all {{ list_current|length }} Pending Bookings</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
 
@@ -170,16 +172,14 @@
                         <i class="fa booking_status_4_icon"></i>
                         <span class="badge booking_status_4">{{ num_to_complete }}</span>
                     </a>
-                    <ul class="dropdown-menu extended inbox">
-                        <li>
-                            <p class="">You have <span>{{ num_to_complete }}</span> incomplete tunings</p>
-                        </li>
-                        {%  for item in list_to_complete %}
+                    <ul class="dropdown-menu extended tasks-bar">
+
+                        {%  for item in list_to_complete|slice:":6" %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
+                                            <h5>{{ item.where }}<br />{{ item.what }}</h5>
                                             <p>{{ item.when }}</p>
                                             <p>Tuner: {{ item.tuner }}</p>
                                         </div>
@@ -191,9 +191,11 @@
                             </li>
                         {%  endfor %}
 
-                        <li>
-                            <a href="{%  url "to_completed" %}">Browse All Incomplete Tunings</a>
-                        </li>
+                        {% if list_requested|length > 6 %}
+                            <li class="external">
+                                <a href="/bookings/?status=4">Browse all {{ list_to_complete|length }} Incomplete Bookings</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
 
@@ -204,16 +206,14 @@
                         <i class="fa booking_status_5_icon"></i>
                         <span class="badge booking_status_5">{{ num_complete }}</span>
                     </a>
-                    <ul class="dropdown-menu extended inbox">
-                        <li>
-                            <p class="">You have <span>{{ num_complete }}</span> pending payment</p>
-                        </li>
-                        {%  for item in list_complete %}
+                    <ul class="dropdown-menu extended tasks-bar">
+
+                        {%  for item in list_complete|slice:":6" %}
                             <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
-                                            <h5>{{ item.where }}</h5>
+                                            <h5>{{ item.where }}<br />{{ item.what }}</h5>
                                             <p>{{ item.when }}</p>
                                             <p>Tuner: {{ item.tuner }}</p>
                                         </div>
@@ -225,9 +225,11 @@
                             </li>
                         {%  endfor %}
 
-                        <li>
-                            <a href="{%  url "to_paid" %}">Browse All Unpaid Tunings</a>
-                        </li>
+                        {% if list_complete|length > 6 %}
+                            <li class="external">
+                                <a href="/bookings/?status=6">Browse all {{ list_complete|length }} Unpaid Bookings</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
 
@@ -330,17 +332,13 @@
 
                         {% if user.is_booker %}
 
-                            <li class="sub-menu">
-                                <a href="javascript:;">
-                                    <i class="fa fa-laptop"></i>
-                                    <span>Bookings</span>
-                                </a>
-                                <ul class="sub">
-                                    <li><a href="/calendar/">Calendar</a></li>
-                                    <li><a href="/booking/add/">New Booking</a></li>
-                                    <li><a href="/bookings/">Browse Bookings</a></li>
-                                </ul>
-                            </li>
+                            <li><a href="/bookings/">Browse Bookings</a></li>
+
+                        {% endif %}
+
+                        {% if user.is_tuner %}
+
+                            <li><a href="/bookings/">Browse Bookings</a></li>
 
                         {% endif %}
 
@@ -393,7 +391,7 @@
 
 
         <div class="right-stat-bar leftside-navigation">
-            <ul id="loglist" class="messages sidebar-menu" data-limit="10">
+            <ul id="loglist" class="message-log messages sidebar-menu" data-items="10">
 
 
 
@@ -467,19 +465,25 @@
     </script>
 
 <script id="log_list_template" type="x-tmpl-mustache">
-                <li>
+            <div class="row alert booking_status_{{ status }}">
+
+                 <div class="col-md-3">
+                     <span class="photo"><img alt="" src="{{ gravatar }}"></span>
+                 </div>
+                 <div class="col-md-9">
+
+
                     <a href="{{ booking_url }}">
-                        <span class="photo"><img alt="avatar" src="{{ gravatar }}"></span>
-                                <span class="subject">
                                 <span class="booking">{{ long_heading }}</span>
-                                <span class="time">{{ since }}</span>
+                                <span class="time pull-right">{{ since }}</span>
                                 </span>
                                 <span class="comment">
                                     {{text}}
                                 </span>
                     </a>
-                </li>
-                </script>
+                 </div>
+            </div>
+            </script>
 {% endverbatim %}
 
 
@@ -489,17 +493,17 @@
 
     function do_last() {
 
-{#        // make left side nav accordian#}
-{#        $('#nav-accordion').dcAccordion({#}
-{#            eventType: 'click',#}
-{#            autoClose: true,#}
-{#            saveState: true,#}
-{#            disableLink: true,#}
-{#            speed: 'slow',#}
-{#            showCount: true,#}
-{#            autoExpand: true,#}
-{#            classExpand: 'dcjq-current-parent'#}
-{#        });#}
+        {#        // make left side nav accordian#}
+        {#        $('#nav-accordion').dcAccordion({#}
+        {#            eventType: 'click',#}
+        {#            autoClose: true,#}
+        {#            saveState: true,#}
+        {#            disableLink: true,#}
+        {#            speed: 'slow',#}
+        {#            showCount: true,#}
+        {#            autoExpand: true,#}
+        {#            classExpand: 'dcjq-current-parent'#}
+        {#        });#}
 
         // tool tips
 
@@ -525,6 +529,10 @@
 
 
 
+        // commented out because slow to load
+        //TODO: load when not busy
+        load_recent_comments($(".message-log"));
+
     }
 
 </script>
@@ -546,20 +554,6 @@
     (function ($) {
         "use strict";
         $(document).ready(function () {
-
-            // load messages from log
-            {% if user.is_admin %}
-                var call = API + "log?format=json";
-            {% elif user.is_booker %}
-                var call = API + "log?format=json&client_id={{ user.client_id }}";
-            {% elif user.is_tuner %}
-                var call = API + "log?format=json&user_id={{ user.id }}";
-            {% endif %}
-
-
-            // commented out because slow to load
-            //TODO: load when not busy
-            //load_recent_comments($("#loglist"), "{{ user.logfilter }}");
 
             base();
 

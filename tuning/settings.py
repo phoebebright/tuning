@@ -226,6 +226,7 @@ INSTALLED_APPS = (
     'django_twilio_sms',
     'django_logtail',
     #'email_monitor',
+    'easy_pdf',
     'web',
 )
 

@@ -56,6 +56,7 @@
     <script type="text/javascript">
         API = "{{ API_URL }}";
 
+
         $(document).ready(function () {
 
             init();
@@ -65,12 +66,23 @@
         function init() {
             // when page is first loaded
 
+                        var data = {};
+
+            // add filter that will be applied to API call to bookings
+            // only allow a filter on status
+            //TODO: should be converted to data for including in ajax call
+            var filter = location.search.substring(1);
+            if (filter.substring(0,6) != "status") {
+                filter='';
+            }
 
 
-            // get list of tuners
+
+            // get list of bookings
             $.ajax({
                 type:"get",
-                url:API+"bookings",
+                url:API+"bookings?" + filter,
+                data: data,
                 dataType : 'json',
                 success:function(data){
 
@@ -103,7 +115,7 @@
                         d['togo'] = moment(d.when).fromNow()
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
                         if (!$.isEmptyObject(d.tuner)) {
-                            d['tuner'] = d.tuner.full_name;
+                            d['tuner'] = d.tuner;
                         } else {
                             d['tuner'] = '';
                         }
