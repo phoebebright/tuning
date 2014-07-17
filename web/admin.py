@@ -44,6 +44,7 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('is_staff', 'is_superuser', 'last_login')
     search_fields =	  ('email', 'first_name', 'last_name', 'username')
     list_display_links = ('email', 'username')
+    
    
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
@@ -51,6 +52,7 @@ class CustomUserAdmin(UserAdmin):
 class BookerUserAdmin(UserAdmin):
     list_display = ('email', 'username', 'first_name', 'last_name','client', 'mobile','is_active', 'use_email', 'use_sms',  'last_login', 'is_staff')
     list_editable = ('is_active','use_email','use_sms')
+    list_display_links = ('email', 'username')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),
@@ -61,6 +63,7 @@ class BookerUserAdmin(UserAdmin):
 class TunerUserAdmin(UserAdmin):
     list_display = ('email', 'username', 'first_name', 'last_name', 'mobile','is_active', 'use_email', 'use_sms', 'last_login', 'is_staff')
     list_editable = ('is_active','use_email','use_sms')
+    list_display_links = ('email', 'username')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),

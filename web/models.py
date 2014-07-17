@@ -220,10 +220,10 @@ class ModelDiffMixin(object):
 
 
 class Activity(models.Model):
-    name = models.CharField(_('eg Tuning'), max_length=12, unique=True)
-    name_plural = models.CharField(_('eg. Tunings'), max_length=15)
-    name_verb = models.CharField(_('eg. Tune'), max_length=20)
-    name_verb_past =   models.CharField(_('eg. Tuned'), max_length=20)
+    name = models.CharField(_('name'), max_length=12, unique=True, help_text="eg Tuning")
+    name_plural = models.CharField(_('plural'), max_length=15, help_text="eg. Tunings")
+    name_verb = models.CharField(_('verb'), max_length=20, help_text="eg. Tune")
+    name_verb_past =   models.CharField(_('verb past'), max_length=20, help_text="eg. Tuned")
     duration = models.PositiveIntegerField(_('Default time slot in minutes '), max_length=5, default=60)
     order = models.PositiveSmallIntegerField(_('Order to display in lists'), default=0)
     price = models.DecimalField(_('Default price (ex vat)'), max_digits=10, decimal_places=2, default=50)
@@ -650,7 +650,7 @@ class Booking(models.Model, ModelDiffMixin):
                      (BOOKING_ARCHIVED, _('archived')),
                      )
 
-    ref = models.CharField(max_length=10, unique=True)
+    ref = models.CharField(max_length=30, unique=True)
     booker = models.ForeignKey(CustomUser, related_name="booker_user", blank=True, null=True)
     client = models.ForeignKey(Client, related_name="client")
     tuner = models.ForeignKey(Tuner, blank=True, null=True, related_name="tuner_user")
@@ -689,7 +689,7 @@ class Booking(models.Model, ModelDiffMixin):
         return "%s %s on %s %s " % (self.ref, self.studio, self.when.strftime('%b'), self.when.strftime('%d'))
 
     def get_absolute_url(self):
-        return reverse('booking-detail', kwargs={'pk': self.ref})
+        return reverse('booking-detail', kwargs={'pk': self.id})
 
     class Meta:
         ordering = ["-deadline",]
