@@ -30,7 +30,8 @@ from model_utils import Choices
 from model_utils.fields import MonitorField, StatusField
 from model_utils.managers import QueryManager, PassThroughManager
 
-from notification import models as notification
+#can't import here as end up with circular import - see email_logged.py
+#from notification import models as notification
 from libs.utils import make_time, is_list, add_tz
 from web.exceptions import *
 
@@ -75,6 +76,26 @@ CALL_REJECTED = 'R'
 CALL_ACCEPTED = 'A'
 CALL_EXPIRED = 'E'
 CALL_FAILED = 'F'
+
+def send_notification(users, label, extra_context=None, sender=None):
+
+    # import here to avoid circular import
+    from notification import models as notification
+    # if in test - always send mails but only to testers
+    if settings.DEBUG:
+
+            system = system_user()
+
+            if not extra_context:
+                extra_context = {}
+
+            extra_context['system_info'] = "TEST MODE - email for %s" % users
+            notification.send([system,], label, extra_context, sender)
+
+
+    # if not in test, don't send notification about bookings in the past
+    else:
+        notification.send(users, label, extra_context, sender)
 
 # default booking request times
 
@@ -344,7 +365,8 @@ class CustomUser(AbstractUser, ModelDiffMixin):
     mobile = models.CharField(max_length=20, null=True, blank=True)
     active = models.BooleanField(default=True, db_index=True)
     gravatar = models.URLField(blank=True, null=True)
-
+    use_email = models.BooleanField(default=True)
+    use_sms = models.BooleanField(default=False)
 
 
     def save(self, *args, **kwargs):
@@ -398,6 +420,7 @@ class CustomUser(AbstractUser, ModelDiffMixin):
     @property
     def client(self):
         return None
+
 
     def can_cancel(self, booking):
 
@@ -492,8 +515,7 @@ class Tuner(CustomUser):
     geolocation = map_fields.GeoLocationField(max_length=100, blank=True, null=True)
     activities = models.ManyToManyField(Activity, blank=True, null=True)
     score = models.PositiveSmallIntegerField(default=1)
-    use_email = models.BooleanField(default=True)
-    use_sms = models.BooleanField(default=True)
+
     #TODO: add vat registered
     #TODO: add availability schedule
 
@@ -512,6 +534,10 @@ class Tuner(CustomUser):
     @property
     def can_book(self):
         return False
+
+    @property
+    def is_contactable(self):
+        return self.use_email or self.use_sms
 
     @property
     def is_test(self):
@@ -797,13 +823,13 @@ class Booking(models.Model, ModelDiffMixin):
 
 
         if user_type == "admin":
-            return "%s charging %s paying %s%s" % (base,  self.price, "&pound;", self.tuner_payment)
+            return "%s charging %s%s paying %s%s" % (base, "&pound;", self.price, "&pound;", self.tuner_payment)
 
         if user_type == "booker":
-            return "%s price %s ex VAT" % (base,  self.price)
+            return "%s price %s%s ex VAT" % (base, "&pound;", self.price)
 
         if user_type == "tuner":
-            return "%s  paying %s" % (base,  self.tuner_payment)
+            return "%s  paying %s%s" % (base, "&pound;", self.tuner_payment)
 
 
     @property
@@ -1013,7 +1039,7 @@ class Booking(models.Model, ModelDiffMixin):
 
         # next line just keeps repeating?????
         #celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
-        notification.send(users=notify,
+        send_notification(users=notify,
                           label=what,
                            extra_context=context)
 
@@ -1303,7 +1329,18 @@ class Booking(models.Model, ModelDiffMixin):
         self.booked_at = NOW
         self.save()
 
+
         self.log(comment="Tuner %s assigned" % (self.tuner,), user=user, type="BOOK")
+
+        # send notification
+        send_notification([self.tuner], "booking_confirmed", {"booking": self,
+                                                               "description": self.description_for_user(self.tuner)
+            })
+        send_notification([self.booker], "booking_confirmed", {"booking": self,
+                                                               "description": self.description_for_user(self.booker)
+            })
+
+
 
 
 
@@ -1476,8 +1513,8 @@ class TunerCall(models.Model):
     @transaction.atomic()
     def save(self, *args, **kwargs):
 
-        if  self.tuner and not self.called:
-            notification.send([self.tuner,], "tuner_request", {"booking": self.booking,
+        if  self.tuner and not self.called and (self.tuner.is_contactable):
+            send_notification([self.tuner,], "tuner_request", {"booking": self.booking,
                                                                "description": self.booking.description_for_user(self.tuner)
             })
             self.called = NOW

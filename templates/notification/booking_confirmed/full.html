@@ -1,0 +1,12 @@
+<p>Booking {{ booking.ref }} has been confirmed.<br />
+{{ description }}</p>
+<br />
+<p>Tuner Contact: {{ booking.tuner.mobile }}</p>
+<p>Booker Contact: {{ booking.booker.mobile }}</p>
+<br />
+
+<p>Full details here: {{ current_site.domain }}{{ booking.get_absolute_url }}</p>
+
+
+<p>{{signature}}</p>
+<p>{{system_info}}</p>

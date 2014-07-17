@@ -107,7 +107,7 @@ function populate_form(object, eventid) {
         } else {
             $("#field_booker").text("?");
         }
-        if (object.tuner != null) {
+        if (object.tuner != null && object.tuner != "") {
             $("#field_tuner").text(object.tuner.full_name);
             $("#field_tuner").attr("data-value", String(object.tuner.id));
         } else {

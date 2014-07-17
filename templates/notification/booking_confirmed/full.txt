@@ -1,0 +1,9 @@
+Booking {{ booking.ref }} has been confirmed.
+{{ description }}
+
+Tuner Contact: {{ booking.tuner.mobile }}
+Booker Contact: {{ booking.booker.mobile }}
+
+Full details here: {{ current_site.domain }}{{ booking.get_absolute_url }}
+
+{{system_info}}

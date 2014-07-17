@@ -41,7 +41,6 @@
 {% block main %}
 
 
-    <div class="container">
         <div id="booking_row" class="row" style="display:none;">
             <div class="col-sm-12">
                 <section class="panel">
@@ -201,7 +200,7 @@
 
             </div>
         </div>
-    </div>
+
 
 
 {% endblock main %}
@@ -225,6 +224,8 @@
             $(".comment_list").slideDown();
             add_comment_editable();
             add_comment_list();
+
+            google.maps.event.addDomListener(window, 'load', init_map);
 
             do_last();   // in base
 
@@ -257,7 +258,7 @@
             });
         }
 
-        google.maps.event.addDomListener(window, 'load', init_map);
+
 
         function redraw(ref, json) {
             // override redraw in tuning_updates.js as just want to reload page

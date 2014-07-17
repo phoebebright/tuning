@@ -141,16 +141,21 @@ class ProviderResource(ModelResource):
 
 class TunerResource(ModelResource):
     class Meta:
-        queryset = Tuner.objects.all()
+        queryset = Tuner.objects.filter(is_active=True)
         include_resource_uri = False
         resource_name = 'tuners'
         limit = 0
         allowed_methods = ['get']
 
     def dehydrate(self, bundle):
+        # some bits of code expect tuner to be an object, others a string
         bundle.data['full_name'] = bundle.obj.get_full_name()
-
         return bundle
+
+class TunerMinResource(TunerResource):
+
+    class Meta(TunerResource):
+        fields = ['id',]
 
 class BookerResource(ModelResource):
     # client = fields.ToOneField(ClientResource, "client", full=False)  not used, if used needs to be null=True in case admin user is booking?
@@ -282,11 +287,6 @@ class BookingsResource(ModelResource):
 
         bundle.data['who'] = bundle.obj.who
 
-        if bundle.obj.tuner:
-            bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
-        else:
-            bundle.data['tuner'] = ''
-
         if bundle.obj.when:
 
             bundle.data['when'] = bundle.obj.when
@@ -343,7 +343,7 @@ class BookingsFullResource(BookingsResource):
 
     client = fields.ToOneField(ClientResource, "client", full=True)
     booker = fields.ToOneField(BookerResource, "booker", full=True)
-    tuner = fields.ToOneField(TunerResource, "tuner", full=True, blank=True, null=True)
+    tuner = fields.ToOneField(TunerMinResource, "tuner", full=True, blank=True, null=True)
     activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
     instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
     studio = fields.ToOneField(StudioResource, "studio", full=True, blank=True, null=True)

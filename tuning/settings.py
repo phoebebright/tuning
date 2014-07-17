@@ -80,8 +80,8 @@ NOTIFICATIONS_CC = ['pbright', 'system']
 
 NOTIFICATION_BACKENDS = [
 
-     #("email", "notification.backends.email_logged.EmailLoggedBackend"),
-     ("email", "notification.backends.email.EmailBackend"),
+     ("email", "notification.backends.email_logged.EmailLoggedBackend"),
+     #("email", "notification.backends.email.EmailBackend"),
 
     ]
 
@@ -115,6 +115,7 @@ ADMINS = (
     ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
 NOTIFY_BOOKINGS = ['phoebebright310+notifybook@gmail.com',]
+
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'site_media')
 MEDIA_URL = '/site_media/'

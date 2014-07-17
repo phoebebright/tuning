@@ -162,37 +162,12 @@ class EmailLog(models.Model):
             self.attempts += 1
             self.save()
 
-            # if not a list, make it one
-            if isinstance(self.to_email, basestring):
-                self.to_email = [self.to_email,]
-
-            #logger.debug("About to send email %s" % self.id)
-            #above line repeats endlessly
-            if settings.DEBUG:
-                # send to me using first part of email added after +
-
-
-
-                revised_list = []
-                for email in self.to_email:
-                    try:
-                        parts = email.split('@')
-                        part = parts.split('+')
-                        revised_list.append("phoebebright310+%s@gmail.com" % part[0])
-                    except:
-
-                        raise InvalidEmail
-
-                self.to_email = revised_list
-
-            success = send_mail(self.subject, self.body, self.from_email,  self.to_email)
-
+            success = send_mail(self.subject, self.body, self.from_email,  [self.to_email, ])
 
             if success:
 
                 self.date_sent=datetime.datetime.now()
                 self.save()
-
 
 def get_notification_language(user):
     """
