@@ -5,6 +5,7 @@ from django.utils.translation import ugettext
 
 from notification import backends
 
+from web.models import CustomUser
 
 
 class EmailLoggedBackend(backends.BaseBackend):
@@ -12,11 +13,15 @@ class EmailLoggedBackend(backends.BaseBackend):
 
     def can_send(self, user, notice_type):
 
-        if not user.email:
-            print "No email address for user %s so can't send notification" % user
-            return False
+        # user is passed in as email address
+        # if they are a registered user, check they are happy to receive email, otherwise allow
 
-        return True
+
+        return user.use_email
+
+
+
+
         # can_send = super(EmailLoggedBackend, self).can_send(user, notice_type)
         # if can_send and user.email:
         #     return True
@@ -55,14 +60,7 @@ class EmailLoggedBackend(backends.BaseBackend):
 
 
 
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient.email])
 
-        # add to log file
-        email = EmailLog.objects.create(
-               from_email = sender.email,
-               recipient = recipient,
-               subject = subject,
-               body = body,
-        )
-        print 'about to send email just added'
-        email.send_now()
-
+        #TODO: if there is a booking in extra_context, then add to log
+        #booking.log(comment,  type, user=None):

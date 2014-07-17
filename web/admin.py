@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django.forms.widgets import TextInput
 
@@ -47,11 +48,20 @@ class CustomUserAdmin(UserAdmin):
 
 class BookerUserAdmin(UserAdmin):
     list_display = ('email', 'username', 'first_name', 'last_name','client', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
-    form = CustomUserChangeForm
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),
+        (_('Preferences'), {'fields': ('is_active', 'client')}),
+    )
     add_form = CustomUserCreationForm
 
 class TunerUserAdmin(UserAdmin):
     list_display = ('email', 'username', 'first_name', 'last_name','provider', 'mobile','is_active', 'date_joined', 'last_login', 'is_staff')
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),
+        (_('Preferences'), {'fields': ('is_active', 'activities', 'use_email','use_sms')}),
+    )
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
 
