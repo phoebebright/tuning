@@ -349,8 +349,6 @@ class BookingsResource(ModelResource):
 class BookingsFullResource(BookingsResource):
 
     client = fields.ToOneField(ClientResource, "client", full=True)
-    booker = fields.ToOneField(BookerResource, "booker", full=True)
-    tuner = fields.ToOneField(TunerMinResource, "tuner", full=True, blank=True, null=True)
     activity = fields.ToOneField(ActivityResource, "activity", full=True, blank=True, null=True)
     instrument = fields.ToOneField(InstrumentResource, "instrument", full=True, blank=True, null=True)
     studio = fields.ToOneField(StudioResource, "studio", full=True, blank=True, null=True)
@@ -381,6 +379,13 @@ class BookingsFullResource(BookingsResource):
         from web.views import render_booking_template
 
         bundle = super(BookingsFullResource, self).dehydrate(bundle)
+
+        if bundle.obj.tuner:
+            bundle.data['tuner'] = {'id': bundle.obj.tuner.id, 'full_name': bundle.obj.tuner.get_full_name()}
+        else:
+            bundle.data['tuner'] = ''
+
+        bundle.data['booker'] = {'id': bundle.obj.booker.id, 'full_name': bundle.obj.booker.get_full_name()}
 
         # return a rendered editable template for this booking
         #TODO: don't need to populate?  Is done in js populate_form I think

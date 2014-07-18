@@ -783,8 +783,8 @@ class Booking(models.Model, ModelDiffMixin):
         if not user:
             return False
 
-        # can edit if not cancelled of archived
-        if user.is_admin and self.status < BOOKING_CANCELLED:
+        # can edit until marked as completed - otherwise will have to use admin interface
+        if user.is_admin and self.status < BOOKING_COMPLETE:
             return True
 
         # tuners can't edit

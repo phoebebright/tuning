@@ -44,7 +44,6 @@ function populate_form(object, eventid) {
 
     if (object.editable) {
 
-
         // now put data into "fields" or ? if no data
         $("#modal_label").text("Add Booking for " + object.client.name);
 
