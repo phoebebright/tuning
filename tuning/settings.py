@@ -79,22 +79,18 @@ BROKER_URL = "amqp://guest:guest@localhost:5672/"
 NOTIFICATIONS_CC = ['pbright', 'system']
 
 NOTIFICATION_BACKENDS = [
-
      ("email", "notification.backends.email_logged.EmailLoggedBackend"),
      #("email", "notification.backends.email.EmailBackend"),
-
     ]
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
-DEFAULT_FROM_SMS = "+441618500659"
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
+'''
 EMAIL_HOST = "mail.beautifuldata.ie"
 EMAIL_PORT = "25"
 EMAIL_HOST_USER = "test@beautifuldata.ie"
 EMAIL_HOST_PASSWORD = "cabbage123"
-
+'''
 
 MONITOR_IMAP_SERVER = "mail.tunemypiano.co.uk"
 MONITOR_IMAP_PASSWORD = "Hg76bbqq"
@@ -103,9 +99,9 @@ MONITOR_IMAP_PASSWORD = "Hg76bbqq"
 SECRET_KEY = '$5n73rcxx(nk#4ix92rbia%zd-x^^4g&gwnx=9!1o_j%9_aue@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -115,7 +111,6 @@ ADMINS = (
     ('Phoebe', 'phoebebright310+tune@gmail.com'),
 )
 NOTIFY_BOOKINGS = ['phoebebright310+notifybook@gmail.com',]
-
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'site_media')
 MEDIA_URL = '/site_media/'
@@ -188,27 +183,12 @@ TEMPLATE_DIRS = (
 
 )
 
-MIDDLEWARE_CLASSES = (
-   
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'privateviews.middleware.LoginRequiredMiddleware',
-    #cannot import name StatsClient"
-    #'django_statsd.middleware.GraphiteRequestTimingMiddleware',
-    #'django_statsd.middleware.GraphiteMiddleware',
-    #'django_statsd.middleware.TastyPieRequestTimingMiddleware'
 
-)
 
 
 # Application definition
 
 INSTALLED_APPS = (
-    #'django_statsd',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -218,17 +198,17 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django_google_maps',
+    'django_cron',
     'theme',  # holds themeforest template static files
     'django_gravatar',
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    #'django_twilio',
-    'django_twilio_sms',
+    'django_twilio',
     'django_logtail',
-    #'email_monitor',
-    'easy_pdf',
+    'email_monitor',
     'web',
+    #'django_statsd',
 )
 
 
@@ -297,9 +277,7 @@ SLA_ASSIGN_TUNER = 60   # minutes to assign tuner
 CALENDAR_MIN_TIME = "05:00:00"
 CALENDAR_MAX_TIME = "22:00:00"
 
-# this causes xdomain issues if using www.tunemypiano...
-#API_URL = "http://tunemypiano.co.uk/api/v1/"
-API_URL = "/api/v1/"
+API_URL = "http://tunemypiano.co.uk/api/v1/"
 
 
 CRON_CLASSES = [
@@ -309,15 +287,10 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
-#TWILIO_ACCOUNT_SID = 'PN1f1890c5266684f8971ab826341772fd'  phone
-TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
-TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'
+TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
+TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
-TWILIO_PHONE_NUMBER = "+441618500659"
-# TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER - copy credentials from the Twilio panel.
-# TWILIO_CALLBACK_USE_HTTPS - use https or not for delivery confirmation callback urls.
-# TWILIO_CALLBACK_DOMAIN - optionally set domain name or IP of your site (otherwise the server name will be extracted from the request info).
-# TWILIO_DRY_MODE - set if you want to run in test mode.
+
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
@@ -325,12 +298,6 @@ TIME_FORMAT = "P"
 TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 
 
-
-STATSD_CLIENT = 'django_statsd.clients.normal'
-STATSD_PATCHES = [
-        'django_statsd.patches.db',
-        'django_statsd.patches.cache',
-]
 
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',
@@ -392,7 +359,7 @@ LOGGING = {
             },
         'celery': {
             'handlers': ['celery', 'console'],
-            'level': 'WARN',
+            'level': 'ERROR',
             },
         }
 }
