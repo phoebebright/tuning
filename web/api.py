@@ -258,9 +258,8 @@ class BookingsResource(ModelResource):
             'ref': ('exact',),
             # 'dataset': ('exact',),
             }
-        #
-        # authorization = Authorization()
-        # authentication = GMDAuthentication()
+        authentication = Authentication()
+        authorization = Authorization()
 
     def dehydrate(self, bundle):
         # for fullCalendar
@@ -286,6 +285,14 @@ class BookingsResource(ModelResource):
         bundle.data['status_display'] = bundle.obj.get_status_display()
 
         bundle.data['who'] = bundle.obj.who
+
+        if bundle.obj.tuner:
+            bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
+        else:
+            bundle.data['tuner'] = ''
+
+        bundle.data['booker'] = bundle.obj.booker.get_full_name()
+
 
         if bundle.obj.when:
 
@@ -918,6 +925,24 @@ class AcceptedBookingsResource(ModelResource):
         bundle.data['tuner'] = bundle.obj.tuner.get_full_name()
         return bundle
 
+
+class GravatarResource(ModelResource):
+    """ get list of gravatars to hold in cache
+    """
+
+    #TODO: Only return comments on booking where involved
+    class Meta:
+        queryset = User.objects.filter(active=True)
+        include_resource_uri = False
+        resource_name = 'gravatr'
+        limit = 100
+        allowed_methods = ['get', ]
+        fields = ('id', 'gravatar')
+        serializer = urlencodeSerializer()
+        authentication = Authentication()
+        authorization = Authorization()
+
+
 class BookingsToCompleteResource(AcceptedBookingsResource):
 
     class Meta:
@@ -975,6 +1000,12 @@ class LogResource(ModelResource):
         '''could do this via tastypie but it would got and do calls for each foreign key
         '''
         base = super(LogResource, self).get_object_list(request)
+
+        # if empty no more filtering otherwise limit to current users bookings
+        if not base:
+            return base
+        else:
+            base = base.mine(request.user)
 
 
         if request._get.has_key('client_id'):

@@ -673,7 +673,7 @@ class Booking(models.Model, ModelDiffMixin):
     instrument = models.ForeignKey(Instrument, blank=True, null=True)
 
     deadline =  models.DateTimeField(_('session start'), blank=True, null=True, db_index=True)
-    client_ref = models.CharField(_('session reference'), max_length=20, blank=True, null=True)
+    client_ref = models.CharField(_('session reference'), max_length=30, blank=True, null=True)
 
     price = models.DecimalField(_('Price for job ex vat'), max_digits=10, decimal_places=2, default=0)
     default_price = models.DecimalField(_('System calculated price for job ex vat'), max_digits=10, decimal_places=2, default=0)
@@ -721,6 +721,9 @@ class Booking(models.Model, ModelDiffMixin):
             if 'requested_at' in self.changed_fields:
                 self.recalc_prices(user)
 
+        # truncate client_ref if necessary
+        if self.client_ref and len(self.client_ref) > 30:
+            self.client_ref = self.client_ref[0:30]
 
         super(Booking, self).save(*args, **kwargs)
 
@@ -1654,6 +1657,31 @@ class TunerCall(models.Model):
 
 
 
+class LogPassThroughManager(PassThroughManager):
+
+    def get_queryset(self):
+        return super(LogPassThroughManager, self).get_queryset()
+
+
+class LogQuerySet(QuerySet):
+
+
+    def mine(self, user):
+
+        # booker can see all bookings for the client
+        if user.is_booker:
+            return self.filter(booking__client=user.client)
+
+        elif user.is_tuner:
+            # all this tuners bookings and bookings looking for tuners
+            return self.filter(booking__tuner=user).exclude(status = 7)
+
+        elif user.is_admin:
+            return self
+
+        else:
+            raise InvalidQueryset(message = "user %s must be booker, tuner or admin" % user)
+
 
 class Log(models.Model):
     """
@@ -1666,6 +1694,8 @@ class Log(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(CustomUser, blank=True, null=True)
     log_type = models.CharField(max_length=20, default='user')
+
+    objects = LogPassThroughManager.for_queryset_class(LogQuerySet)()
 
     def __unicode__(self):
         return self.comment

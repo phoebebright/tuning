@@ -104,16 +104,6 @@ function load_recent_comments(selection, filter) {
 
     var data = {};
 
-    // comments that can be viewed depends on user type
-    if (USER_TYPE == "admin") {
-        data['filter'] = '';
-    } else if (USER_TYPE == "booker") {
-        data['filter'] = {client_id: CLIENT_ID};
-    } else if (USER_TYPE == "tuner") {
-        data['filter'] = {user_id: USER_ID};
-    }
-
-
     var template = $('#log_list_template').html();
     Mustache.parse(template);
 
@@ -223,6 +213,7 @@ function comment_html(d, template) {
 
     return Mustache.render(template, {
         user: d['user'],
+        gravatar: d['gravatar'],
         since: d['since'],
         booking_ref: d['booking_ref'],
         booking_url: d['booking_url'],

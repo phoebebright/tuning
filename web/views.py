@@ -105,13 +105,13 @@ def bookings_add(request, client_id=None, when=None):
 
     if when:
         try:
-            dline = datetime.strptime(deadline, "%Y%m%d%H%M")
+            dline = datetime.strptime(when, "%Y%m%d%H%M")
             dline = tz.localize(dline)
         except:
             try:
-                dline = datetime.strptime(deadline, "%Y%m%d").date
+                dline = datetime.strptime(when, "%Y%m%d").date
             except:
-                raise InvalidData(message = "datetime passed %s did not parse" % deadline)
+                raise InvalidData(message = "datetime passed %s did not parse" % when)
 
     # create new blank booking
     if when:

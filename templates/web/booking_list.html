@@ -55,6 +55,7 @@
 
     <script type="text/javascript">
         API = "{{ API_URL }}";
+        //TODO: bookings api being called twice - for headers and list but different gets so another call - optimise
 
 
         $(document).ready(function () {
@@ -66,7 +67,7 @@
         function init() {
             // when page is first loaded
 
-                        var data = {};
+            var data = {};
 
             // add filter that will be applied to API call to bookings
             // only allow a filter on status
@@ -76,20 +77,22 @@
                 filter='';
             }
 
+            // is this filter still being used???
 
+            show_bookings();
 
-            // get list of bookings
-            $.ajax({
-                type:"get",
-                url:API+"bookings?" + filter,
-                data: data,
-                dataType : 'json',
-                success:function(data){
-
-                    show_bookings(data.objects);
-
-                }
-            });
+            {#            // get list of bookings#}
+            {#            $.ajax({#}
+            {#                type:"get",#}
+            {#                url:API+"bookings?" + filter,#}
+            {#                data: data,#}
+            {#                dataType : 'json',#}
+            {#                success:function(data){#}
+            {##}
+            {#                    show_bookings(data.objects);#}
+            {##}
+            {#                }#}
+            {#            });#}
 
 
         }
@@ -107,18 +110,28 @@
                 url:API+"bookings",
                 data: {
                     limit:0,
-                dataset:"current"},
+                    dataset:"current"},
                 dataType : 'json',
                 success:function(json){
                     data = new Array();
                     $.each(json.objects, function(i,d) {
                         d['togo'] = moment(d.when).fromNow()
                         d['when'] = moment(d.when).format('ddd Do MMM - HH:mm')
+
                         if (!$.isEmptyObject(d.tuner)) {
-                            d['tuner'] = d.tuner;
+                            tuner = d.tuner;
                         } else {
-                            d['tuner'] = '';
+                            tuner = '';
                         }
+
+                        if (USER_TYPE=="booker") {
+                            d['who'] = tuner;
+                        } else  if (USER_TYPE=="tuner") {
+                            d['who'] = d.booker;
+                        } else {
+                            d['who'] = d.booker + "/" + d.tuner;
+                        }
+
                         d['comment'] =  Mustache.render(template, {ref: d.ref}) +
                                 '<div class="comment_badge" data-pk="' + d.ref + '"></div>' +
                                 '<div class="comment_list" data-pk="' + d.ref + '"></div>';

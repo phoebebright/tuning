@@ -20,100 +20,19 @@
 
     NOT USED - tuner cannot edit, so booking description is put in here in load_data function
 
-    <a href="#" id="field_activity" class=" activities"
-       data-pk="{{ object.ref }}"
-       data-title="Activity"
-       data-value="{{ object.activity.id }}"
-       data-title="Activity">
-        {{ default_activity }}</a>
-    &nbsp;
-    <a href="#" id="field_instrument" class=" instruments"
-       data-pk="{{ object.ref }}"
-       data-title="Instrument"
-       data-value="{{ object.instrument.id }}">
-        {{ default_instrument }}</a>
-    &nbsp;at&nbsp;
-    <a href="#" id="field_studio" class=" studios"
-       data-pk="{{ object.ref }}"
-       data-title="Studio"
-       data-value="{{ object.studio.id }}">
-        {{ default_studio }}</a>
-
- to start
-    <a href="#" id="field_requested_time" class=" when_time"
-       data-pk="{{ object.ref }}"
-       data-date="{{ object.requested_from|date:"Y-m-d" }}"
-            >{{ requested_time }}</a>
-
-    for session beginning at
-    {% if object.status < '2' %}
-        <a href="#" id="field_deadline_time" class=" when_time"
-           data-pk="{{ object.ref }}"
-           data-date="{{ object.deadline|date:"Y-m-d" }}"
-                >{{ deadline_time }}</a>
-    {% else %}
-        <span id="field_deadline_time" >{ deadline_time }}</span>
-    {% endif %}
-
-{% if object.client_ref %}
-    with reference
-    <a href="#" id="field_client_ref" class=" clientref"
-       data-pk="{{ object.ref }}"
-       data-title="Reference"
-       data-value="{{ object.client_ref }}">
-        {{ default_client_ref }}</a>
-{% endif %}
-
-
-    duration
-    <a href="#" id="field_duration" class=" duration"
-       data-pk="{{ object.ref }}"
-       data-title="Duration in Mins"
-       data-value="{{ object.duration }}"
-       data-title="Duration">
-        {{ default_duration }}</a>&nbsp;mins&nbsp;
-
-    booked by
-    <a href="#" id="field_booker" class=" booker"
-       data-pk="{{ object.ref }}"
-       data-title="Booker"
-       data-value="{{ object.booker.id }}"
-       data-title="Booker">
-        {{ default_booker }}</a>
-
-
-    pays £
-    <a href="#" id="field_fee" class=" fee"
-       data-pk="{{ object.ref }}"
-       data-title="Fee"
-       data-value="{{ object.tuner_payment }}"
-       data-title="Fee">
-        {{ object.tuner_payment }}</a>
-
 </div>
 
 
 <span id="button_row" class="pull-right">
 
-              <div id="button_bar">
+          <span id="button_row" class="pull-right">
+
+
+{% include "web/button_bar.html" %}
 
 
 
-                  <button id="editable_done" type="button" class="btn btn-success"
-                          data-pk="{{ object.ref }}" data-show-status="1 2 3,4,5" data-show-user="booker,tuner,admin">Done</button>
-
-                  <button type="button" class="btn booking_status_3 accept_booking"
-                          data-pk="{{ object.ref }}" data-show-status="_1" data-show-user="tuner">Accept Booking</button>
-
-
-
-
-
-                  <a href="{{ object.get_absolute_url }}" id="goto_detail" type="button" class="btn btn-success"
-                     data-pk="{{ object.ref }}" data-show-status="_1,3,4,7,8,9" data-show-user="booker,admin">Details...</a>
-
-              </div>
-
+</span>
 
 
 
