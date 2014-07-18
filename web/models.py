@@ -833,6 +833,16 @@ class Booking(models.Model, ModelDiffMixin):
 
 
     @property
+    def text_description_for_user(self, user):
+
+        descr = self.description_for_user(user)
+
+        # replace pound signs etc.
+        descr = descr.replace("&pound;", chr(156))
+
+        return descr
+
+    @property
     def description(self):
         '''
         text description of this booking
@@ -1334,10 +1344,10 @@ class Booking(models.Model, ModelDiffMixin):
 
         # send notification
         send_notification([self.tuner], "booking_confirmed", {"booking": self,
-                                                               "description": self.description_for_user(self.tuner)
+                                                               "description": self.text_description_for_user(self.tuner)
             })
         send_notification([self.booker], "booking_confirmed", {"booking": self,
-                                                               "description": self.description_for_user(self.booker)
+                                                               "description": self.text_description_for_user(self.booker)
             })
 
 
