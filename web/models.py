@@ -92,8 +92,6 @@ def send_notification(users, label, extra_context=None, sender=None):
             extra_context['system_info'] = "TEST MODE - email for %s" % users
             notification.send([system,], label, extra_context, sender)
 
-
-    # if not in test, don't send notification about bookings in the past
     else:
         notification.send(users, label, extra_context, sender)
 
@@ -144,6 +142,11 @@ def system_user():
         return CustomUser.objects.get(username='system')
     except CustomUser.DoesNotExist:
         raise NoSystemUser
+
+def admin_users():
+
+    return CustomUser.objects.filter(username__in=settings.NOTIFICATIONS_ADMIN)
+
 
 def base_price(price, dt = None):
     if dt and dt.weekday() == 6:
@@ -1042,17 +1045,10 @@ class Booking(models.Model, ModelDiffMixin):
 
     def notify(self, who, what, context):
 
-        cc = []
-        for username in settings.NOTIFICATIONS_CC:
-            user = get_object_or_404(CustomUser, username=username)
-            cc.append(user)
-
-
-        notify = cc + who
 
         # next line just keeps repeating?????
         #celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
-        send_notification(users=notify,
+        send_notification(users=who,
                           label=what,
                            extra_context=context)
 
@@ -1273,7 +1269,6 @@ class Booking(models.Model, ModelDiffMixin):
 
 
 
-        #TODO: handle case where show does not have an organisation or is not a client
 
         booking = Booking.objects.create(booker=who,
                                          activity = activity,
@@ -1351,6 +1346,9 @@ class Booking(models.Model, ModelDiffMixin):
             })
         send_notification([self.booker], "booking_confirmed", {"booking": self,
                                                                "description": self.text_description_for_user(self.booker)
+            })
+        send_notification(admin_users(), "booking_confirmed", {"booking": self,
+                                                               "description": self.description
             })
 
 

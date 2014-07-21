@@ -75,13 +75,17 @@ RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 # djcelery.setup_loader()
 BROKER_URL = "amqp://guest:guest@localhost:5672/"
 
-# usernames to cc on all notifications
-NOTIFICATIONS_CC = ['pbright', 'system']
+# usernames to cc on certain notifications
+NOTIFICATIONS_ADMINS = ['pbright', 'ajs']
 
 NOTIFICATION_BACKENDS = [
      ("email", "notification.backends.email_logged.EmailLoggedBackend"),
+     ("twilio", "notification.backends.twilio.TwilioBackend"),
      #("email", "notification.backends.email.EmailBackend"),
     ]
+# need this to simplify checking for sms notifications.
+# if there is an sms.txt in notifications/notice_type then an sms will be sent (if user accetps thems)
+NOTIFICATION_TEMPLATES = BASE_DIR+ "/templates/notification/"
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -287,10 +291,11 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
+TWILIO_DRY_MODE = False
 TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
 TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
-
+TWILIO_CALLBACK_DOMAIN = "http://tunemypiano.co.uk"
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
