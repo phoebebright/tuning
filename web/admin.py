@@ -40,28 +40,32 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
 
 class CustomUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'first_name', 'last_name', 'mobile','is_active', 'use_email', 'use_sms', 'last_login', 'is_staff')
+    list_display = ('email', 'username', 'first_name', 'last_name', 'is_active', 'use_email', 'use_sms', 'mobile','last_login', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'last_login')
     search_fields =	  ('email', 'first_name', 'last_name', 'username')
     list_display_links = ('email', 'username')
-    
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),
+        (_('Preferences'), {'fields': ('is_active','is_staff','use_email','use_sms')}),
+    )    
    
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
 
 class BookerUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'first_name', 'last_name','client', 'mobile','is_active', 'use_email', 'use_sms',  'last_login', 'is_staff')
+    list_display = ('email', 'username', 'first_name', 'last_name','client', 'is_active', 'use_email', 'use_sms', 'mobile', 'last_login', 'is_staff')
     list_editable = ('is_active','use_email','use_sms')
     list_display_links = ('email', 'username')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile')}),
-        (_('Preferences'), {'fields': ('is_active', 'client')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email', 'mobile','client',)}),
+        (_('Preferences'), {'fields': ('is_active', 'use_email','use_sms')}),
     )
     add_form = CustomUserCreationForm
 
 class TunerUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'first_name', 'last_name', 'mobile','is_active', 'use_email', 'use_sms', 'last_login', 'is_staff')
+    list_display = ('email', 'username', 'first_name', 'last_name', 'is_active', 'use_email', 'use_sms','mobile', 'last_login', 'is_staff')
     list_editable = ('is_active','use_email','use_sms')
     list_display_links = ('email', 'username')
     fieldsets = (
