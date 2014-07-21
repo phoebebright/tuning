@@ -5,7 +5,6 @@ from django.utils.translation import ugettext
 
 from notification import backends
 
-from web.models import CustomUser
 
 
 class EmailLoggedBackend(backends.BaseBackend):
@@ -28,9 +27,8 @@ class EmailLoggedBackend(backends.BaseBackend):
         # return False
 
     def deliver(self, recipient, sender, notice_type, extra_context):
-        # TODO: require this to be passed in extra_context
-        from notification.models import EmailLog
 
+        from notification.models import Log
 
         if sender == None:
             from web.models import system_user
@@ -44,6 +42,11 @@ class EmailLoggedBackend(backends.BaseBackend):
             "notice": ugettext(notice_type.display),
         })
         context.update(extra_context)
+
+        try:
+            booking=extra_context['booking']
+        except:
+            booking = None
 
         messages = self.get_formatted_messages((
             "short.txt",
@@ -62,5 +65,8 @@ class EmailLoggedBackend(backends.BaseBackend):
 
         send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient.email])
 
-        #TODO: if there is a booking in extra_context, then add to log
-        #booking.log(comment,  type, user=None):
+        Log.objects.create(notice_type = notice_type,
+                                   method='email',
+                                   recipient = recipient,
+                                   subject=subject,
+                                   booking=booking)

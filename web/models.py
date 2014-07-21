@@ -143,10 +143,15 @@ def system_user():
     except CustomUser.DoesNotExist:
         raise NoSystemUser
 
-def admin_users():
 
-    return CustomUser.objects.filter(username__in=settings.NOTIFICATIONS_ADMIN)
 
+def add_admins(users):
+    # add admin users to list of users supplied
+    for admin in CustomUser.objects.filter(username__in=settings.NOTIFICATIONS_ADMINS):
+        if admin not in users:
+            users += [admin]
+
+    return users
 
 def base_price(price, dt = None):
     if dt and dt.weekday() == 6:
@@ -1024,17 +1029,19 @@ class Booking(models.Model, ModelDiffMixin):
             self.booked_at = NOW
             self.save()
 
-            # initiate calls to tuners if there is time
-            if not self.tuner and self.deadline > NOW:
+            # initiate calls to tuners if booking is in the future
+            # just check for date as may create an urgent booking for NOW
+            if not self.tuner and self.deadline.date() >= NOW.date():
                 TunerCall.request(self)
 
             self.log("Booking Requested" , user=user, type = "REQUEST")
 
             # notifications - don't send if booking is past
-            if self.deadline > NOW:
-                self.notify(who=[self.booker,],
-                            what="booking_requested",
-                            context={
+            if self.deadline.date() >= NOW.date():
+
+                send_notification(add_admins([self.booker,]),
+                            "booking_requested",
+                            {
                                 "booking": self,
                                 "description": self.description_for_user(self.booker)
 
@@ -1043,14 +1050,7 @@ class Booking(models.Model, ModelDiffMixin):
 
         return self
 
-    def notify(self, who, what, context):
 
-
-        # next line just keeps repeating?????
-        #celery_log.info("sending notifications %s for booking %s %s" % (what, self.ref,  self.short_description))
-        send_notification(users=who,
-                          label=what,
-                           extra_context=context)
 
 
 
@@ -1082,9 +1082,23 @@ class Booking(models.Model, ModelDiffMixin):
             self.status = BOOKING_CANCELLED
             self.save()
 
-            # notifications
+            # canications
             msg = "Booking CANCELLED"
             self.log(comment=msg, user=user, type='CANCEL')
+
+            # notifications - don't send if booking is past
+            if self.deadline.date() >= NOW.date():
+
+                who = [self.booker,]
+                if self.tuner:
+                    who += self.tuner
+
+                send_notification(add_admins(who),
+                            "booking_cancelled",
+                            {
+                                "booking": self,
+
+                            })
 
 
     def change_all_times(self, time_type, requested):
@@ -1347,7 +1361,7 @@ class Booking(models.Model, ModelDiffMixin):
         send_notification([self.booker], "booking_confirmed", {"booking": self,
                                                                "description": self.text_description_for_user(self.booker)
             })
-        send_notification(admin_users(), "booking_confirmed", {"booking": self,
+        send_notification(add_admins([]), "booking_confirmed", {"booking": self,
                                                                "description": self.description
             })
 

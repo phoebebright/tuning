@@ -6,6 +6,7 @@ from django.template.loader import find_template
 
 from notification import backends
 
+
 from django_twilio_sms.utils import send_sms
 
 import os.path
@@ -21,8 +22,7 @@ class TwilioBackend(backends.BaseBackend):
 
     def deliver(self, recipient, sender, notice_type, extra_context):
 
-        # TODO: require this to be passed in extra_context
-        #from notification.models import EmailLog
+        from notification.models import Log
 
         template = "%s/%s/sms.txt" % (settings.NOTIFICATION_TEMPLATES, notice_type)
         # only send sms if an sms.txt template exists
@@ -31,6 +31,11 @@ class TwilioBackend(backends.BaseBackend):
 
             context = self.default_context()
             context.update(extra_context)
+
+            try:
+                booking=extra_context['booking']
+            except:
+                booking = None
 
             messages = self.get_formatted_messages((
                 "sms.txt",
@@ -41,5 +46,8 @@ class TwilioBackend(backends.BaseBackend):
             result = send_sms(None, recipient.mobile, sms)
 
 
-            #TODO: if there is a booking in extra_context, then add to log
-            #booking.log(comment,  type, user=None):
+            Log.objects.create(notice_type = notice_type,
+                                   method='sms',
+                                   recipient = recipient,
+                                   subject=sms,
+                                   booking=booking)

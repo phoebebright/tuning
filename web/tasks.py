@@ -1,5 +1,5 @@
 from web.models import Booking
-from notification.models import EmailLog
+
 
 from datetime import timedelta
 import imaplib

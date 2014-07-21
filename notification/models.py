@@ -123,18 +123,19 @@ class NoticeQueueBatch(models.Model):
     pickled_data = models.TextField()
 
 
-class EmailLog(models.Model):
+class Log(models.Model):
 
+    from web.models import Booking
 
-    from_email = models.EmailField(_("From"))
-    to_email =  models.EmailField(_("To"))
-    recipient = models.ForeignKey(AUTH_USER_MODEL, blank=True,  null=True)
-
+    date_sent = models.DateTimeField(auto_now_add=True, editable=False)
+    notice_type = models.ForeignKey(NoticeType)
+    method = models.CharField(max_length=5, default="email")
+    recipient = models.ForeignKey(AUTH_USER_MODEL, blank=True,  null=True, db_index=True, related_name="recipient")
     subject = models.TextField(_("subject"))
     body = models.TextField(_("body"))
-    attempts = models.PositiveSmallIntegerField(default=0)
-    date_sent = models.DateTimeField(_("date sent"), blank=True, null=True,
-                                     db_index=True)
+    booking = models.ForeignKey(Booking, blank=True, null=True, related_name="for_booking", db_index=True)
+
+
 
     def __str__(self):
         return "{s.recipient}: {s.subject}".format(s=self)
@@ -143,31 +144,6 @@ class EmailLog(models.Model):
         ordering = ('-id',)
 
 
-    def save(self, *args, **kwargs):
-
-        # auto populate to_email form user if not already specified
-        if self.recipient and not self.to_email:
-            self.to_email = self.recipient.email
-
-        if not self.from_email:
-            self.from_email = settings.DEFAULT_FROM_EMAIL
-
-        super(EmailLog, self).save(*args, **kwargs)
-
-
-
-    def send_now(self):
-
-
-            self.attempts += 1
-            self.save()
-
-            success = send_mail(self.subject, self.body, self.from_email,  [self.to_email, ])
-
-            if success:
-
-                self.date_sent=datetime.datetime.now()
-                self.save()
 
 def get_notification_language(user):
     """
@@ -223,6 +199,7 @@ def send_now(users, label, extra_context=None, sender=None):
             if backend.can_send(user, notice_type):
                 backend.deliver(user, sender, notice_type, extra_context)
                 sent = True
+
 
     # reset environment to original language
     activate(current_language)

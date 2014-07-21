@@ -131,7 +131,6 @@ def check_mail(request=None):
 def send_requests(request=None):
 
 
-
     # check and remove calls for bookings with deadline in the past
     expire_overdue_calls()
 

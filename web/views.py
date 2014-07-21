@@ -199,7 +199,7 @@ def bookings_list(request, status=None):
 def dashboard(request):
 
     #check_mail(request)
-    send_requests(request)
+    #send_requests(request)
 
     if request.user.is_admin:
         template = "index_admin.html"

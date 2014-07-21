@@ -11,18 +11,40 @@
             font-size: 90%;
         }
 
-    #xs-nav {
-        margin: 5px;
-    }
+        #xs-nav {
+            margin: 5px;
+        }
 
     </style>
 {% endblock extra_head %}
 {% block main %}
 
-    <!-- menu for xs -->
+        <!-- menu for xs -->
     <div id="xs-nav" class="row visible-xs-* hidden-sm hidden-md hidden-lg">
-    <a href="/calendar/"  class="btn btn-success btn-lg btn-block">Calendar</a>
-    <a href="/bookings/"  class="btn btn-success btn-lg btn-block">Update Bookings</a>
+        <a href="/calendar/"  class="btn btn-success btn-lg btn-block">Calendar</a>
+        <a href="/bookings/"  class="btn btn-success btn-lg btn-block">Update Bookings</a>
+        <h3>Current Booking Requests</h3>
+        <ul class="tasks-bar">
+            {%  for item in list_requested %}
+                <li class="well">
+                    <a href="{{item.get_absolute_url}}">
+                        <div class="task-info clearfix">
+                            <div class="desc pull-left">
+                                <h5>{{ item.ref }}</h5>
+
+                                            <span class="notification-pie-chart pull-right" data-percent="{{ item.sla_assign_tuner_pct }}">
+                            <span class="percent"></span>
+                            </span>
+                                <p>{{ item.when|timeuntil }}<br />
+                                    {{ item.description|safe }}</p>
+                            </div>
+
+                        </div>
+                    </a>
+                </li>
+
+            {% endfor %}
+        </ul>
 
     </div>
 
@@ -137,7 +159,7 @@
                     <ul class="tasks-bar">
 
                         {%  for item in list_complete %}
-                           <li >
+                            <li >
                                 <a href="{{item.get_absolute_url}}">
                                     <div class="task-info clearfix">
                                         <div class="desc pull-left">
