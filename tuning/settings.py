@@ -89,6 +89,8 @@ NOTIFICATION_TEMPLATES = BASE_DIR+ "/templates/notification/"
 
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+DEFAULT_FROM_SMS = "+441618500659"
+
 '''
 EMAIL_HOST = "mail.beautifuldata.ie"
 EMAIL_PORT = "25"
@@ -208,7 +210,8 @@ INSTALLED_APPS = (
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    'django_twilio',
+    #'django_twilio',
+    'django_twilio_sms',
     'django_logtail',
     'email_monitor',
     'web',
@@ -292,10 +295,11 @@ CRON_CLASSES = [
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
 TWILIO_DRY_MODE = False
-TWILIO_ACCOUNT_SID = 'PN78be7b924df23239bd6d439537561152'
-TWILIO_AUTH_TOKEN = '6ba9663e89e284de2e7a11c08e79fac4'
+TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
+TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
-TWILIO_CALLBACK_DOMAIN = "http://tunemypiano.co.uk"
+TWILIO_CALLBACK_DOMAIN = "tunemypiano.co.uk"
+TWILIO_PHONE_NUMBER = "+441618500659"
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
