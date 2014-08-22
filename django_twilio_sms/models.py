@@ -6,6 +6,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now as tznow
 
+import arrow
 
 class IncomingSMS(models.Model):
     sms_sid         = models.CharField(max_length=34)
@@ -53,4 +54,8 @@ class OutgoingSMS(models.Model):
     def save(self, *args, **kwargs):
         if self.status == "sent" and not self.delivered_at:
             self.delivered_at = tznow()
+            
+        print self.sent_at, '<<<<<<'
+       
+            
         super(OutgoingSMS, self).save(*args, **kwargs)

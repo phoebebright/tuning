@@ -105,7 +105,7 @@ MONITOR_IMAP_PASSWORD = "Hg76bbqq"
 SECRET_KEY = '$5n73rcxx(nk#4ix92rbia%zd-x^^4g&gwnx=9!1o_j%9_aue@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 TEMPLATE_DEBUG = False
 
@@ -316,7 +316,7 @@ LOGTAIL_FILES = {
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'simple': {
             'format': '%(levelname)s %(message)s',
@@ -352,13 +352,14 @@ LOGGING = {
         },
         },
     'loggers': {
+
         'django': {
-            'handlers':['console'],
+            'handlers':['console',],
             'propagate': True,
             'level':'WARN',
             },
         'django.db.backends': {
-            'handlers': ['console'],
+            'handlers': ['console','logfile'],
             'level': 'ERROR',
             'propagate': False,
             },
@@ -372,6 +373,7 @@ LOGGING = {
             },
         }
 }
+
 
 from logging.config import dictConfig
 dictConfig(LOGGING)

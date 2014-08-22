@@ -18,7 +18,7 @@ from .serializers import SMSRequestSerializer, SMSStatusSerializer
 
 logger = logging.getLogger("django-twilio-sms.views")
 
-@csrf_exempt
+
 class TwilioView(View):
     """
     Base view for Twilio callbacks
@@ -77,7 +77,7 @@ class IncomingSMSView(TwilioView):
     def post_save(self, obj):
         pass
 
-@csrf_exempt
+
 class SMSStatusCallbackView(SingleObjectMixin, TwilioView):
     """
     Callback view for tracking status of sent messages.
