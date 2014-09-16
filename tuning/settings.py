@@ -45,30 +45,30 @@ http://docs.celeryproject.org/en/latest/tutorials/daemonizing.html#daemonizing
 # settings up celery periodic tasks http://stackoverflow.com/questions/20116573/in-celery-3-1-making-django-periodic-task
 
 
-from celery.schedules import crontab
+# from celery.schedules import crontab
 
-
-
-CELERYBEAT_SCHEDULE = {
-    # crontab(hour=0, minute=0, day_of_week='saturday')
-    'check-bookings-to-complete': {
-        'task': 'web.tasks.check_bookings',
-        'schedule': crontab(),    # every n minutes crontab(minute='*/15')
-    },
-    'email-monitor-send': {
-        'task': 'email_monitor.tasks.send',
-        'schedule': crontab(),
-        },
-    'email-monitor-check': {
-        'task': 'email_monitor.tasks.check',
-        'schedule': crontab(1),
-        },
-    }
-
-# didn't think this was required
-CELERY_IMPORTS = ('web.tasks', 'email_monitor.tasks')
-
-CELERY_MONITOR_URL = "http://217.115.117.19:5555"
+#
+#
+# CELERYBEAT_SCHEDULE = {
+#     # crontab(hour=0, minute=0, day_of_week='saturday')
+#     'check-bookings-to-complete': {
+#         'task': 'web.tasks.check_bookings',
+#         'schedule': crontab(),    # every n minutes crontab(minute='*/15')
+#     },
+#     'email-monitor-send': {
+#         'task': 'email_monitor.tasks.send',
+#         'schedule': crontab(),
+#         },
+#     'email-monitor-check': {
+#         'task': 'email_monitor.tasks.check',
+#         'schedule': crontab(1),
+#         },
+#     }
+#
+# # didn't think this was required
+# CELERY_IMPORTS = ('web.tasks', 'email_monitor.tasks')
+#
+# CELERY_MONITOR_URL = "http://217.115.117.19:5555"
 RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 
 # import djcelery
@@ -213,7 +213,7 @@ INSTALLED_APPS = (
     #'django_twilio',
     'django_twilio_sms',
     'django_logtail',
-    'email_monitor',
+    # 'email_monitor',
     'web',
     #'django_statsd',
 )
@@ -295,11 +295,14 @@ CRON_CLASSES = [
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
 TWILIO_DRY_MODE = False
+
+
 TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
 TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
 TWILIO_CALLBACK_DOMAIN = "tunemypiano.co.uk"
 TWILIO_PHONE_NUMBER = "+441618500659"
+TWILIO_SKIP_SIGNATURE_VALIDATION = False
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
@@ -307,12 +310,33 @@ TIME_FORMAT = "P"
 TASTYPIE_DATETIME_FORMATTING = 'iso-8601-strict'  # eg.  2010-12-16T03:02:00
 
 
+#private_views middleware requires login for everything, so put exceptions here
+
+PUBLIC_VIEWS = [
+    'django.contrib.auth.views.password_reset_done',
+    'django.contrib.auth.views.password_reset',
+    'django.contrib.auth.views.password_reset_confirm',
+    'django.contrib.auth.views.password_reset_complete',
+    'django_twilio_sms.views.SMSStatusCallbackView',
+]
+
+
+PUBLIC_PATHS = [
+    '^/messaging/callback/sent/(?P<pk>\d+)/$',
+]
+
+
 
 LOGTAIL_FILES = {
     'apache': '/var/log/apache2/error.log',
-    'celery': os.path.join(BASE_DIR, 'logs/celery.log'),
+    # 'celery': os.path.join(BASE_DIR, 'logs/celery.log'),
     'logfile': os.path.join(BASE_DIR, 'logs/logfile.log'),
     }
+
+
+# if this is not set, all the loggers are setup for celery (somehow!!!)
+#  ITS STILL DOING IT!!!!!
+CELERYD_HIJACK_ROOT_LOGGER = True
 
 LOGGING = {
     'version': 1,
@@ -342,14 +366,14 @@ LOGGING = {
             'backupCount': 2,
             'formatter': 'standard',
             },
-        'celery': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/celery.log'),
-            'formatter': 'simple',
-            'maxBytes': 1024 * 1024 * 100,  # 100 mb
-
-        },
+        # 'celery': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.handlers.RotatingFileHandler',
+        #     'filename': os.path.join(BASE_DIR, 'logs/celery.log'),
+        #     'formatter': 'simple',
+        #     'maxBytes': 1024 * 1024 * 100,  # 100 mb
+        #
+        # },
         },
     'loggers': {
 
@@ -367,10 +391,10 @@ LOGGING = {
             'handlers': ['console', 'logfile'],
             'level': 'ERROR',
             },
-        'celery': {
-            'handlers': ['celery', 'console'],
-            'level': 'ERROR',
-            },
+        # 'celery': {
+        #     'handlers': ['celery', 'console'],
+        #     'level': 'ERROR',
+        #     },
         }
 }
 

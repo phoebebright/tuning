@@ -12,6 +12,7 @@ from django.utils.encoding import force_text
 from twilio.rest import TwilioRestClient
 
 from .models import OutgoingSMS
+from dateutil import parser
 
 logger = logging.getLogger("django-twilio-sms.utils")
 
@@ -46,6 +47,8 @@ def send_sms(request, to_number, body, callback_urlname="sms_status_callback"):
     """
     Create :class:`OutgoingSMS` object and send SMS using Twilio.
     """
+
+
     client = TwilioRestClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     from_number = settings.TWILIO_PHONE_NUMBER
 
@@ -62,7 +65,7 @@ def send_sms(request, to_number, body, callback_urlname="sms_status_callback"):
     logger.debug("Sending SMS message to %s with callback url %s: %s.",
                  to_number, status_callback, body)
 
-    if not getattr(settings, "TWILIO_DRY_MODE", False):
+    if getattr(settings, "TWILIO_DRY_MODE", False):
         sent = client.sms.messages.create(
             to=to_number,
             from_=from_number,
@@ -78,11 +81,11 @@ def send_sms(request, to_number, body, callback_urlname="sms_status_callback"):
         if sent.price:
             message.price = Decimal(force_text(sent.price))
             message.price_unit = sent.price_unit
-        message.sent_at = sent.date_created
+        message.sent_at = parser.parse(sent.date_created)
         message.save(update_fields=[
             "sms_sid", "account_sid", "status", "to_parsed",
             "price", "price_unit", "sent_at"
         ])
     else:
-        logger.info("SMS: from %s to %s: %s", from_number, to_number, body)
+        logger.info("SMS: DRY RUN - from %s to %s: %s", from_number, to_number, body)
     return message

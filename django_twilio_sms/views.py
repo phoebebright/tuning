@@ -91,6 +91,7 @@ class SMSStatusCallbackView(SingleObjectMixin, TwilioView):
         self.object = self.get_object()
         return super(SMSStatusCallbackView, self).post(request, *args, **kwargs)
 
+
     def handle_request(self, data):
         logger.debug("Callback for sent SMS message status %s: %r", self.object.pk, data)
 

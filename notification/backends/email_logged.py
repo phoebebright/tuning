@@ -15,7 +15,7 @@ class EmailLoggedBackend(backends.BaseBackend):
         # user is passed in as email address
         # if they are a registered user, check they are happy to receive email, otherwise allow
 
-
+        print "can_send", user, user.use_email
         return user.use_email
 
 
@@ -62,9 +62,9 @@ class EmailLoggedBackend(backends.BaseBackend):
         }, context)
 
 
-
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient.email])
-
+        print "delivering email to ", recipient.email
+        msg = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [recipient.email])
+        print msg
         Log.objects.create(notice_type = notice_type,
                                    method='email',
                                    recipient = recipient,

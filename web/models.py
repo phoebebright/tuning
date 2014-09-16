@@ -50,7 +50,7 @@ https://github.com/scdoshi/django-notifier - build different backends for sms et
 http://www.twilio.com/sms/pricing/gb - sending sms
 
 """
-celery_log = logging.getLogger('celery')
+# celery_log = logging.getLogger('celery')
 
 
 # faketime allows the actual date to be set in the future past - for testing can be useful

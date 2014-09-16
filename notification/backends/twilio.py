@@ -16,7 +16,7 @@ class TwilioBackend(backends.BaseBackend):
     spam_sensitivity = 2
 
     def can_send(self, user, notice_type):
-
+        print "twillio can_send ",user, user.use_sms , user.mobile
         return user.use_sms and user.mobile
 
 
@@ -43,8 +43,9 @@ class TwilioBackend(backends.BaseBackend):
 
             sms = "".join(render_to_string(template, {}, context).splitlines())
 
+            print "sending twillio ", recipient, recipient.mobile
             result = send_sms(None, recipient.mobile, sms)
-
+            print result
 
             Log.objects.create(notice_type = notice_type,
                                    method='sms',
