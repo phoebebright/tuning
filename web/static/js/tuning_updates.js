@@ -138,7 +138,8 @@ function populate_form(object, eventid) {
         // load lists of instruments, activities etc. to be used for editable fields
         load_data(object.client.id);
     } else {
-        $("#editform").html(object.description);
+        // overide form with description
+        $("#booking_description").html(object.description);
     }
 
     // decide which buttons to show

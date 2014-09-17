@@ -35,9 +35,13 @@
 
 {% block extra_style %}
     <style type="text/css">
+
         @font-face { font-family: Cardo; src: url(/shared_static/fonts/Cardo-Bold.ttf); font-weight: bold; }
         @font-face { font-family: Cardo; src: url(/shared_static/fonts/Cardo-Regular.ttf); }
 
+        body {
+            font-family: 'Cardo';
+        }
         html {
             font-family: 'Cardo';
             color: #333333;
@@ -60,6 +64,7 @@
 
         table {
             font-size: 12px;
+             font-family: 'Cardo';
         }
         #invoice_detail table{
             line-height: 140%;
@@ -99,7 +104,10 @@
             margin-right: 30px;
         }
 
-
+        #invoice {
+             font-family: 'Cardo';
+            font-size: 24px;
+        }
 
     </style>
 {% endblock %}
@@ -125,7 +133,7 @@
 
 {% block content %}
     <div id="content">
-
+<h1 id="invoice">INVOICE</h1>
         <table><tr>
             <td class="text-left">
                 <p>{{ booking.client.name }}</p>

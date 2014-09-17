@@ -393,18 +393,26 @@ class BookingDetailView(DetailView):
     #TODO: show a day calendar with times - for bookers all for client, for tuner all for tuner
     def get_object(self, queryset=None):
         '''can retrieve object by id or ref
+        in urls will try to differentiate but a ref can be all numeric
+        so try both if first option not found
         '''
         if self.kwargs.has_key('ref'):
 
             try:
                 obj = Booking.objects.get(ref=self.kwargs['ref'])
             except Booking.DoesNotExist:
-                raise Http404(_("No Booking with ref %s" % self.kwargs['ref']))
+                try:
+                    obj = Booking.objects.get(id=self.kwargs['ref'])
+                except Booking.DoesNotExist:
+                    raise Http404(_("No Booking with ref %s" % self.kwargs['ref']))
         else:
             try:
                 obj = Booking.objects.get(id=self.kwargs['pk'])
             except Booking.DoesNotExist:
-                raise Http404(_("No Booking with id %s" % self.kwargs['pk']))
+                try:
+                    obj = Booking.objects.get(ref=self.kwargs['pk'])
+                except Booking.DoesNotExist:
+                    raise Http404(_("No Booking with id %s" % self.kwargs['pk']))
 
 
         return obj

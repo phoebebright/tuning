@@ -849,13 +849,15 @@ class Booking(models.Model, ModelDiffMixin):
             return "%s  paying %s%s" % (base, "&pound;", self.tuner_payment)
 
 
-    @property
+
     def text_description_for_user(self, user):
 
         descr = self.description_for_user(user)
 
         # replace pound signs etc.
-        descr = descr.replace("&pound;", chr(156))
+        #TODO: get pound sign - if put chr(156) instead of "" then get error
+        #  'ascii' codec can't decode byte 0x9c in position 0: ordinal not in range(128)\n"
+        descr = descr.replace("&pound;", "")
 
         return descr
 
@@ -871,9 +873,9 @@ class Booking(models.Model, ModelDiffMixin):
             txt = 'Request to %s ' % self.activity.name_verb
         elif self.tuner:
             if self.status < BOOKING_COMPLETE:
-                txt = "%s to %s " % (self.tuner, self.activity.name_verb)
+                txt = "%s to %s " % (self.tuner.get_full_name(), self.activity.name_verb)
             else:
-                txt = "%s %s " % (self.tuner, self.activity.name_verb_past)
+                txt = "%s %s " % (self.tuner.get_full_name(), self.activity.name_verb_past)
         else:
             txt = ""
 
@@ -1357,10 +1359,11 @@ class Booking(models.Model, ModelDiffMixin):
         self.booked_at = NOW
         self.save()
 
-
+        print self.tuner, '<<<<<<'
         self.log(comment="Tuner %s assigned" % (self.tuner,), user=user, type="BOOK")
 
         # send notification
+
         send_notification([self.tuner], "booking_confirmed", {"booking": self,
                                                                "description": self.text_description_for_user(self.tuner)
             })
