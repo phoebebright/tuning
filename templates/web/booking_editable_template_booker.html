@@ -10,65 +10,66 @@
 </h3>
 <div id="editform" class="editable_content" data-eventid="">
 
-    {% if object.tuner %}
-          {{ object.tuner }}&nbsp;to&nbsp;
-    {% endif %}
+    <div id="booking_description">
+        {% if object.tuner %}
+            {{ object.tuner }}&nbsp;to&nbsp;
+        {% endif %}
 
 
-    <a href="#" id="field_activity" class="editable activities"
-       data-pk="{{ object.ref }}"
-       data-title="Activity"
-       data-value="{{ object.activity.id }}"
-       data-title="Activity">
-        {{ default_activity }}</a>
-    &nbsp;
-    <a href="#" id="field_instrument" class="editable instruments"
-       data-pk="{{ object.ref }}"
-       data-title="Instrument"
-       data-value="{{ object.instrument.id }}">
-        {{ default_instrument }}</a>
-    &nbsp;at&nbsp;
-    <a href="#" id="field_studio" class="editable studios"
-       data-pk="{{ object.ref }}"
-       data-title="Studio"
-       data-value="{{ object.studio.id }}">
-        {{ default_studio }}</a>
-
-       for session beginning at
-    {% if object.status < '2' %}
-        <a href="#" id="field_deadline_time" class="editable when_time"
+        <a href="#" id="field_activity" class="editable activities"
            data-pk="{{ object.ref }}"
-           data-date="{{ object.deadline|date:"Y-m-d" }}"
-                >{{ deadline_time }}</a>
-    {% else %}
-        <span id="field_deadline_time" >{ deadline_time }}</span>
-    {% endif %}
+           data-title="Activity"
+           data-value="{{ object.activity.id }}"
+           data-title="Activity">
+            {{ default_activity }}</a>
+        &nbsp;
+        <a href="#" id="field_instrument" class="editable instruments"
+           data-pk="{{ object.ref }}"
+           data-title="Instrument"
+           data-value="{{ object.instrument.id }}">
+            {{ default_instrument }}</a>
+        &nbsp;at&nbsp;
+        <a href="#" id="field_studio" class="editable studios"
+           data-pk="{{ object.ref }}"
+           data-title="Studio"
+           data-value="{{ object.studio.id }}">
+            {{ default_studio }}</a>
+
+        for session beginning at
+        {% if object.status < '2' %}
+            <a href="#" id="field_deadline_time" class="editable when_time"
+               data-pk="{{ object.ref }}"
+               data-date="{{ object.deadline|date:"Y-m-d" }}"
+                    >{{ deadline_time }}</a>
+        {% else %}
+            <span id="field_deadline_time" >{ deadline_time }}</span>
+        {% endif %}
 
 
-    with reference
-    <a href="#" id="field_client_ref" class="editable clientref"
-       data-pk="{{ object.ref }}"
-       data-title="Reference"
-       data-value="{% if object.client_ref %}{{ object.client_ref }}{% endif %}">
-        {{ default_client_ref }}</a>
+        with reference
+        <a href="#" id="field_client_ref" class="editable clientref"
+           data-pk="{{ object.ref }}"
+           data-title="Reference"
+           data-value="{% if object.client_ref %}{{ object.client_ref }}{% endif %}">
+            {{ default_client_ref }}</a>
 
 
-    to start
-    <a href="#" id="field_requested_time" class="editable when_time"
-       data-pk="{{ object.ref }}"
-       data-date="{{ object.requested_from|date:"Y-m-d" }}"
-            >{{ requested_time }}</a>
-    duration
-    <a href="#" id="field_duration" class="editable duration"
-       data-pk="{{ object.ref }}"
-       data-title="Duration in Mins"
-       data-value="{{ object.duration }}"
-       data-title="Duration">
-        {{ default_duration }}</a>&nbsp;mins&nbsp;
+        to start
+        <a href="#" id="field_requested_time" class="editable when_time"
+           data-pk="{{ object.ref }}"
+           data-date="{{ object.requested_from|date:"Y-m-d" }}"
+                >{{ requested_time }}</a>
+        duration
+        <a href="#" id="field_duration" class="editable duration"
+           data-pk="{{ object.ref }}"
+           data-title="Duration in Mins"
+           data-value="{{ object.duration }}"
+           data-title="Duration">
+            {{ default_duration }}</a>&nbsp;mins&nbsp;
 
 
-    price {{ object.price }} ex VAT
-
+        price {{ object.price }} ex VAT
+    </div>
 <span id="button_row" class="pull-right">
 
 

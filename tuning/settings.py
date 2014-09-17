@@ -294,8 +294,7 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
-TWILIO_DRY_MODE = False
-
+TWILIO_DRY_MODE = True
 
 TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
 TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'

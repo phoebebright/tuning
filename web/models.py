@@ -384,6 +384,14 @@ class CustomUser(AbstractUser, ModelDiffMixin):
 
         super(CustomUser, self).save(*args, **kwargs)
 
+    @property
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return "%s %s" % (self.first_name, self.last_name)
+        elif self.last_name:
+            return self.last_name
+        else:
+            return self.username
 
     @property
     def organisation(self):
@@ -873,9 +881,9 @@ class Booking(models.Model, ModelDiffMixin):
             txt = 'Request to %s ' % self.activity.name_verb
         elif self.tuner:
             if self.status < BOOKING_COMPLETE:
-                txt = "%s to %s " % (self.tuner.get_full_name(), self.activity.name_verb)
+                txt = "%s to %s " % (self.tuner.full_name, self.activity.name_verb)
             else:
-                txt = "%s %s " % (self.tuner.get_full_name(), self.activity.name_verb_past)
+                txt = "%s %s " % (self.tuner.full_name, self.activity.name_verb_past)
         else:
             txt = ""
 

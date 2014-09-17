@@ -108,7 +108,15 @@
              font-family: 'Cardo';
             font-size: 24px;
         }
-
+        h1 {
+            font-size: 32px;
+        }
+            h2 {
+            font-size: 24px;
+        }
+            h3 {
+            font-size: 16px;
+        }
     </style>
 {% endblock %}
 
@@ -120,10 +128,10 @@
                 Newton,<br />
                 Cambridgeshire<br />
                 CB22 7PH</h2>
-            <p>Tel & Fax: 020-7275 0888<br />
+            <h3>Tel & Fax: 020-7275 0888<br />
                 Mobile: 07973-843189<br />
                 e-mail: alexanderskeaping@mac.com
-            </p>
+            </h3>
 
 
         </div>
@@ -133,25 +141,30 @@
 
 {% block content %}
     <div id="content">
-<h1 id="invoice">INVOICE</h1>
+
         <table><tr>
             <td class="text-left">
                 <p>{{ booking.client.name }}</p>
                 <p>{{ booking.client.address }}</p>
-                <p><strong>f.a.o. {{ booking.booker }}</strong></p>
+                <p><strong>f.a.o. {{ booking.booker.full_name }}</strong></p>
             </td>
 
             <td class="text-right">
                 <p>Invoice Date: {{ booking.completed_at|date:"DATE_FORMAT" }}</p>
                 <p><strong>Invoice Ref: {{ booking.ref }}</strong></p>
+                {% if booking.client_ref %}
+                <p><strong>Your Ref: {{ booking.client_ref }}</strong></p>
+                {% endif %}
             </td>
         </tr></table>
 
         <br />
 
-        <p><strong>Actvitiy:</strong> {{ booking.activity.name_verb_past }} {{ booking.instrument }}</p>
+        <h1 id="invoice" class="text-center">INVOICE</h1>
+
+        <p><strong>Actvitiy:</strong> {{ booking.activity.name_verb_past }}</p>
         <p><strong>Location:</strong> {{ booking.studio }}</p>
-        <p><strong>Tuner:</strong> {{ booking.tuner }}</p>
+        <p><strong>Tuner:</strong> {{ booking.tuner.full_name }}</p>
 
 
         <br />
