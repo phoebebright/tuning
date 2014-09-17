@@ -163,9 +163,15 @@ urlpatterns += patterns('libs.mail_utils',
 urlpatterns += patterns('',
                        #login required
                        #url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
-                       url(r'booking/(?P<pk>\w+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
-                       url(r'booking/(?P<pk>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
-                       url(r'booking/complete/(?P<pk>\w+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
+                       url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
+                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
+                       url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
+                       url(r'booking/request_tuner/(?P<booking_ref>\d+)/$', 'request_another_tuner', name='booking-request-tuner'),
+
+
+                       url(r'booking/(?P<ref>\w+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
+                       url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
+                       url(r'booking/complete/(?P<ref>\w+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
 
                        url(r'tunerprofile/(?P<pk>\w+)/$', login_required(TunerDetailView.as_view()), name='tuner-profile'),
