@@ -9,14 +9,27 @@
             margin-top: 8.5cm;
             margin-bottom: 2cm;
 
+
             @frame header {
-        -pdf-frame-content: page-header;
+        -pdf-frame-content:page-header;
             margin-top: 1.3cm;
             margin-right: 2mm;
             margin-bottom: 1cm;
             margin-left: 1.2cm;
+
         }
+
+        @frame footer {
+        -pdf-frame-content: page-footer;
+
+        bottom: 0cm;
+        margin-left: 1cm;
+        margin-right: 1cm;
+        height: 4cm;
+        top: 27.5cm;
         }
+
+        }  /* dont delete this - its correct */
     </style>
 {% endblock %}
 
@@ -26,13 +39,13 @@
         @font-face { font-family: Cardo; src: url(/shared_static/fonts/Cardo-Regular.ttf); }
 
         html {
-            font-family: 'Cardo', serif;
+            font-family: 'Cardo';
             color: #333333;
         }
 
         p {
             margin: 0 0 6px 0;
-            font-size: 11pt;
+            font-size: 12pt;
 
         }
 
@@ -44,9 +57,15 @@
             width: 30%;
             text-align: right;
         }
+
+        table {
+            font-size: 12px;
+        }
         #invoice_detail table{
             line-height: 140%;
             margin-bottom: 20px;
+            margin-left: 40px;
+            margin-right: 40px;
         }
         #invoice_detail  table.bordered {
             border-top: 0.1pt solid #999999;
@@ -75,6 +94,12 @@
         .text-right { text-align: right; }
         .text-center { text-align: center; }
 
+        .indented {
+            margin-left: 30px;
+            margin-right: 30px;
+        }
+
+
 
     </style>
 {% endblock %}
@@ -83,12 +108,11 @@
     <div id="page-header">
         <div class="header text-center">
             <h1>Thornhill Music Limited</h1>
-            <p>
-                42 Whittlesford Road<br />
+            <h2>42 Whittlesford Road<br />
                 Newton,<br />
                 Cambridgeshire<br />
-                CB22 7PH<br />
-                Tel & Fax: 020-7275 0888<br />
+                CB22 7PH</h2>
+            <p>Tel & Fax: 020-7275 0888<br />
                 Mobile: 07973-843189<br />
                 e-mail: alexanderskeaping@mac.com
             </p>
@@ -102,73 +126,77 @@
 {% block content %}
     <div id="content">
 
-      <table><tr>
+        <table><tr>
             <td class="text-left">
                 <p>{{ booking.client.name }}</p>
                 <p>{{ booking.client.address }}</p>
-                <p>{{ booking.booker }}</p>
+                <p><strong>f.a.o. {{ booking.booker }}</strong></p>
             </td>
 
             <td class="text-right">
                 <p>Invoice Date: {{ booking.completed_at|date:"DATE_FORMAT" }}</p>
-                <p>Invoice Ref: {{ booking.ref }}</p>
+                <p><strong>Invoice Ref: {{ booking.ref }}</strong></p>
             </td>
         </tr></table>
 
+        <br />
 
-        <p>Actvitiy:{{ booking.activity.name_verb_past }} {{ booking.instrument }}</p>
-        <p>Location: {{ booking.studio }}</p>
-        <p>Tuner: {{ booking.tuner }}</p>
+        <p><strong>Actvitiy:</strong> {{ booking.activity.name_verb_past }} {{ booking.instrument }}</p>
+        <p><strong>Location:</strong> {{ booking.studio }}</p>
+        <p><strong>Tuner:</strong> {{ booking.tuner }}</p>
 
 
-        <p class="info">
+        <br />
 
-        </p>
 
         <div class="main">
             <h2>To: Provision of the following services:</h2>
 
-
-            <table id="invoice_detail" class="bordered bottom-20">
-                <tr>
-                    <td class="item-name">{{ booking.description }} </td>
-                    <td class="amount">{{ booking.price }}</td>
-                </tr>
-                <tr>
-                    <td class="item-name">VAT</td>
-                    <td class="amount">{{ booking.vat }}</td>
-                </tr>
-                 <tr>
-                    <td class="item-name">Total</td>
-                    <td class="amount">{{ booking.total }}</td>
-                </tr>
-            </table>
-
+            <br />
+            <div class="indented">
+                <table id="invoice_detail" >
+                    <tr>
+                        <td class="item-name">{{ booking.description }} </td>
+                        <td class="amount">{{ booking.price }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-name text-right">VAT @ 20%</td>
+                        <td class="amount ">{{ booking.vat }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-name text-right"><strong>Invoice Total</strong></td>
+                        <td class="amount"><strong>{{ booking.total }}</strong></td>
+                    </tr>
+                </table>
+            </div>
 
 
             <h2> With compliments</h2>
 
 
 
-<p>Terms: nett 30 days</p>
+            <p>Terms: nett 30 days</p>
 
-<p>Internet Banking Details: Barclays Bank PLC Sort Code: 20-29-90 a/c no: 43018393</p>
+            <p>Internet Banking Details:<br />
+                Barclays Bank PLC Sort Code: 20-29-90 a/c no: 43018393</p>
 
-
+        </div>
+    </div>
 
 
 {% endblock %}
 
- {%block page_foot%}
-            <table><tr>
-                <td class="text-left">
-                    Thornhill Music Limited: Registered in London No 1933176 <br />
-                    Registered Office 8 – 10 South Street Epsom Surrey KT18 7PF
-                </td>
-                <td class="text-right">
-                    Directors: A. J. Skeaping, F. M. Skeaping<br />
-                    VAT Registration No: 438 8018 34
-                </td>
-            </tr></table>
+{%block page_foot%}
+
+    <table><tr>
+        <td class="text-left">
+            Thornhill Music Limited: Registered in London No 1933176 <br />
+            Registered Office 8 – 10 South Street Epsom Surrey KT18 7PF
+        </td>
+        <td class="text-right">
+            Directors: A. J. Skeaping, F. M. Skeaping<br />
+            VAT Registration No: 438 8018 34
+        </td>
+    </tr></table>
 
 {% endblock %}
