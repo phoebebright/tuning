@@ -41,165 +41,173 @@
 {% block main %}
 
 
-        <div id="booking_row" class="row" style="display:none;">
-            <div class="col-sm-12">
-                <section class="panel">
-                    <div id="booking_edit" class="panel-body booking_status_1">
-                        {%  include "web/booking_editable_template.html" with user=user object=object %}
-                    </div>
-                </section>
-            </div>
+    <div id="booking_row" class="row" style="display:none;">
+        <div class="col-sm-12">
+            <section class="panel">
+                <div id="booking_edit" class="panel-body booking_status_1">
+                    {%  include "web/booking_editable_template.html" with user=user object=object %}
+                </div>
+            </section>
         </div>
+    </div>
 
 
-        <div class="row">
-            <div class="col-sm-6">
-                <section class="panel">
-                    <header class="panel-heading">
-                        {{ object.short_heading }} History
-                    </header>
+    <div class="row">
+        <div class="col-sm-6">
+            <section class="panel">
+                <header class="panel-heading">
+                    {{ object.short_heading }} History
+                </header>
 
-                    <div class="panel-body">
+                <div class="panel-body">
 
-                        <div class="row">
-                            <div class="chunk">
-                                                                {%  if object.status >= '1' %}
+                    <div class="row">
+                        <div class="chunk">
+                            {%  if object.status >= '1' %}
                                 <i class="fa booking_status_1_icon"></i>Requested by <strong>{{ object.booker }}</strong><span class="label pull-right booking_status_1">{{ object.requested_at }}</span>
                             {% endif %}
-                            </div>
                         </div>
+                    </div>
 
 
-                        <div class="row">
-                            <div class="chunk">
-                                {%  if object.status >= '3' %}
+                    <div class="row">
+                        <div class="chunk">
+                            {%  if object.status >= '3' %}
 
-                                    <i class="fa booking_status_3_icon"></i>Booked <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
-                                {%  endif %}
-                            </div>
+                                <i class="fa booking_status_3_icon"></i>Booked <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_3">{{ object.booked_at }}</span>
+                            {%  endif %}
                         </div>
+                    </div>
 
 
-                        {%  if object.status >= '5' %}
-                            {%  if not object.cancelled %}
+                    {%  if object.status >= '5' %}
+                        {%  if not object.cancelled %}
+                            <div class="row">
+                                <div class="chunk">
+                                    <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_5">{{ object.completed_at }}</span>
+                                </div>
+                            </div>
+
+                            {% if user.is_admin or user.is_booker %}
                                 <div class="row">
                                     <div class="chunk">
-                                        <i class="fa booking_status_4_icon"></i>Tuned by <strong>{{ object.tuner }}</strong><span class="label pull-right booking_status_5">{{ object.completed_at }}</span>
+                                       <span class="pull-right"><a href="/invoice/{{ object.ref }}/">View Invoice</a></span>
                                     </div>
                                 </div>
-                            {% endif %}
-
-                            {% if user.is_admin %}
-                                {%  if object.has_provider_paid %}
-                                    <div class="row">
-                                        <div class="chunk">
-                                            <i class="fa booking_status_6_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
-                                        </div>
-                                    </div>
-
-                                {%  endif %}
-                            {%  endif %}
-
-
-                            {%  if user.is_admin or user.is_booker %}
-                                {%  if  object.has_client_paid %}
-                                    <div class="row">
-                                        <div class="chunk">
-                                            <i class="fa booking_status_6_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
-                                        </div>
-                                    </div>
-
-
-                                {% endif %}
                             {% endif %}
                         {% endif %}
 
+                        {% if user.is_admin %}
+                            {%  if object.has_provider_paid %}
+                                <div class="row">
+                                    <div class="chunk">
+                                        <i class="fa booking_status_6_icon"></i>Tuner Paid <span class="label pull-right booking_status_6">{{ object.paid_provider_at }}</span>
+                                    </div>
+                                </div>
 
-                        {%  if object.status == '9'  %}
-                            <div class="row">
-                                <div class="chunk">
-                                    <i class="fa booking_status_9_icon"></i>Archived<span class="label pull-right booking_status_9">{{ object.archived_at }}</span>
-                                </div>
-                            </div>
-                        {%  endif %}
-                        {%  if object.status == '8'  %}
-                            <div class="row">
-                                <div class="chunk">
-                                    <i class="fa booking_status_8_icon"></i>Cancelled<span class="label pull-right booking_status_8">{{ object.cancelled_at }}</span>
-                                </div>
-                            </div>
+                            {%  endif %}
                         {%  endif %}
 
 
-                    </div>
+                        {%  if user.is_admin or user.is_booker %}
+                            {%  if  object.has_client_paid %}
+                                <div class="row">
+                                    <div class="chunk">
+                                        <i class="fa booking_status_6_icon"></i>Client Paid <span class="label pull-right booking_status_6">{{ object.paid_client_at }}</span>
+                                    </div>
+                                </div>
 
 
-
-                </section>
-
-
-
-
-            </div>
-
-            <div class="col-sm-6">
-                <section class="panel">
-                    <header class="panel-heading wht-bg">
-                        Location
-                    </header>
-
-                    <div class="panel-body">
-                        <div id="map_canvas"></div>
-                    </div>
-
-                </section>
-            </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
 
 
-        </div>
-
-        <div id="booking_row" class="row" style="display:none;">
-            <div class="col-sm-12">
-                <section class="panel">
-                    <header class="panel-heading wht-bg">
-                        <div id="booking_edit" class="panel-body booking_status_1">
-                            {%  include "web/booking_editable_template.html" with user=user object=object %}
+                    {%  if object.status == '9'  %}
+                        <div class="row">
+                            <div class="chunk">
+                                <i class="fa booking_status_9_icon"></i>Archived<span class="label pull-right booking_status_9">{{ object.archived_at }}</span>
+                            </div>
                         </div>
-                    </header>
+                    {%  endif %}
+                    {%  if object.status == '8'  %}
+                        <div class="row">
+                            <div class="chunk">
+                                <i class="fa booking_status_8_icon"></i>Cancelled<span class="label pull-right booking_status_8">{{ object.cancelled_at }}</span>
+                            </div>
+                        </div>
+                    {%  endif %}
 
-                    <div class="panel-body">
+
+                </div>
 
 
-                        <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
 
-                    </div>
+            </section>
 
 
-                </section>
-            </div>
+
+
         </div>
 
-        <div class="row">
-            <div class="col-sm-12">
-                <section class="panel">
-                    <header class="panel-heading wht-bg">
-                        Comments
-                        <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="{{ object.ref }}" data-value="">Comment</a>
-                    </header>
+        <div class="col-sm-6">
+            <section class="panel">
+                <header class="panel-heading wht-bg">
+                    Location
+                </header>
 
-                    <div class="panel-body">
+                <div class="panel-body">
+                    <div id="map_canvas"></div>
+                </div>
 
-
-                        <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
-
-                    </div>
-
-
-
-                </section>
-
-            </div>
+            </section>
         </div>
+
+
+    </div>
+
+    <div id="booking_row" class="row" style="display:none;">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading wht-bg">
+                    <div id="booking_edit" class="panel-body booking_status_1">
+                        {%  include "web/booking_editable_template.html" with user=user object=object %}
+                    </div>
+                </header>
+
+                <div class="panel-body">
+
+
+                    <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
+
+                </div>
+
+
+            </section>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12">
+            <section class="panel">
+                <header class="panel-heading wht-bg">
+                    Comments
+                    <a href="#" class="comment btn btn-primary fa fa-pencil pull-right"  data-pk="{{ object.ref }}" data-value="">Comment</a>
+                </header>
+
+                <div class="panel-body">
+
+
+                    <div class="comment_list" data-pk="{{ object.ref }}" data-type="user"></div>
+
+                </div>
+
+
+
+            </section>
+
+        </div>
+    </div>
 
 
 
@@ -242,20 +250,20 @@
         function init_map() {
             // init map
             {% if object.studio.lat %}
-            var map_canvas = document.getElementById('map_canvas');
-            var location = new google.maps.LatLng({{ object.studio.lat}}, {{ object.studio.lon}});
-            var map_options = {
-                center: location,
-                zoom: 18,
-                mapTypeId: google.maps.MapTypeId.HYBRID
-            }
-            var map = new google.maps.Map(map_canvas, map_options)
+                var map_canvas = document.getElementById('map_canvas');
+                var location = new google.maps.LatLng({{ object.studio.lat}}, {{ object.studio.lon}});
+                var map_options = {
+                    center: location,
+                    zoom: 18,
+                    mapTypeId: google.maps.MapTypeId.HYBRID
+                }
+                var map = new google.maps.Map(map_canvas, map_options)
 
-            var marker = new google.maps.Marker({
-                position: location,
-                map: map,
-                title: '{{ object.studio }}'
-            });
+                var marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: '{{ object.studio }}'
+                });
             {% endif %}
         }
 

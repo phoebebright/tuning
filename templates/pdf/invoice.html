@@ -157,15 +157,15 @@
                 <table id="invoice_detail" >
                     <tr>
                         <td class="item-name">{{ booking.description }} </td>
-                        <td class="amount">{{ booking.price }}</td>
+                        <td class="amount">&pound;&nbsp;{{ booking.price }}</td>
                     </tr>
                     <tr>
                         <td class="item-name text-right">VAT @ 20%</td>
-                        <td class="amount ">{{ booking.vat }}</td>
+                        <td class="amount ">&pound;&nbsp;{{ booking.vat }}</td>
                     </tr>
                     <tr>
                         <td class="item-name text-right"><strong>Invoice Total</strong></td>
-                        <td class="amount"><strong>{{ booking.total }}</strong></td>
+                        <td class="amount"><strong>&pound;&nbsp;{{ booking.total }}</strong></td>
                     </tr>
                 </table>
             </div>
