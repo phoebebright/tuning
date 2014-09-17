@@ -768,7 +768,13 @@ class Booking(models.Model, ModelDiffMixin):
                 'price': self.price,
                 'tuner_payment': self.tuner_payment}
 
+    @property
+    def total(self):
+        '''
+        :return: price including VAT
+        '''
 
+        return self.price + self.vat
 
     @classmethod
     def create_ref(cls):
@@ -1375,7 +1381,18 @@ class Booking(models.Model, ModelDiffMixin):
         self.completed_at = NOW
         self.save()
 
+        self.generate_invoice()
+
         self.log(comment="%s complete" % (self.activity,), user=user, type="COMPLETE")
+
+
+    def generate_invoice(self):
+        '''
+        email invoice
+        :return:
+        '''
+        # currently code in web.view
+        pass
 
     def set_uncomplete(self, user=None):
         ''' set status back, but only if called  within a minute(ish)
