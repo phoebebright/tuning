@@ -68,7 +68,7 @@ http://docs.celeryproject.org/en/latest/tutorials/daemonizing.html#daemonizing
 # # didn't think this was required
 # CELERY_IMPORTS = ('web.tasks', 'email_monitor.tasks')
 #
-# CELERY_MONITOR_URL = "http://217.115.117.19:5555"
+CELERY_MONITOR_URL = "http://217.115.117.19:5555"
 RABBITMQ_MONITOR_URL = "http://217.115.117.19:55672"
 
 # import djcelery
