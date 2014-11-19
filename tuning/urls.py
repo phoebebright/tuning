@@ -129,7 +129,7 @@ urlpatterns = patterns('',
                        url(r'^reset/done/$', 'django.contrib.auth.views.password_reset_complete', name="password_reset_complete"),
                        #                       url(r'^index.html$', DirectTemplateView.as_view(template_name='index.html'),  name="index"),
 
-                       url(r"^messaging/", include("django_twilio_sms.urls")),
+                       #url(r"^messaging/", include("django_twilio_sms.urls")),
                        # url(r'^monitor/', include('email_monitor.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
@@ -151,8 +151,7 @@ urlpatterns += patterns('web.views',
                         url(r'^booking/template/(?P<booking_ref>\w+)/$', 'render_booking_template', name="render_booking_template"),
                         url(r'^webmaster/$', 'webmaster', name='webmaster'),
                         url(r'^ping/$', 'ping', name='ping'),
-                         )
-
+                        )
 
 
 urlpatterns += patterns('libs.mail_utils',
@@ -161,28 +160,33 @@ urlpatterns += patterns('libs.mail_utils',
                         )
 
 urlpatterns += patterns('',
-                       #login required
-                       #url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
-                       url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
-                       url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
-                       url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
-                       url(r'booking/request_tuner/(?P<booking_ref>\d+)/$', 'request_another_tuner', name='booking-request-tuner'),
+                        #login required
+                        #url(r'booking/add/$', login_required(BookingCreate.as_view()), name='booking_add'),
+                        url(r'booking/(?P<pk>\d+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
+                        url(r'booking/(?P<pk>\d+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
+                        url(r'booking/complete/(?P<pk>\d+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
+                        url(r'booking/request_tuner/(?P<booking_ref>\d+)/$', 'request_another_tuner', name='booking-request-tuner'),
 
 
-                       url(r'booking/(?P<ref>\w+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
-                       url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
-                       url(r'booking/complete/(?P<ref>\w+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
-                       url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
+                        url(r'booking/(?P<ref>\w+)/delete/$', login_required(BookingDelete.as_view()), name='booking_delete'),
+                        url(r'booking/(?P<ref>\w+)/$', login_required(BookingDetailView.as_view()), name='booking-detail'),
+                        url(r'booking/complete/(?P<ref>\w+)/$', login_required(BookingCompleteView.as_view()), name='booking-complete'),
+                        url(r'booking/request_tuner/(?P<booking_ref>\w+)/$', 'request_another_tuner', name='booking-request-tuner'),
 
-                       url(r'tunerprofile/(?P<pk>\w+)/$', login_required(TunerDetailView.as_view()), name='tuner-profile'),
-                       url(r'invoice/(?P<ref>\w+)/$', login_required(GenerateInvoice.as_view()), name='invoice'),
+                        url(r'tunerprofile/(?P<pk>\w+)/$', login_required(TunerDetailView.as_view()), name='tuner-profile'),
+                        url(r'invoice/(?P<ref>\w+)/$', login_required(GenerateInvoice.as_view()), name='invoice'),
 
-                       url(r'^check_bookings/$', superuser_required(check_bookings_task), name='check_bookings'),
-                       url(r'^test_email/$', superuser_required(send_test_email), name='send_test_email'),
-                       url(r'^test_sms/$', superuser_required(send_test_sms), name='send_test_sms'),
+                        url(r'^check_bookings/$', superuser_required(check_bookings_task), name='check_bookings'),
+                        url(r'^test_email/$', superuser_required(send_test_email), name='send_test_email'),
+                        url(r'^test_sms/$', superuser_required(send_test_sms), name='send_test_sms'),
+                        url(r'^sync_twilio_numbers/$', superuser_required(sync_twilio_numbers), name='sync_twilio_numbers'),
 
 
-)
+                        url(r'^sms_callback/(?P<ref>\w+)/$', 'notification.backends.twilio.sms_callback', name='send_test_sms'),
+                        url(r'^messaging/$', 'web.views.reply', name='reply_sms'),
+
+
+                        )
 
 
 

@@ -83,6 +83,7 @@ def base_data(request=None):
     u.mobile = "434534534"
     u.provider=t1
     u.score = 10
+    u.use_sm = True
     u.save()
     u.activities.add(a1)
     u.activities.add(a2)
@@ -95,6 +96,7 @@ def base_data(request=None):
     u.mobile = "56756445"
     u.provider=t3
     u.score = 6
+    u.use_sm = True
     u.save()
     u.activities.add(a1)
     u.save()

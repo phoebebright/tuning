@@ -90,6 +90,7 @@ NOTIFICATION_TEMPLATES = BASE_DIR+ "/templates/notification/"
 DEFAULT_FROM_EMAIL = "system@tunemypiano.co.uk"
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 DEFAULT_FROM_SMS = "+441618500659"
+ADMIN_SMS = "+447973843189"
 
 '''
 EMAIL_HOST = "mail.beautifuldata.ie"
@@ -109,7 +110,6 @@ DEBUG = True
 
 TEMPLATE_DEBUG = False
 
-ALLOWED_HOSTS = []
 
 SITE_ID = 1
 
@@ -210,8 +210,8 @@ INSTALLED_APPS = (
     'notification',
     # 'djcelery',
     #'djcelery_email',
-    #'django_twilio',
-    'django_twilio_sms',
+    'django_twilio',
+    #'django_twilio_sms',
     'django_logtail',
     # 'email_monitor',
     'web',
@@ -294,14 +294,18 @@ CRON_CLASSES = [
 
 #TODO: more sophisticated privacy - https://github.com/dabapps/django-private-views
 
-TWILIO_DRY_MODE = True
+#TWILIO_DRY_MODE = True
+
+
 
 TWILIO_ACCOUNT_SID = 'AC16c2424eb4d481012c6227e5dfe37719'
 TWILIO_AUTH_TOKEN = '231d2bdf0738a138a61e239a0bc069cc'
+TWILIO_DEFAULT_CALLERID =  "+441618500659"
+
 DJANGO_TWILIO_FORGERY_PROTECTION = not DEBUG
 TWILIO_CALLBACK_DOMAIN = "tunemypiano.co.uk"
-TWILIO_PHONE_NUMBER = "+441618500659"
-TWILIO_SKIP_SIGNATURE_VALIDATION = False
+# TWILIO_PHONE_NUMBER = "+441618500659"
+# TWILIO_SKIP_SIGNATURE_VALIDATION = False
 
 DATETIME_FORMAT = "D j N P"
 SHORT_DATE_FORMAT = "D j N"
@@ -316,12 +320,15 @@ PUBLIC_VIEWS = [
     'django.contrib.auth.views.password_reset',
     'django.contrib.auth.views.password_reset_confirm',
     'django.contrib.auth.views.password_reset_complete',
-    'django_twilio_sms.views.SMSStatusCallbackView',
+    'notification.backends.twilio.sms_callback',
+    'web.views.reply',
+    #'django_twilio_sms.views.SMSStatusCallbackView',
 ]
 
 
 PUBLIC_PATHS = [
     '^/messaging/callback/sent/(?P<pk>\d+)/$',
+    '^sms_callback/(?P<ref>\w+)/$',
 ]
 
 

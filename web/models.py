@@ -1,6 +1,7 @@
 import uuid
 from decimal import *
 import logging
+import random
 
 from datetime import datetime, date, timedelta, time
 
@@ -39,8 +40,9 @@ from django_google_maps import fields as map_fields
 from django.forms.models import model_to_dict
 from django_gravatar.helpers import get_gravatar_url
 
-#from twilio.twiml import Response
-#from django_twilio.decorators import twilio_view
+
+from django_twilio.client import twilio_client
+
 
 """
 notifications:
@@ -1117,6 +1119,8 @@ class Booking(models.Model, ModelDiffMixin):
                             })
 
 
+            PhoneNumber.release(self)
+
     def change_all_times(self, time_type, requested):
         ''' one time is changed and adjust all other times.  Usuall this is called from the
         api, eg. a booking has been dragged on the calendar
@@ -1367,7 +1371,7 @@ class Booking(models.Model, ModelDiffMixin):
         self.booked_at = NOW
         self.save()
 
-        print self.tuner, '<<<<<<'
+
         self.log(comment="Tuner %s assigned" % (self.tuner,), user=user, type="BOOK")
 
         # send notification
@@ -1382,8 +1386,40 @@ class Booking(models.Model, ModelDiffMixin):
                                                                "description": self.description
             })
 
+        PhoneNumber.release(self)
 
+    @property
+    def sms_number(self):
+        """
 
+        :return: sms number if one is allocated to this booking otherwise None
+        """
+        try:
+            num = PhoneNumber.objects.get(booking = self)
+            return num.number
+        except:
+            return None
+
+    def get_sms_number(self):
+        """
+        :return: sms number for this booking, creating one if necessary
+        """
+
+        num =  PhoneNumber.get_number(self)
+        return "%s" % num.number
+
+    def release_sms_number(self):
+        """ frees up the sms number for next booking
+        :return: nothing
+        """
+        qs = PhoneNumber.objects.filter(booking=self)
+        if qs.count() > 0:
+            #should be only 1
+            for item in qs:
+                item.booking = None
+                item.save()
+
+        return
 
 
     def set_complete(self, user=None):
@@ -1530,6 +1566,116 @@ class TunerCallQuerySet(QuerySet):
 
     def overdue(self):
         return self.filter(booking__deadline__gt = NOW).select_related()
+
+class PhoneNumber(models.Model):
+
+
+    number = models.CharField(_("twilio number"), max_length=15, unique=True)
+    provisioned_at = models.DateTimeField(auto_now_add=True, editable=False)
+    booking = models.ForeignKey(Booking, blank=True, null=True)
+
+    def __unicode__(self):
+        return self.number
+
+    @classmethod
+    def sync(cls):
+        """ make sure list is the same as the twilio numbers.
+        Load any that are missing.
+        Delete any that don't have bookings that are not found.
+        If there are ones with bookings that are not found, then reassign the booking to a valid one
+
+        :return:
+        """
+
+        # first check all twilio numbers are in table
+        numbers = twilio_client.phone_numbers.list()
+        checked = []
+
+        for num in numbers:
+
+            try:
+                item = cls.objects.get(number = num.phone_number)
+            except cls.DoesNotExist:
+                item = cls.objects.create(number = num.phone_number)
+
+            checked.append(item)
+
+
+        # now see if there are any in the table not in twilio
+        for item in cls.objects.all():
+
+            if item not in checked:
+                booking = None
+
+                #if booking associated with this and booking still active, move to another number
+                if item.booking and item.booking.status < BOOKING_COMPLETE:
+                    booking = item.booking
+
+                item.delete()
+
+                if booking:
+                    cls.get_number(booking)
+
+
+    @classmethod
+    def get_number(cls, booking):
+        """
+        :return: number to use to send sms
+        """
+
+        # first see if already set
+        try:
+            use = cls.objects.get(booking=booking)
+            return use
+
+        except cls.DoesNotExist:
+            # then see if a number if free
+            available = cls.objects.filter(booking=None).order_by("?")
+            if available.count() > 0:
+                use = available[0]
+
+            else:
+                #otherwise purchase a new number
+                use = cls.new_number()
+
+
+            # save booking against this number
+            use.booking = booking
+            use.save()
+
+            return use
+
+
+    @classmethod
+    def new_number(cls):
+
+        if settings.TWILIO_DRY_MODE:
+            rand = random.randint(10000000, 99999999)
+            new = cls.objects.create(number=rand)
+
+        else:
+
+            numbers = twilio_client.phone_numbers.search(country="GB",
+            type="local")
+
+
+            if numbers:
+                result = numbers[0].purchase()
+                new = cls.objects.create(number = result.phone_number)
+
+
+        return new
+
+    @classmethod
+    def release(cls, booking):
+
+        try:
+            item = cls.objects.get(booking=booking)
+            item.booking = None
+            item.save()
+        except cls.DoesNotExist:
+            pass
+
 
 
 class TunerCall(models.Model):

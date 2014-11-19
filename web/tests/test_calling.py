@@ -86,6 +86,25 @@ class SimpleTest(TestCase):
         self.a1 = Activity.objects.get(name="Tuning")
         self.a2 = Activity.objects.get(name="Repair")
 
+    def test_sms_numbers(self):
+        """
+        test how sms numbers are assigned to each booking
+        """
+
+        # no number assigned if booking will not need to send out SMS
+        bk1 = Booking.create_booking(self.freda, when=TOMORROW)
+        self.assertEqual(bk1.sms_number, None)
+
+        # manually assign a number
+        num = bk1.get_sms_number()
+        self.assertEqual(bk1.sms_number, num)
+
+        # now release it
+        bk1.release_sms_number()
+        self.assertEqual(bk1.sms_number, None)
+
+        #bk2 = Booking.create_booking(self.freda, when=TOMORROW)
+
 
     def test_calls(self):
 

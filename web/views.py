@@ -25,6 +25,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.edit import ModelFormMixin
 from django.template.loader import render_to_string
+
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
 
@@ -38,7 +39,11 @@ import json
 import pytz
 import arrow
 
-from django_twilio_sms.utils import send_sms
+from twilio import twiml
+from django_twilio.decorators import twilio_view
+from django_twilio.client import twilio_client
+
+
 from notification import models as notification
 from easy_pdf.views import PDFTemplateView
 
@@ -476,15 +481,23 @@ def send_test_email(request):
 @user_passes_test(is_webmaster)
 def send_test_sms(request):
 
-    to = '+447973843189'
-    sender = settings.DEFAULT_FROM_SMS
-    body = "test sms"
+    m = twilio_client.messages.create(
+        to=settings.ADMIN_SMS,
+        from_=settings.DEFAULT_FROM_SMS,
+        body='Test SMS from tune my piano',
+    )
+
+    return HttpResponse("Message sent to %s: %s" % (settings.ADMIN_SMS,m.status))
+
+@login_required
+@user_passes_test(is_webmaster)
+def sync_twilio_numbers(request):
+
+    PhoneNumber.sync()
+
+    return HttpResponse("Numbers synced")
 
 
-    result = send_sms(request, to, body)
-
-    print result
-    return HttpResponse(result)
 
 
 class TunerDetailView(UpdateView):
@@ -519,3 +532,16 @@ class GenerateInvoice(PDFTemplateView):
         #     user = request.user
         # if not user:
         #     raise PermissionDenied()
+
+@twilio_view
+def reply(request):
+
+    print request.POST
+
+    m = twilio_client.messages.create(
+        to=settings.ADMIN_SMS,
+        from_=settings.DEFAULT_FROM_SMS,
+        body='Your txt received!',
+    )
+
+    return HttpResponse("OK")
