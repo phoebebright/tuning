@@ -1,0 +1,14 @@
+settings_local.py
+*.egg-info
+*.pot
+*.pyc
+*.py[co]
+MANIFEST
+dist/
+docs/_build/
+tests/coverage_html/
+tests/.coverage
+shared_static/
+.DS_Store
+*.DS_Store
+wsgi*
