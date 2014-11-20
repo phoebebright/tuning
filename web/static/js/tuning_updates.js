@@ -410,8 +410,21 @@ function populate_form(object, eventid) {
 //                todayHighlight: true
 //            });
 
-            $('#field_requested_time').clockin($("#field_requested_time").text(), time_update);
-            $('#field_deadline_time').clockin($("#field_deadline_time").text(), time_update);
+            //$('#field_requested_time').clockin($("#field_requested_time").text(), time_update);
+            //$('#field_deadline_time').clockin($("#field_deadline_time").text(), time_update);
+
+            var dt_options = {
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                'default': 'now'
+            };
+
+
+            $('#field_requested_time').clockpicker(dt_options);
+
+            $('#field_deadline_time').clockpicker(dt_options);
+
 
 
 // session ref

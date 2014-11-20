@@ -1695,8 +1695,10 @@ class TunerCall(models.Model):
     called = models.DateTimeField(blank=True, null=True)
     expire_in =  models.PositiveSmallIntegerField(_('Expire in mins after call'), default=5)
     status = models.CharField(max_length=1, choices=CALL_STATUS, default=CALL_INITIALISING)
+    twilio_status = models.CharField(max_length=20, blank=True, null=True)
+    twilio_status_updated = models.DateTimeField(blank=True, null=True)
     answered = models.DateTimeField(blank=True, null=True)
-
+    sms_sid = models.CharField(max_length=24, blank=True, null=True)
     objects = TunerCallPassThroughManager.for_queryset_class(TunerCallQuerySet)()
 
 
@@ -1712,13 +1714,17 @@ class TunerCall(models.Model):
     @transaction.atomic()
     def save(self, *args, **kwargs):
 
+        super(TunerCall, self).save(*args, **kwargs)
+
+        # id of the TunerCall record is passed to notification so that the SID from twillio can be added to the record.
         if  self.tuner and not self.called and (self.tuner.is_contactable):
-            send_notification([self.tuner,], "tuner_request", {"booking": self.booking,
+            send_notification([self.tuner,], "tuner_request", {"tunercall_id": self.id,
+                                                               "booking": self.booking,
                                                                "description": self.booking.description_for_user(self.tuner)
             })
             self.called = NOW
 
-        super(TunerCall, self).save(*args, **kwargs)
+            super(TunerCall, self).save(*args, **kwargs)
 
 
     @classmethod

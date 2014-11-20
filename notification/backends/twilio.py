@@ -8,10 +8,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from notification import backends
 
+from datetime import datetime
 
 from django_twilio.client import twilio_client
 
-from web.models import PhoneNumber
+from web.models import PhoneNumber, TunerCall
 
 import os.path
 
@@ -62,6 +63,12 @@ class TwilioBackend(backends.BaseBackend):
                 status_callback="http://%s/%s/%s/" % (settings.TWILIO_CALLBACK_DOMAIN, "sms_callback", booking.ref),
                 )
 
+            if extra_context.has_key('tunercall_id'):
+
+                # link the tuner call to the sms
+                tunercall = TunerCall.objects.get(id=extra_context['tunercall_id'])
+                tunercall.sms_sid = m.sid
+                tunercall.save()
 
 
             print m.sid
@@ -79,7 +86,16 @@ def sms_callback(request, ref):
     #TODO: need to match this to call and save in db
     print "SMS_CALLBACK for ref ------", ref
     #print request._post.get('MessageSid'),request._post.get('MessageStatus')
-    #print request._post.get('SmsSid'),request._post.get('SmsStatus')
-    print request.POST
+    sid = request.POST.get('SmsSid')
+    status = request.POST.get('SmsStatus')
+
+    try:
+        tc = TunerCall.objects.get(sms_sid = sid)
+        tc.twilio_status = status
+        tc.twilio_status_updated = datetime.now()
+        tc.save()
+    except TunerCall.DoesNotExist:
+        pass
+
 
     return HttpResponse("OK")

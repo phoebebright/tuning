@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_head %}
-    <link href="{{ STATIC_URL }}css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}css/jquery-clockpicker.min.css" rel="stylesheet">
     <link href="{{ STATIC_URL }}js/fullcalendar/fullcalendar.css" rel="stylesheet">
     <link href="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet"/>
     {# TODO: better datetimepicker http://www.malot.fr/bootstrap-datetimepicker/#}
@@ -16,7 +16,7 @@
 {% endblock extra_head %}
 {% block main %}
 
-
+NOT USED????????
     <div class="container">
         <div class="row">
 
@@ -48,7 +48,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.tablesorter.widgets.min.js"></script>
     {#    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker/js/bootstrap-datetimepicker.js"></script>#}
-    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datetimepicker.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-clockpicker.min.js"></script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
@@ -124,21 +124,18 @@
             var maxdate = moment().add('days', {{ MAX_BOOK_DAYS_IN_ADVANCE }});
 
             var dt_options = {
-                useSeconds: false,
-                format: 'YYYY-MM-DD HH:mm',
-                minuteStepping:5,
-                minDate:mindate,
-                maxDate: maxdate,
-                showToday: true,
-                language:'en',
-                sideBySide: true
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                'default': 'now'
             };
 
-            $('#id_requested_from').datetimepicker(dt_options);
 
-            $('#id_requested_to').datetimepicker(dt_options);
+            $('#id_requested_from').clockpicker(dt_options);
 
-            $('#id_deadline').datetimepicker(dt_options);
+            $('#id_requested_to').clockpicker(dt_options);
+
+            $('#id_deadline').clockpicker(dt_options);
 
             //TODO: If one location then use that
             //TODO: allow for entry of new locations and instruments
