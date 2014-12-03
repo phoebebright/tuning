@@ -727,7 +727,7 @@ class Booking(models.Model, ModelDiffMixin):
                 self.ref = Booking.create_ref()
 
             self.activity = Activity.default_activity()
-            self.requested_at = NOW
+            self.requested_at = now()
             self.recalc_prices(user)
 
         # recalculate price/vat if appropriate

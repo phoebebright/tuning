@@ -84,6 +84,8 @@ function populate_form(object, eventid) {
             $("#field_deadline_time").text(dline.local().format("HH:mm"));
             // store as utc
             $("#field_deadline_time").attr("data-value", dline.toISOString());
+            // input field is used by clockpicker
+            $("#input_deadline_time").val(dline.local().format("HH:mm"));
         } else {
             $("#field_deadline_time").text("?");
         }
@@ -96,6 +98,8 @@ function populate_form(object, eventid) {
             $("#field_requested_time").text(requested.local().format("HH:mm"));
             //store as utc
             $("#field_requested_time").attr("data-value", requested.toISOString());
+            // input field is used by clockpicker
+            $("#input_requested_time").val(requested.local().format("HH:mm"));
         } else {
             $("#field_requested_time").text("?");
         }
@@ -395,11 +399,10 @@ function load_data(client_id) {
 
     // setup requested time
 
-    var input = $('#input_requested_time').clockpicker({
+    var input_requested = $('#input_requested_time').clockpicker({
         placement: 'bottom',
         align: 'left',
         autoclose: true,
-        'default': 'now',
         afterDone: function () {
             time_update($('#input_requested_time'));
         }
@@ -409,16 +412,15 @@ function load_data(client_id) {
     $('#field_requested_time').click(function(e){
         // Have to stop propagation here
         e.stopPropagation();
-        input.clockpicker('show')
+        input_requested.clockpicker('show')
             .clockpicker();
     });
 
 // setup deadline time
-    var input = $('#input_deadline_time').clockpicker({
+    var input_deadline = $('#input_deadline_time').clockpicker({
         placement: 'bottom',
         align: 'left',
         autoclose: true,
-        'default': 'now',
         afterDone: function () {
             time_update($('#input_deadline_time'));
         }
@@ -428,7 +430,7 @@ function load_data(client_id) {
     $('#field_deadline_time').click(function(e){
         // Have to stop propagation here
         e.stopPropagation();
-        input.clockpicker('show')
+        input_deadline.clockpicker('show')
             .clockpicker();
     });
 

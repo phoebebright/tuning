@@ -647,48 +647,28 @@ class BookingTimes(BookingUpdateResource):
     class Meta(BookingStudioResource.Meta):
         resource_name = 'set_booking_times'
 
-
-    def obj_create(self, bundle, request=None, **kwargs):
-        # date expected to be utc so no conversion required
-        ref = bundle.data['pk']
-        #TDOD: error handling
+    def update_booking(self, booking, bundle, value):
 
         tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
 
-        try:
-            booking = Booking.objects.get(ref=ref)
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
         booking.change_all_times(bundle.data['time_type'], tm)
         booking.save(user=bundle.request.user)
 
-        return self.full_hydrate(bundle)
 
 class BookingDeadlineResource(BookingUpdateResource):
 
     class Meta(BookingStudioResource.Meta):
         resource_name = 'set_deadline_booking'
 
+    def update_booking(self, booking, bundle, value):
 
-    def obj_create(self, bundle, request=None, **kwargs):
-        ''' expecting datetime in utc
-        '''
-        ref = bundle.data['pk']
-        #TDOD: error handling
         deadline = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
-
-        try:
-            booking = Booking.objects.get(ref=ref)
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
 
         booking.change_deadline(deadline)
         booking.save(user=bundle.request.user)
 
-        return self.full_hydrate(bundle)
 
 
 class BookingRequestedStartResource(BookingUpdateResource):
@@ -696,24 +676,14 @@ class BookingRequestedStartResource(BookingUpdateResource):
     class Meta(BookingStudioResource.Meta):
         resource_name = 'set_requested_start_booking'
 
-
-    def obj_create(self, bundle, request=None, **kwargs):
-        # date expected to be utc so no conversion required
-        ref = bundle.data['pk']
-        #TDOD: error handling
+    def update_booking(self, booking, bundle, value):
 
         tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
 
-        try:
-            booking = Booking.objects.get(ref=ref)
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
         booking.change_requested_from(tm)
         booking.save(user=bundle.request.user)
 
-        return self.full_hydrate(bundle)
 
 class BookingRequestedEndResource(BookingUpdateResource):
 
@@ -721,23 +691,14 @@ class BookingRequestedEndResource(BookingUpdateResource):
         resource_name = 'set_requested_end_booking'
 
 
-    def obj_create(self, bundle, request=None, **kwargs):
-        # date expected to be utc so no conversion required
-        ref = bundle.data['pk']
-        #TDOD: error handling
+    def update_booking(self, booking, bundle, value):
 
         tm = make_time(datetime.strptime(bundle.data['value'][0:16], "%Y-%m-%dT%H:%M"))
         me = bundle.request.user
 
-        try:
-            booking = Booking.objects.get(ref=ref)
-        except Booking.DoesNotExist:
-            raise BadRequest('Invalid Booking reference %s' % ref)
-
         booking.change_requested_to(tm)
         booking.save(user=bundle.request.user)
 
-        return self.full_hydrate(bundle)
 
 class BookingClientrefResource(BookingUpdateResource):
 
