@@ -563,7 +563,8 @@ class BookingDeleteResource(BookingUpdateResource):
 
         booking.cancel(bundle.request.user)
 
-
+    def dehydrate(self, bundle):
+        return bundle
 
 class BookingActivityResource(BookingUpdateResource):
 

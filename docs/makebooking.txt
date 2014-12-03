@@ -1,0 +1,120 @@
+How a booking is added.  Written after twilio went wild and sent hundreds of sms messages.
+
+In Calendar, on dragging a client to a date or the client double clicking on a date.
+The Booking form is displayed with default values - ? from tuning_update.js?
+At this point a booking is created with status of 0 so data can be saved to it.
+
+On clicking "Create Booking" button activates onClick event in tuning_update.js
+
+  $("#editable_save").on("click", function() {
+        // mark booking as created
+        $.ajax({
+            type:"post",
+            url:API+"make_booking/",
+            data: {pk: object.ref, value:"{{ request.user.id }}"},
+            dataType : 'json',
+            success:function(json){
+
+                var data = tidy_data(json.booking);
+
+                close_form();
+                redraw_event(object.ref, data);
+
+
+            }
+        });
+
+    });
+
+This is routed via web/api.py tastypie interface to the make_booking method on the Booking model.
+
+   def make_booking(self, user=None):
+        ''' save booking and change status 1 so it becomes a real booking.  Bookings are created with cls.booking_create
+        with a status of 0 so that they can be edit from javascript.  Don't become real until the user clicks on
+        save and this method is called
+        '''
+        #TODO: some validation here
+        if  int(self.status) == 0:
+            self.status = BOOKING_REQUESTED
+            self.booked_at = NOW
+            self.save()
+
+            # initiate calls to tuners if booking is in the future
+            # just check for date as may create an urgent booking for NOW
+            if not self.tuner and self.deadline.date() >= NOW.date():
+                TunerCall.request(self)
+
+            self.log("Booking Requested" , user=user, type = "REQUEST")
+
+            # notifications - don't send if booking is past
+            if self.deadline.date() >= NOW.date():
+
+                send_notification(add_admins([self.booker,]),
+                            "booking_requested",
+                            {
+                                "booking": self,
+                                "description": self.description_for_user(self.booker)
+
+                            })
+
+
+        return self
+
+
+Now send an sms to all available tuners by creating new records in TunerCall
+
+   def request(self, booking):
+
+
+        while True:
+            call = TunerCall(booking = booking)
+            tuner = call.get_next_tuner()
+            # loop until run out of tuners to call
+            if not tuner:
+                break
+            call.tuner = tuner
+            call.save()
+
+
+Saving the record will trigger the notification being created:
+
+        super(TunerCall, self).save(*args, **kwargs)
+
+        # id of the TunerCall record is passed to notification so that the SID from twillio can be added to the record.
+        if  self.tuner and not self.called and (self.tuner.is_contactable):
+            send_notification([self.tuner,], "tuner_request", {"tunercall_id": self.id,
+                                                               "booking": self.booking,
+                                                               "description": self.booking.description_for_user(self.tuner)
+            })
+            self.called = NOW
+
+            super(TunerCall, self).save(*args, **kwargs)
+
+
+The notification code is in notifications/backends/twilio and is the code that sends the request to Twilio
+I think the code was failing here and so, was was falling back to the while True loop?
+
+            m = twilio_client.messages.create(
+                to=recipient.mobile,
+                from_=number,
+                body=sms,
+                status_callback="http://%s/%s/%s/" % (settings.TWILIO_CALLBACK_DOMAIN, "sms_callback", booking.ref),
+                )
+
+
+            if extra_context.has_key('tunercall_id'):
+
+                # link the tuner call to the sms
+                tunercall = TunerCall.objects.get(id=extra_context['tunercall_id'])
+                tunercall.sms_sid = m.sid
+                tunercall.save()
+
+
+            print m.sid
+            print m.status
+
+            Log.objects.create(notice_type = notice_type,
+                                   method='sms',
+                                   recipient = recipient,
+                                   subject=sms,
+                                   booking=booking)

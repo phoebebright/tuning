@@ -50,8 +50,9 @@
         {{ default_studio }}</a>
 
     for session beginning at
+    <input id="input_deadline_time" value="" data-pk="{{ object.ref }}" type="hidden">
     {% if object.status < '2' %}
-        <a href="#" id="field_deadline_time" class="editable when_time"
+        <a href="#" id="field_deadline_time" class="editable-click when_time"
            data-pk="{{ object.ref }}"
            data-date="{{ object.deadline|date:"Y-m-d" }}"
                 >{{ deadline_time }}</a>
@@ -67,7 +68,8 @@
         {{ default_client_ref }}</a>
 
     to start
-    <a href="#" id="field_requested_time" class="editable when_time"
+    <input id="input_requested_time" value="" data-pk="{{ object.ref }}" type="hidden">
+    <a href="#" id="field_requested_time" class="editable-click when_time"
        data-pk="{{ object.ref }}"
        data-date="{{ object.requested_from|date:"Y-m-d" }}"
             >{{ requested_time }}</a>

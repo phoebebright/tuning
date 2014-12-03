@@ -1085,8 +1085,11 @@ class Booking(models.Model, ModelDiffMixin):
 
     def cancel(self, user=None):
 
+        # can be a string - shouldn't have to fix here!
+        status = int(self.status)
+
         # if not created then just delete
-        if self.status == 0:
+        if status == 0:
             #TODO: delete comments
             self.delete()
 
